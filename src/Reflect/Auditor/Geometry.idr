@@ -1,6 +1,7 @@
 module Reflect.Auditor.Geometry
 
 import public Core.BoxInt
+import public Core.Order.Preorder
 import public Derivation.PureGeometricClassifier
 import public Geometry.InformationGeometry
 import public Geometry.GaloisCurvature

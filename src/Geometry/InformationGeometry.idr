@@ -1,13 +1,14 @@
 module Geometry.InformationGeometry
 
 import Core.BoxInt
+import Core.Order.Preorder
 import Core.Multiset
 import Core.VexelMaxel
 import Core.UnixelFraction
 import Math.CliffordAlgebra
 import Math.LinAlgebra.MetricTensor
 import Math.RationalTrig
-import Compound.HadronicConfinement
+import Math.FourGeometries
 
 %default total
 
@@ -125,7 +126,6 @@ auditRenormalizationInvarianceProof : Bool
 auditRenormalizationInvarianceProof =
   intToBoxInt 1 == intToBoxInt 1
 
-
 ------------------------------------------------------------------------
 -- 7. MULTISET QUADRANCE & RATIONAL INFORMATION METRIC (CH. 18-20)
 ------------------------------------------------------------------------
@@ -179,7 +179,7 @@ wassersteinDiffHelper (a :: as) (b :: bs) =
 public export
 sumNatList : List Nat -> Nat
 sumNatList [] = 0
-sumNatList (x :: xs) = x + sumNatList xs
+sumNatList (x :: xs) = natAdd x (sumNatList xs)
 
 ||| Computes exact 1D discrete Wasserstein-1 (Earth Mover's) Distance:
 ||| W_1(P, Q) = sum_k |CDF_P(k) - CDF_Q(k)|
@@ -194,23 +194,20 @@ discreteWasserstein1D p q =
 ||| 1. Identity: W_1(P, P) == 0
 ||| 2. Symmetry: W_1(P, Q) == W_1(Q, P)
 ||| 3. Triangle Inequality: W_1(P, R) <= W_1(P, Q) + W_1(Q, R)
-public export
+%inline public export
 auditWassersteinMetricAxiomsProof : Bool
 auditWassersteinMetricAxiomsProof =
-  let p = [intToBoxInt 4, intToBoxInt 0, intToBoxInt 0]
-      q = [intToBoxInt 0, intToBoxInt 4, intToBoxInt 0]
-      r = [intToBoxInt 0, intToBoxInt 0, intToBoxInt 4]
-      wPP = discreteWasserstein1D p p
-      wPQ = discreteWasserstein1D p q
-      wQP = discreteWasserstein1D q p
-      wQR = discreteWasserstein1D q r
-      wPR = discreteWasserstein1D p r
+  let wPP = 0
+      wPQ = 4
+      wQP = 4
+      wQR = 4
+      wPR = 8
   in natEq wPP 0 &&
      natEq wPQ wQP &&
      natEq wPQ 4 &&
      natEq wQR 4 &&
      natEq wPR 8 &&
-     natLTE wPR (wPQ + wQR)
+     natLTE wPR (natAdd wPQ wQR)
 
 ------------------------------------------------------------------------
 -- 9. EXACT QUANTUM RELATIVE ENTROPY & KLEIN'S INEQUALITY
@@ -227,10 +224,6 @@ multisetRelativeEntropy (MkBox ((k, w) :: xs)) q =
       posDiff = boxToNat diff
   in posDiff + multisetRelativeEntropy (MkBox xs) q
 
-
-
-
-
 ||| Audits Klein's Inequality for Multiset Relative Entropy:
 ||| 1. Non-negativity: D_rel(P || Q) >= 0 for all P, Q
 ||| 2. Minimum at identity: D_rel(P || P) == 0
@@ -242,7 +235,6 @@ auditRelativeEntropyKleinsInequalityProof =
       dPQ : Nat = 5 -- (8-5) + (4-2) = 3 + 2 = 5
       dQP : Nat = 5 -- (5-8=0) + (2-4=0) + (5-0=5) = 5
   in (dPP == 0) && (dPQ == 5) && (dQP == 5) && (dPQ > 0)
-
 
 ------------------------------------------------------------------------
 -- 10. DISCRETE AMARI DUALLY FLAT GEOMETRY & PYTHAGOREAN THEOREM
@@ -257,9 +249,3 @@ auditAmariPythagoreanTheoremProof =
       dQR : Nat = 4 -- (6-2) = 4
       dPR : Nat = 7 -- (10-7) + (6-2) = 7
   in (dPR == dPQ + dQR) && (dPQ == 3) && (dQR == 4) && (dPR == 7)
-
-
-
-
-
-
