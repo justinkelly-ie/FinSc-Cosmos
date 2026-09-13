@@ -9,7 +9,6 @@ depends = base
         , Idris2-Multiset-Binary
         , Idris2-Multiset-Ternary
         , Idris2-Geometry
-        , Idris2-Physics
         , Idris2-Hadron
         , Idris2-Chemistry
         , Idris2-Biology
