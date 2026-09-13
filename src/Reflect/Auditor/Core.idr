@@ -21,6 +21,18 @@ auditWitness : (target : Bool) -> Elab (target = True)
 auditWitness True = pure Refl
 auditWitness False = fail "Audit witness check failed: proof export returned False"
 
+||| Helper checking if a list of booleans are all True.
+%inline public export
+allTrue : List Bool -> Bool
+allTrue [] = True
+allTrue (True :: xs) = allTrue xs
+allTrue (False :: _) = False
+
+||| Generic catalog witness auditor tactic for batch witness validation.
+%inline public export
+auditCatalogWitnesses : (targets : List Bool) -> Elab (allTrue targets = True)
+auditCatalogWitnesses targets = auditWitness (allTrue targets)
+
 -- Witness 3: Maxel Row Extraction
 public export
 auditRowExtractionProofExport : Bool
