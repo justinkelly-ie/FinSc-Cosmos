@@ -51,5 +51,25 @@ public export
 auditHolographicStream : Elab (Reflect.Auditor.Observation.auditHolographicStreamProofExport = True)
 auditHolographicStream = auditWitness auditHolographicStreamProofExport
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+observationCatalogWitnesses : List Bool
+observationCatalogWitnesses =
+  [ auditMultisetHehnerTriadProofExport
+  , auditScientificObservationDatasetProofExport
+  , auditAlgebraicObservationCatalogProofExport
+  , auditCosmologicalTriadProofExport
+  , auditHolographicStreamProofExport
+  ]
+
+public export
+%macro
+auditObservationCatalog : Elab (allTrue Reflect.Auditor.Observation.observationCatalogWitnesses = True)
+auditObservationCatalog = auditCatalogWitnesses observationCatalogWitnesses
+
+
 
 

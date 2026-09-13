@@ -146,3 +146,26 @@ public export
 auditGaloisEinsteinCurvature : Elab (Reflect.Auditor.Geometry.auditGaloisEinsteinCurvatureProofExport = True)
 auditGaloisEinsteinCurvature = auditWitness auditGaloisEinsteinCurvatureProofExport
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+geometryCatalogWitnesses : List Bool
+geometryCatalogWitnesses =
+  [ auditHyperbolicBitDualityProofExport
+  , auditCliffordCompactnessDualityProofExport
+  , auditHolographicBoundaryDualityProofExport
+  , auditYangMillsPlaquetteCrossEntropyProofExport
+  , auditRelativeEntropyKleinsInequalityProofExport
+  , auditAmariPythagoreanTheoremProofExport
+  , auditLatticeFluidTransportProofExport
+  , auditGaloisEinsteinCurvatureProofExport
+  ]
+
+public export
+%macro
+auditGeometryCatalog : Elab (allTrue Reflect.Auditor.Geometry.geometryCatalogWitnesses = True)
+auditGeometryCatalog = auditCatalogWitnesses geometryCatalogWitnesses
+
+

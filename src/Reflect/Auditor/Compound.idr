@@ -253,6 +253,29 @@ public export
 auditBasePairingTransformProofExport : Bool
 auditBasePairingTransformProofExport = Compound.WatsonCrickBasePairing.auditBasePairingTransformProof
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+compoundCatalogWitnesses : List Bool
+compoundCatalogWitnesses =
+  [ auditTier5MolecularBondingProofExport
+  , auditSymplecticPhaseInvarianceProofExport
+  , auditPeptideCondensationConservationProofExport
+  , auditFullStandardModelCatalogProofExport
+  , auditParticleScatteringProofExport
+  , auditHadronizationEngineProofExport
+  , auditQuarkToBaryonTransformProofExport
+  , auditBasePairingTransformProofExport
+  ]
+
+public export
+%macro
+auditCompoundCatalog : Elab (allTrue Reflect.Auditor.Compound.compoundCatalogWitnesses = True)
+auditCompoundCatalog = auditCatalogWitnesses compoundCatalogWitnesses
+
+
 
 
 
