@@ -22,7 +22,6 @@ import public Geometry.SpinNetwork
 import public Math.CosmicInflation
 import public Math.QuantumStressTensor
 import public Math.ThermalDistribution
-import public Compound.ActiveInferenceNeuralNetwork
 import public Core.BoxInt
 import public Reflect.Auditor.Core
 import Language.Reflection
@@ -248,16 +247,6 @@ public export
 auditQuantumStressTensor : Elab (Reflect.Auditor.Evolution.auditQuantumStressTensorProofExport = True)
 auditQuantumStressTensor = auditWitness auditQuantumStressTensorProofExport
 
--- Witness 138: Active Inference Neural Networks & Free Energy Minimization
-public export
-auditActiveInferenceNeuralNetworkProofExport : Bool
-auditActiveInferenceNeuralNetworkProofExport = Compound.ActiveInferenceNeuralNetwork.auditActiveInferenceNeuralNetworkProof
-
-public export
-%macro
-auditActiveInferenceNeuralNetwork : Elab (Reflect.Auditor.Evolution.auditActiveInferenceNeuralNetworkProofExport = True)
-auditActiveInferenceNeuralNetwork = auditWitness auditActiveInferenceNeuralNetworkProofExport
-
 -- Witness 139: Electron Spatial Knot & Proton-to-Electron Mass Ratio (~1836.15)
 public export
 auditElectronKnotMassRatioProofExport : Bool
@@ -280,7 +269,6 @@ evolutionCatalogWitnesses =
   , auditLinearQTTConservationProofExport
   , auditZeroTemperatureGroundStateCollapseProofExport
   , auditQuantumStressTensorProofExport
-  , auditActiveInferenceNeuralNetworkProofExport
   , auditElectronKnotMassRatioProofExport
   ]
 

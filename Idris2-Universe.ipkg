@@ -6,12 +6,7 @@ brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 depends = base
         , Idris2-Multiset-Core
         , Idris2-Multiset-Transform
-        , Idris2-Multiset-Binary
-        , Idris2-Multiset-Ternary
         , Idris2-Geometry
-        , Idris2-Hadron
-        , Idris2-Chemistry
-        , Idris2-Biology
 
 sourcedir = "src"
 
@@ -71,7 +66,6 @@ modules =         Compound.AstrophysicalAggregation
         , Math.FineStructure
         , Math.FlavorMixing
         , Math.FluctuationTheorem
-        , Math.FourGeometries
         , Math.FractionalQuantumHall
         , Math.GalacticRotationCurve
         , Math.GaugeSpinorCoupling

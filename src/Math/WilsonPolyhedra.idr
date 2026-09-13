@@ -4,7 +4,7 @@ import Core.BoxInt
 import Core.VexelMaxel
 import Core.UnixelFraction
 import Math.QuantumTransition
-import Compound.HadronicConfinement
+import Math.FourGeometries
 import Geometry.LatticeTopology
 import Data.Vect
 import Data.List

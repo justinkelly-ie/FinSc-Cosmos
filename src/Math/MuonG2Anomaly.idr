@@ -3,7 +3,6 @@ module Math.MuonG2Anomaly
 import Core.BoxInt
 import Core.UnixelFraction
 import Core.Multiset
-import Compound.StandardModel
 import Data.Vect
 import Data.List
 

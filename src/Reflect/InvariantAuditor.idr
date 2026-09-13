@@ -8,7 +8,6 @@ import public Reflect.Auditor.Evolution
 import public Reflect.Auditor.Observation
 
 import Math.FineStructure
-import Compound.AlphaReplication
 import public Language.Reflection
 
 %default total
@@ -121,9 +120,3 @@ auditFineStructure137Proof : Bool
 auditFineStructure137Proof =
   Math.FineStructure.verify137Derivation &&
   Math.FineStructure.verifyCosmicPartition210
-
-public export
-auditAlphaClusterSaturationProof : Bool
-auditAlphaClusterSaturationProof =
-  Compound.AlphaReplication.isAlphaStable Compound.AlphaReplication.seedAlphaClusterEpoch4 &&
-  Compound.AlphaReplication.auditTripleAlphaCarbonBalanceProof

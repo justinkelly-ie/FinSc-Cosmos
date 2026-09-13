@@ -4,11 +4,7 @@ import Core.BoxInt
 import Core.ScaleTransform
 import Core.NarayAlphabet
 import Geometry.LatticeTopology
-import Compound.HadronicConfinement
-import Compound.StandardModel
-import Compound.ChemistryScaleTransforms
-import Compound.BiophysicalAggregation
-import Compound.BiologyScaleTransforms
+import Math.FourGeometries
 import Data.Fin
 
 %default total

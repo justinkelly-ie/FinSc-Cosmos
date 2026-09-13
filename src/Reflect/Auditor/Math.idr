@@ -46,8 +46,6 @@ import Math.EnzymeKinetics
 import Math.AllostericCooperativity
 import Math.ReciprocalTransport
 import Math.EvaporationEntropyCurve
-import Math.SymmetryBreakingMass
-import Math.VacuumPolarization
 
 import Math.PlasmaRecombination
 import Math.ElectromagneticEnergyFlow
@@ -894,26 +892,6 @@ public export
 auditParallelPushforward : Elab (Reflect.Auditor.Math.auditParallelPushforwardProofExport = True)
 auditParallelPushforward = auditWitness auditParallelPushforwardProofExport
 
--- Witness 184: Discrete Higgs Mechanism Potential & Vacuum Stability
-public export
-auditHiggsVacuumStabilityProofExport : Bool
-auditHiggsVacuumStabilityProofExport = Math.SymmetryBreakingMass.auditHiggsVacuumStabilityProof
-
-public export
-%macro
-auditHiggsVacuumStability : Elab (Reflect.Auditor.Math.auditHiggsVacuumStabilityProofExport = True)
-auditHiggsVacuumStability = auditWitness auditHiggsVacuumStabilityProofExport
-
--- Witness 185: 1-Loop Discrete Vacuum Polarization Running Coupling
-public export
-auditVacuumPolarizationProofExport : Bool
-auditVacuumPolarizationProofExport = Math.VacuumPolarization.auditVacuumPolarizationProof
-
-public export
-%macro
-auditVacuumPolarization : Elab (Reflect.Auditor.Math.auditVacuumPolarizationProofExport = True)
-auditVacuumPolarization = auditWitness auditVacuumPolarizationProofExport
-
 
 -- Witness 182: Muon g-2 Anomaly & Discrete Loop Correction Engine
 public export
@@ -950,8 +928,6 @@ mathCatalogWitnesses =
   , auditDiscreteMomentumConservationProofExport
   , auditParabolicNullMomentumZeroProofExport
   , auditSectorSpecificActionSignaturesProofExport
-  , auditHiggsVacuumStabilityProofExport
-  , auditVacuumPolarizationProofExport
   , auditMuonG2AnomalyProofExport
   ]
 

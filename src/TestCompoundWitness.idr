@@ -1,27 +1,18 @@
 module TestCompoundWitness
-import Compound.AlphaReplication
-import Compound.HierarchicalMatterPipeline
-import Compound.HydrogenBonding
-import Compound.MacromolecularChirality
-import Compound.PlasmaRecombination
-import Compound.QuarkHadronAlgebra
-import Compound.StellarNucleosynthesis
+
 import Compound.SymplecticIntegrator
-import Compound.TypeIndexedMultiset
-import Compound.UniversalAlgebraTRS
 import Compound.VelocityLensing
-import Compound.WatsonCrickBasePairing
+import Compound.AstrophysicalAggregation
 import Core.BoxInt
 import Language.Reflection
 
 %default total
 
-
 public export
-auditTripleAlphaCarbonPhosphorusSynthesisProofExport : Bool
-auditTripleAlphaCarbonPhosphorusSynthesisProofExport = Compound.StellarNucleosynthesis.auditTripleAlphaCarbonPhosphorusSynthesisProof
+auditSymplecticStepProofExport : Bool
+auditSymplecticStepProofExport = Compound.SymplecticIntegrator.auditSymplecticStepProof
 
 export
 %macro
-auditTripleAlphaCarbonPhosphorusSynthesis : Elab (TestCompoundWitness.auditTripleAlphaCarbonPhosphorusSynthesisProofExport = True)
-auditTripleAlphaCarbonPhosphorusSynthesis = pure Refl
+auditSymplecticStep : Elab (TestCompoundWitness.auditSymplecticStepProofExport = True)
+auditSymplecticStep = pure Refl
