@@ -31,6 +31,7 @@ import public Compound.StandardModel
 import public Compound.ParticleScattering
 import public Compound.HadronizationEngine
 import public Core.BoxInt
+import public Reflect.Auditor.Core
 import Language.Reflection
 
 %default total
@@ -210,7 +211,7 @@ auditBiomolecularPipelineProofExport = Compound.Biomolecules.auditBiomolecularPi
 public export
 %macro
 auditBiomolecularPipeline : Elab (Reflect.Auditor.Compound.auditBiomolecularPipelineProofExport = True)
-auditBiomolecularPipeline = pure Refl
+auditBiomolecularPipeline = auditWitness auditBiomolecularPipelineProofExport
 
 -- Witness 178: Full Standard Model Particle Catalog (37 States) & Multiset Lagrangian Vertices
 public export
@@ -220,7 +221,7 @@ auditFullStandardModelCatalogProofExport = Compound.StandardModel.auditFullStand
 public export
 %macro
 auditFullStandardModelCatalog : Elab (Reflect.Auditor.Compound.auditFullStandardModelCatalogProofExport = True)
-auditFullStandardModelCatalog = pure Refl
+auditFullStandardModelCatalog = auditWitness auditFullStandardModelCatalogProofExport
 
 -- Witness 179: High-Energy 2-to-2 Particle Scattering Vertices (QED, QCD, Weak)
 public export
@@ -230,7 +231,7 @@ auditParticleScatteringProofExport = Compound.ParticleScattering.auditParticleSc
 public export
 %macro
 auditParticleScattering : Elab (Reflect.Auditor.Compound.auditParticleScatteringProofExport = True)
-auditParticleScattering = pure Refl
+auditParticleScattering = auditWitness auditParticleScatteringProofExport
 
 -- Witness 180: Hadronization & QGP Jet Fragmentation Automaton
 public export
@@ -240,7 +241,7 @@ auditHadronizationEngineProofExport = Compound.HadronizationEngine.auditHadroniz
 public export
 %macro
 auditHadronizationEngine : Elab (Reflect.Auditor.Compound.auditHadronizationEngineProofExport = True)
-auditHadronizationEngine = pure Refl
+auditHadronizationEngine = auditWitness auditHadronizationEngineProofExport
 
 -- Witness 181: Universal Transform Multiset Hadronic Confinement (G ⊗ Z ⊗ J)
 public export

@@ -1,10 +1,9 @@
 module Reflect.Auditor.Evolution
 
-import public Core.BoxInt
 import public Evolution.Contraction
-import public Evolution.LinearPipeline
-import public Evolution.State
 import public Evolution.StructuralAccounting
+import public Evolution.State
+import public Evolution.LinearPipeline
 import public Evolution.ThreeMetricEvolution
 import public Evolution.ProtocolChannel
 import public Evolution.UniverseApp
@@ -22,9 +21,11 @@ import public Derivation.MultisetAdvancedTensorEngine
 import public Geometry.SpinNetwork
 import public Math.CosmicInflation
 import public Math.QuantumStressTensor
-import public Compound.ActiveInferenceNeuralNetwork
-import Language.Reflection
 import public Math.ThermalDistribution
+import public Compound.ActiveInferenceNeuralNetwork
+import public Core.BoxInt
+import public Reflect.Auditor.Core
+import Language.Reflection
 
 %default total
 
@@ -75,7 +76,7 @@ auditProtocolChannelConservationProofExport = Evolution.ProtocolChannel.auditPro
 public export
 %macro
 auditProtocolChannelConservation : Elab (Reflect.Auditor.Evolution.auditProtocolChannelConservationProofExport = True)
-auditProtocolChannelConservation = pure Refl
+auditProtocolChannelConservation = auditWitness auditProtocolChannelConservationProofExport
 
 -- Witness 121: Idris 2 Control.App Linear Resource Architecture
 public export
@@ -85,7 +86,7 @@ auditUniverseAppProofExport = Evolution.UniverseApp.auditUniverseAppProof
 public export
 %macro
 auditUniverseApp : Elab (Reflect.Auditor.Evolution.auditUniverseAppProofExport = True)
-auditUniverseApp = pure Refl
+auditUniverseApp = auditWitness auditUniverseAppProofExport
 
 -- Witness 122: Multi-System Control.App Interaction Architecture (composeSystemApps)
 public export
@@ -95,7 +96,7 @@ auditMultiSystemInteractionProofExport = Evolution.UniverseApp.auditUniverseAppP
 public export
 %macro
 auditMultiSystemInteraction : Elab (Reflect.Auditor.Evolution.auditMultiSystemInteractionProofExport = True)
-auditMultiSystemInteraction = pure Refl
+auditMultiSystemInteraction = auditWitness auditMultiSystemInteractionProofExport
 
 -- Witness 123: Automated Galois Scale-Jump Architecture (autoScaleUniverseApp)
 public export
@@ -105,7 +106,7 @@ auditGaloisScaleJumpProofExport = Evolution.UniverseApp.auditUniverseAppProof
 public export
 %macro
 auditGaloisScaleJump : Elab (Reflect.Auditor.Evolution.auditGaloisScaleJumpProofExport = True)
-auditGaloisScaleJump = pure Refl
+auditGaloisScaleJump = auditWitness auditGaloisScaleJumpProofExport
 
 -- Witness 124: Thermodynamic Causal Arrow & Jarzynski Fluctuation Equality
 public export
@@ -115,7 +116,7 @@ auditJarzynskiThermalProofExport = Evolution.Thermodynamics.auditJarzynskiTherma
 public export
 %macro
 auditJarzynskiThermal : Elab (Reflect.Auditor.Evolution.auditJarzynskiThermalProofExport = True)
-auditJarzynskiThermal = pure Refl
+auditJarzynskiThermal = auditWitness auditJarzynskiThermalProofExport
 
 -- Witness 125: Fault-Tolerant Kitaev Toric Code Error Syndrome Recovery (Law 36)
 public export
@@ -125,7 +126,7 @@ auditToricSyndromeProofExport = Evolution.ToricSyndrome.auditToricSyndromeProof
 public export
 %macro
 auditToricSyndrome : Elab (Reflect.Auditor.Evolution.auditToricSyndromeProofExport = True)
-auditToricSyndrome = pure Refl
+auditToricSyndrome = auditWitness auditToricSyndromeProofExport
 
 -- Witness 126: Interactive FiniteScienceREPL Engine Architecture
 public export
@@ -135,6 +136,8 @@ auditReplEngineProofExport = Evolution.ReplEngine.auditReplEngineProof
 public export
 %macro
 auditReplEngine : Elab (Reflect.Auditor.Evolution.auditReplEngineProofExport = True)
+auditReplEngine = auditWitness auditReplEngineProofExport
+
 -- Witness 127: End-to-End Functorial Scale Composition Pipeline (T4 ∘ T3 ∘ T2 ∘ T1)
 public export
 auditFunctorialPipelineProofExport : Bool
@@ -143,6 +146,8 @@ auditFunctorialPipelineProofExport = Derivation.FunctorialScalePipeline.auditFun
 public export
 %macro
 auditFunctorialPipeline : Elab (Reflect.Auditor.Evolution.auditFunctorialPipelineProofExport = True)
+auditFunctorialPipeline = auditWitness auditFunctorialPipelineProofExport
+
 -- Witness 128: Automatic Reverse-Causal Pullback Reconstruction (f^* ⊣ f_*)
 public export
 auditReverseCausalReconstructionProofExport : Bool
@@ -151,6 +156,8 @@ auditReverseCausalReconstructionProofExport = Derivation.ReverseCausalReconstruc
 public export
 %macro
 auditReverseCausalReconstruction : Elab (Reflect.Auditor.Evolution.auditReverseCausalReconstructionProofExport = True)
+auditReverseCausalReconstruction = auditWitness auditReverseCausalReconstructionProofExport
+
 -- Witness 129: O(log N) Parallelized MultisetTree Transform Application
 public export
 auditTreeTransformEngineProofExport : Bool
@@ -159,6 +166,8 @@ auditTreeTransformEngineProofExport = Derivation.TreeTransformEngine.auditTreeTr
 public export
 %macro
 auditTreeTransformEngine : Elab (Reflect.Auditor.Evolution.auditTreeTransformEngineProofExport = True)
+auditTreeTransformEngine = auditWitness auditTreeTransformEngineProofExport
+
 -- Witness 130: Interactive REPL Dynamic Transform Engine
 public export
 auditReplTransformEngineProofExport : Bool
@@ -167,7 +176,7 @@ auditReplTransformEngineProofExport = Derivation.ReplTransformEngine.auditReplTr
 public export
 %macro
 auditReplTransformEngine : Elab (Reflect.Auditor.Evolution.auditReplTransformEngineProofExport = True)
-auditReplTransformEngine = pure Refl
+auditReplTransformEngine = auditWitness auditReplTransformEngineProofExport
 
 -- Witness 131: Multiset Formal Theorem Exporter (Lean 4 / Coq / LaTeX)
 public export
@@ -177,7 +186,7 @@ auditMultisetTheoremExporterProofExport = Derivation.MultisetTheoremExporter.aud
 public export
 %macro
 auditMultisetTheoremExporter : Elab (Reflect.Auditor.Evolution.auditMultisetTheoremExporterProofExport = True)
-auditMultisetTheoremExporter = pure Refl
+auditMultisetTheoremExporter = auditWitness auditMultisetTheoremExporterProofExport
 
 -- Witness 132: Helmholtz Free Energy Minimizer under Transforms
 public export
@@ -187,7 +196,7 @@ auditFreeEnergyMinimizerProofExport = Derivation.FreeEnergyMinimizer.auditFreeEn
 public export
 %macro
 auditFreeEnergyMinimizer : Elab (Reflect.Auditor.Evolution.auditFreeEnergyMinimizerProofExport = True)
-auditFreeEnergyMinimizer = pure Refl
+auditFreeEnergyMinimizer = auditWitness auditFreeEnergyMinimizerProofExport
 
 -- Witness 133: Multiset 2-Category Tensor Engine & Spectral Solver
 public export
@@ -197,7 +206,7 @@ auditMultisetTensorEngineProofExport = Derivation.MultisetTensorEngine.auditMult
 public export
 %macro
 auditMultisetTensorEngine : Elab (Reflect.Auditor.Evolution.auditMultisetTensorEngineProofExport = True)
-auditMultisetTensorEngine = pure Refl
+auditMultisetTensorEngine = auditWitness auditMultisetTensorEngineProofExport
 
 -- Witness 134: Multiset Quantum Density Matrices, Lie Algebra, Unitary Classifiers & Tensor Networks
 public export
@@ -207,7 +216,7 @@ auditMultisetAdvancedTensorEngineProofExport = Derivation.MultisetAdvancedTensor
 public export
 %macro
 auditMultisetAdvancedTensorEngine : Elab (Reflect.Auditor.Evolution.auditMultisetAdvancedTensorEngineProofExport = True)
-auditMultisetAdvancedTensorEngine = pure Refl
+auditMultisetAdvancedTensorEngine = auditWitness auditMultisetAdvancedTensorEngineProofExport
 
 -- Witness 135: Dynamic Spacetime Geometry & Spin Networks
 public export
@@ -217,7 +226,7 @@ auditSpinNetworkVolumeProofExport = Geometry.SpinNetwork.auditSpinNetworkVolumeP
 public export
 %macro
 auditSpinNetworkVolume : Elab (Reflect.Auditor.Evolution.auditSpinNetworkVolumeProofExport = True)
-auditSpinNetworkVolume = pure Refl
+auditSpinNetworkVolume = auditWitness auditSpinNetworkVolumeProofExport
 
 -- Witness 136: Cosmic Inflation & Primordial Power Spectrum
 public export
@@ -227,7 +236,7 @@ auditCosmicInflationProofExport = Math.CosmicInflation.auditCosmicInflationProof
 public export
 %macro
 auditCosmicInflation : Elab (Reflect.Auditor.Evolution.auditCosmicInflationProofExport = True)
-auditCosmicInflation = pure Refl
+auditCosmicInflation = auditWitness auditCosmicInflationProofExport
 
 -- Witness 137: Quantum Stress-Energy Tensor in Curved Spacetime
 public export
@@ -237,7 +246,7 @@ auditQuantumStressTensorProofExport = Math.QuantumStressTensor.auditQuantumStres
 public export
 %macro
 auditQuantumStressTensor : Elab (Reflect.Auditor.Evolution.auditQuantumStressTensorProofExport = True)
-auditQuantumStressTensor = pure Refl
+auditQuantumStressTensor = auditWitness auditQuantumStressTensorProofExport
 
 -- Witness 138: Active Inference Neural Networks & Free Energy Minimization
 public export
@@ -247,7 +256,7 @@ auditActiveInferenceNeuralNetworkProofExport = Compound.ActiveInferenceNeuralNet
 public export
 %macro
 auditActiveInferenceNeuralNetwork : Elab (Reflect.Auditor.Evolution.auditActiveInferenceNeuralNetworkProofExport = True)
-auditActiveInferenceNeuralNetwork = pure Refl
+auditActiveInferenceNeuralNetwork = auditWitness auditActiveInferenceNeuralNetworkProofExport
 
 -- Witness 139: Electron Spatial Knot & Proton-to-Electron Mass Ratio (~1836.15)
 public export
@@ -257,7 +266,7 @@ auditElectronKnotMassRatioProofExport = True
 public export
 %macro
 auditElectronKnotMassRatio : Elab (Reflect.Auditor.Evolution.auditElectronKnotMassRatioProofExport = True)
-auditElectronKnotMassRatio = pure Refl
+auditElectronKnotMassRatio = auditWitness auditElectronKnotMassRatioProofExport
 
 
 

@@ -15,6 +15,12 @@ import Language.Reflection
 -- COMPILE-TIME REFLECTION AUDITS: CORE DOMAIN
 ------------------------------------------------------------------------
 
+||| Universal generic macro witness auditor tactic.
+%inline public export
+auditWitness : (target : Bool) -> Elab (target = True)
+auditWitness True = pure Refl
+auditWitness False = fail "Audit witness check failed: proof export returned False"
+
 -- Witness 3: Maxel Row Extraction
 public export
 auditRowExtractionProofExport : Bool
@@ -23,7 +29,7 @@ auditRowExtractionProofExport = Core.VexelMaxel.auditRowExtractionProof
 public export
 %macro
 auditRowExtraction : Elab (Reflect.Auditor.Core.auditRowExtractionProofExport = True)
-auditRowExtraction = pure Refl
+auditRowExtraction = auditWitness auditRowExtractionProofExport
 
 -- Witness 7: Unixel Denominator Positivity
 public export
@@ -33,9 +39,7 @@ auditUnixelFractionPositivityProofExport = Core.UnixelFraction.auditSternBrocotP
 public export
 %macro
 auditUnixelFractionPositivity : Elab (Reflect.Auditor.Core.auditUnixelFractionPositivityProofExport = True)
-auditUnixelFractionPositivity = pure Refl
-
-
+auditUnixelFractionPositivity = auditWitness auditUnixelFractionPositivityProofExport
 
 -- Witness 8: Rational Equivalence
 public export
@@ -45,7 +49,7 @@ auditRationalEquivalenceProofExport = Core.UnixelFraction.auditContinuedFraction
 public export
 %macro
 auditRationalEquivalence : Elab (Reflect.Auditor.Core.auditRationalEquivalenceProofExport = True)
-auditRationalEquivalence = pure Refl
+auditRationalEquivalence = auditWitness auditRationalEquivalenceProofExport
 
 -- Witness 9: OnSeq Clip Length Extraction
 public export
@@ -55,7 +59,7 @@ auditOnSeqClipExtractionProofExport = Core.OnSeq.auditOnSeqClipExtractionProof
 public export
 %macro
 auditOnSeqClipExtraction : Elab (Reflect.Auditor.Core.auditOnSeqClipExtractionProofExport = True)
-auditOnSeqClipExtraction = pure Refl
+auditOnSeqClipExtraction = auditWitness auditOnSeqClipExtractionProofExport
 
 -- Witness 10: Hehner Scale Conversion
 public export
@@ -65,7 +69,7 @@ auditHehnerScaleConversionProofExport = Core.UnixelFraction.auditHehnerScaleConv
 public export
 %macro
 auditHehnerScaleConversion : Elab (Reflect.Auditor.Core.auditHehnerScaleConversionProofExport = True)
-auditHehnerScaleConversion = pure Refl
+auditHehnerScaleConversion = auditWitness auditHehnerScaleConversionProofExport
 
 -- Witness 11: Multiset Information Distance
 public export
@@ -75,7 +79,7 @@ auditMultisetInformationDistanceProofExport = Core.Multiset.auditMultisetInforma
 public export
 %macro
 auditMultisetInformationDistance : Elab (Reflect.Auditor.Core.auditMultisetInformationDistanceProofExport = True)
-auditMultisetInformationDistance = pure Refl
+auditMultisetInformationDistance = auditWitness auditMultisetInformationDistanceProofExport
 
 -- Witness 13: Multiset Cross-Entropy
 public export
@@ -85,7 +89,7 @@ auditMultisetCrossEntropyProofExport = Core.Multiset.auditMultisetCrossEntropyPr
 public export
 %macro
 auditMultisetCrossEntropy : Elab (Reflect.Auditor.Core.auditMultisetCrossEntropyProofExport = True)
-auditMultisetCrossEntropy = pure Refl
+auditMultisetCrossEntropy = auditWitness auditMultisetCrossEntropyProofExport
 
 -- Witness 14: Multiset Compactness Intelligence
 public export
@@ -95,7 +99,7 @@ auditMultisetCompactnessProofExport = Core.UnixelFraction.auditMultisetCompactne
 public export
 %macro
 auditMultisetCompactness : Elab (Reflect.Auditor.Core.auditMultisetCompactnessProofExport = True)
-auditMultisetCompactness = pure Refl
+auditMultisetCompactness = auditWitness auditMultisetCompactnessProofExport
 
 -- Witness 95: Fast O(log N) MultisetTree Lookup
 public export
@@ -105,7 +109,7 @@ auditMultisetTreeLookupProofExport = Core.MultisetTree.auditMultisetTreeLookupPr
 public export
 %macro
 auditMultisetTreeLookup : Elab (Reflect.Auditor.Core.auditMultisetTreeLookupProofExport = True)
-auditMultisetTreeLookup = pure Refl
+auditMultisetTreeLookup = auditWitness auditMultisetTreeLookupProofExport
 
 -- Witness 96: MultisetTree Token Multiplicity Summation
 public export
@@ -115,7 +119,7 @@ auditMultisetTreeTokenSumProofExport = Core.MultisetTree.auditMultisetTreeTokenS
 public export
 %macro
 auditMultisetTreeTokenSum : Elab (Reflect.Auditor.Core.auditMultisetTreeTokenSumProofExport = True)
-auditMultisetTreeTokenSum = pure Refl
+auditMultisetTreeTokenSum = auditWitness auditMultisetTreeTokenSumProofExport
 
 -- Witness 114: Caret Product Identity Invariant
 public export
@@ -125,7 +129,7 @@ auditCaretProductIdentityProofExport = Core.Polynumber.auditCaretProductIdentity
 public export
 %macro
 auditCaretProductIdentity : Elab (Reflect.Auditor.Core.auditCaretProductIdentityProofExport = True)
-auditCaretProductIdentity = pure Refl
+auditCaretProductIdentity = auditWitness auditCaretProductIdentityProofExport
 
 -- Witness 115: Fundamental Identity of Arithmetic (FIA) Euler Caret Factorization
 public export
@@ -135,7 +139,7 @@ auditFIAEulerProductProofExport = Core.Polynumber.auditFIAEulerProductProof
 public export
 %macro
 auditFIAEulerProduct : Elab (Reflect.Auditor.Core.auditFIAEulerProductProofExport = True)
-auditFIAEulerProduct = pure Refl
+auditFIAEulerProduct = auditWitness auditFIAEulerProductProofExport
 
 -- Witness 116: Canonical Box Ordering & Dyck Path Contour Walk Isomorphism
 public export
@@ -145,7 +149,7 @@ auditBoxOrderingAndContourWalkProofExport = Core.Multiset.auditBoxOrderingProof
 public export
 %macro
 auditBoxOrderingAndContourWalk : Elab (Reflect.Auditor.Core.auditBoxOrderingAndContourWalkProofExport = True)
-auditBoxOrderingAndContourWalk = pure Refl
+auditBoxOrderingAndContourWalk = auditWitness auditBoxOrderingAndContourWalkProofExport
 
 -- Witness 117: Balance Arrays & Subtraction-Free Natural Linear Independence
 public export
@@ -155,7 +159,7 @@ auditVexelBalanceArrayProofExport = Core.VexelMaxel.auditVexelBalanceProof
 public export
 %macro
 auditVexelBalanceArray : Elab (Reflect.Auditor.Core.auditVexelBalanceArrayProofExport = True)
-auditVexelBalanceArray = pure Refl
+auditVexelBalanceArray = auditWitness auditVexelBalanceArrayProofExport
 
 -- Witness 118: Magic Maxels & Doubly Stochastic Token Mass Conservation
 public export
@@ -165,5 +169,5 @@ auditMagicMaxelConservationProofExport = Core.VexelMaxel.auditMagicMaxel3x3Proof
 public export
 %macro
 auditMagicMaxelConservation : Elab (Reflect.Auditor.Core.auditMagicMaxelConservationProofExport = True)
-auditMagicMaxelConservation = pure Refl
+auditMagicMaxelConservation = auditWitness auditMagicMaxelConservationProofExport
 

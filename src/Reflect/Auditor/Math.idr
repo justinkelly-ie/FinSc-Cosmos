@@ -4,6 +4,7 @@ import public Core.BoxInt
 import public Core.VexelMaxel
 import public Core.Multiset
 import public Core.TransformMultiset
+import public Reflect.Auditor.Core
 
 import Data.Vect
 import Data.List
@@ -851,7 +852,7 @@ auditDensityMatrixBornRuleProofExport = Math.DensityMatrix.auditDensityMatrixBor
 public export
 %macro
 auditDensityMatrixBornRule : Elab (Reflect.Auditor.Math.auditDensityMatrixBornRuleProofExport = True)
-auditDensityMatrixBornRule = pure Refl
+auditDensityMatrixBornRule = auditWitness auditDensityMatrixBornRuleProofExport
 
 -- Witness 175: 1,000-Step Galactic Rotation Curve & Dark Matter Halo Time-Series Simulation
 public export
@@ -861,7 +862,7 @@ auditGalacticRotationTimeSeriesProofExport = Math.GalacticRotationCurve.auditGal
 public export
 %macro
 auditGalacticRotationTimeSeries : Elab (Reflect.Auditor.Math.auditGalacticRotationTimeSeriesProofExport = True)
-auditGalacticRotationTimeSeries = pure Refl
+auditGalacticRotationTimeSeries = auditWitness auditGalacticRotationTimeSeriesProofExport
 
 -- Witness 176: Constructive Anti-Matter Multiset Pair Annihilation & CKM/PMNS CP-Violation Unitarity
 public export
@@ -871,7 +872,7 @@ auditAntiMatterAnnihilationProofExport = Math.FlavorMixing.auditAntiMatterAnnihi
 public export
 %macro
 auditAntiMatterAnnihilation : Elab (Reflect.Auditor.Math.auditAntiMatterAnnihilationProofExport = True)
-auditAntiMatterAnnihilation = pure Refl
+auditAntiMatterAnnihilation = auditWitness auditAntiMatterAnnihilationProofExport
 
 -- Witness 181: 3-Flavor Neutrino Oscillation Time-Series & PMNS Unitary Conservation
 public export
@@ -881,7 +882,7 @@ auditNeutrinoOscillationProofExport = Math.NeutrinoOscillation.auditNeutrinoOsci
 public export
 %macro
 auditNeutrinoOscillation : Elab (Reflect.Auditor.Math.auditNeutrinoOscillationProofExport = True)
-auditNeutrinoOscillation = pure Refl
+auditNeutrinoOscillation = auditWitness auditNeutrinoOscillationProofExport
 
 -- Witness 183: Parallelized O(log N) Transform Multiset Tree Pushforward Evaluation
 public export
@@ -891,7 +892,7 @@ auditParallelPushforwardProofExport = Core.TransformMultiset.auditParallelPushfo
 public export
 %macro
 auditParallelPushforward : Elab (Reflect.Auditor.Math.auditParallelPushforwardProofExport = True)
-auditParallelPushforward = pure Refl
+auditParallelPushforward = auditWitness auditParallelPushforwardProofExport
 
 -- Witness 184: Discrete Higgs Mechanism Potential & Vacuum Stability
 public export
@@ -901,7 +902,7 @@ auditHiggsVacuumStabilityProofExport = Math.SymmetryBreakingMass.auditHiggsVacuu
 public export
 %macro
 auditHiggsVacuumStability : Elab (Reflect.Auditor.Math.auditHiggsVacuumStabilityProofExport = True)
-auditHiggsVacuumStability = pure Refl
+auditHiggsVacuumStability = auditWitness auditHiggsVacuumStabilityProofExport
 
 -- Witness 185: 1-Loop Discrete Vacuum Polarization Running Coupling
 public export
@@ -911,7 +912,7 @@ auditVacuumPolarizationProofExport = Math.VacuumPolarization.auditVacuumPolariza
 public export
 %macro
 auditVacuumPolarization : Elab (Reflect.Auditor.Math.auditVacuumPolarizationProofExport = True)
-auditVacuumPolarization = pure Refl
+auditVacuumPolarization = auditWitness auditVacuumPolarizationProofExport
 
 
 -- Witness 182: Muon g-2 Anomaly & Discrete Loop Correction Engine
@@ -922,7 +923,7 @@ auditMuonG2AnomalyProofExport = Math.MuonG2Anomaly.auditMuonG2AnomalyProof
 public export
 %macro
 auditMuonG2Anomaly : Elab (Reflect.Auditor.Math.auditMuonG2AnomalyProofExport = True)
-auditMuonG2Anomaly = pure Refl
+auditMuonG2Anomaly = auditWitness auditMuonG2AnomalyProofExport
 
 
 

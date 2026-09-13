@@ -3,6 +3,7 @@ module Reflect.Auditor.Observation
 import public Core.BoxInt
 import public Core.Multiset
 import public Core.UnixelFraction
+import public Reflect.Auditor.Core
 import Language.Reflection
 import public Observation.Algebraic
 import public Observation.Dataset
@@ -48,6 +49,7 @@ auditHolographicStreamProofExport = Observation.HolographicStream.auditHolograph
 public export
 %macro
 auditHolographicStream : Elab (Reflect.Auditor.Observation.auditHolographicStreamProofExport = True)
-auditHolographicStream = pure Refl
+auditHolographicStream = auditWitness auditHolographicStreamProofExport
+
 
 

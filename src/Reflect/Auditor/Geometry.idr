@@ -5,6 +5,7 @@ import public Core.Order.Preorder
 import public Derivation.PureGeometricClassifier
 import public Geometry.InformationGeometry
 import public Geometry.GaloisCurvature
+import public Reflect.Auditor.Core
 import Language.Reflection
 import public Math.LatticeFluidTransport
 import public Math.ExclusionPrinciple
@@ -23,7 +24,7 @@ auditHyperbolicBitDualityProofExport = Geometry.InformationGeometry.auditHyperbo
 public export
 %macro
 auditHyperbolicBitDuality : Elab (Reflect.Auditor.Geometry.auditHyperbolicBitDualityProofExport = True)
-auditHyperbolicBitDuality = pure Refl
+auditHyperbolicBitDuality = auditWitness auditHyperbolicBitDualityProofExport
 
 -- Witness 16: Clifford Compactness Duality
 public export
@@ -33,7 +34,7 @@ auditCliffordCompactnessDualityProofExport = Geometry.InformationGeometry.auditC
 public export
 %macro
 auditCliffordCompactnessDuality : Elab (Reflect.Auditor.Geometry.auditCliffordCompactnessDualityProofExport = True)
-auditCliffordCompactnessDuality = pure Refl
+auditCliffordCompactnessDuality = auditWitness auditCliffordCompactnessDualityProofExport
 
 -- Witness 18: Holographic Boundary Duality
 public export
@@ -43,7 +44,7 @@ auditHolographicBoundaryDualityProofExport = Geometry.InformationGeometry.auditH
 public export
 %macro
 auditHolographicBoundaryDuality : Elab (Reflect.Auditor.Geometry.auditHolographicBoundaryDualityProofExport = True)
-auditHolographicBoundaryDuality = pure Refl
+auditHolographicBoundaryDuality = auditWitness auditHolographicBoundaryDualityProofExport
 
 -- Witness 19: Yang-Mills Plaquette Cross-Entropy
 public export
@@ -53,7 +54,7 @@ auditYangMillsPlaquetteCrossEntropyProofExport = Geometry.InformationGeometry.au
 public export
 %macro
 auditYangMillsPlaquetteCrossEntropy : Elab (Reflect.Auditor.Geometry.auditYangMillsPlaquetteCrossEntropyProofExport = True)
-auditYangMillsPlaquetteCrossEntropy = pure Refl
+auditYangMillsPlaquetteCrossEntropy = auditWitness auditYangMillsPlaquetteCrossEntropyProofExport
 
 -- Witness 21: Multi-Scale Renormalization Group
 public export
@@ -63,7 +64,7 @@ auditRenormalizationInvarianceProofExport = Geometry.InformationGeometry.auditRe
 public export
 %macro
 auditRenormalizationInvariance : Elab (Reflect.Auditor.Geometry.auditRenormalizationInvarianceProofExport = True)
-auditRenormalizationInvariance = pure Refl
+auditRenormalizationInvariance = auditWitness auditRenormalizationInvarianceProofExport
 
 -- Witness 22: Master Cosmological Inferences
 public export
@@ -73,7 +74,7 @@ auditCosmologicalInferencesProofExport = Derivation.PureGeometricClassifier.audi
 public export
 %macro
 auditCosmologicalInferences : Elab (Reflect.Auditor.Geometry.auditCosmologicalInferencesProofExport = True)
-auditCosmologicalInferences = pure Refl
+auditCosmologicalInferences = auditWitness auditCosmologicalInferencesProofExport
 
 -- Witness 64: Grassmann Blade Nilpotency (Law 9)
 public export
@@ -83,7 +84,7 @@ auditGrassmannNilpotencyProofExport = Math.ExclusionPrinciple.auditGrassmannNilp
 public export
 %macro
 auditGrassmannNilpotency : Elab (Reflect.Auditor.Geometry.auditGrassmannNilpotencyProofExport = True)
-auditGrassmannNilpotency = pure Refl
+auditGrassmannNilpotency = auditWitness auditGrassmannNilpotencyProofExport
 
 -- Witness 98: Pure Constructive Geometric Classification
 public export
@@ -93,7 +94,7 @@ auditPureGeometricClassificationProofExport = Derivation.PureGeometricClassifier
 public export
 %macro
 auditPureGeometricClassification : Elab (Reflect.Auditor.Geometry.auditPureGeometricClassificationProofExport = True)
-auditPureGeometricClassification = pure Refl
+auditPureGeometricClassification = auditWitness auditPureGeometricClassificationProofExport
 
 -- Witness 125: Constructive Wasserstein Optimal Transport Metric Axioms
 public export
@@ -103,7 +104,7 @@ auditWassersteinMetricAxiomsProofExport = Geometry.InformationGeometry.auditWass
 public export
 %macro
 auditWassersteinMetricAxioms : Elab (Reflect.Auditor.Geometry.auditWassersteinMetricAxiomsProofExport = True)
-auditWassersteinMetricAxioms = pure Refl
+auditWassersteinMetricAxioms = auditWitness auditWassersteinMetricAxiomsProofExport
 
 -- Witness 126: Exact Quantum Relative Entropy & Klein's Inequality
 public export
@@ -113,7 +114,7 @@ auditRelativeEntropyKleinsInequalityProofExport = Geometry.InformationGeometry.a
 public export
 %macro
 auditRelativeEntropyKleinsInequality : Elab (Reflect.Auditor.Geometry.auditRelativeEntropyKleinsInequalityProofExport = True)
-auditRelativeEntropyKleinsInequality = pure Refl
+auditRelativeEntropyKleinsInequality = auditWitness auditRelativeEntropyKleinsInequalityProofExport
 
 -- Witness 127: Discrete Amari Dually Flat Geometry & Pythagorean Theorem
 public export
@@ -123,7 +124,7 @@ auditAmariPythagoreanTheoremProofExport = Geometry.InformationGeometry.auditAmar
 public export
 %macro
 auditAmariPythagoreanTheorem : Elab (Reflect.Auditor.Geometry.auditAmariPythagoreanTheoremProofExport = True)
-auditAmariPythagoreanTheorem = pure Refl
+auditAmariPythagoreanTheorem = auditWitness auditAmariPythagoreanTheoremProofExport
 
 -- Witness 144: Law 30 (Discrete Lattice Boltzmann & Navier-Stokes Transport)
 public export
@@ -133,7 +134,7 @@ auditLatticeFluidTransportProofExport = Math.LatticeFluidTransport.auditLatticeF
 public export
 %macro
 auditLatticeFluidTransport : Elab (Reflect.Auditor.Geometry.auditLatticeFluidTransportProofExport = True)
-auditLatticeFluidTransport = pure Refl
+auditLatticeFluidTransport = auditWitness auditLatticeFluidTransportProofExport
 
 -- Witness 175: Discrete Galois Einstein Curvature Tensor & Metric Shear
 public export
@@ -143,5 +144,5 @@ auditGaloisEinsteinCurvatureProofExport = Geometry.GaloisCurvature.auditGaloisEi
 public export
 %macro
 auditGaloisEinsteinCurvature : Elab (Reflect.Auditor.Geometry.auditGaloisEinsteinCurvatureProofExport = True)
-auditGaloisEinsteinCurvature = pure Refl
+auditGaloisEinsteinCurvature = auditWitness auditGaloisEinsteinCurvatureProofExport
 
