@@ -1,12 +1,25 @@
 module Reflect.EcosystemAudit
 
 import Language.Reflection
-import Reflect.InvariantAuditor
+import Reflect.Auditor.Core
+import Reflect.Auditor.Math
 import Reflect.Auditor.Evolution
 
 %default total
 
-||| Top-level compile-time reflection macro macro-auditing the entire 55-law physical ecosystem.
+||| Master Ecosystem Catalog witness list combining Core, Math, and Evolution domain catalogs.
+public export
+masterEcosystemCatalogWitnesses : List Bool
+masterEcosystemCatalogWitnesses =
+  coreCatalogWitnesses ++ mathCatalogWitnesses ++ evolutionCatalogWitnesses
+
+||| Top-level compile-time reflection macro macro-auditing the entire physical ecosystem catalog.
+public export
+%macro
+auditMasterEcosystem : Elab (allTrue Reflect.EcosystemAudit.masterEcosystemCatalogWitnesses = True)
+auditMasterEcosystem = auditCatalogWitnesses masterEcosystemCatalogWitnesses
+
+||| Legacy single witness ecosystem master proof macro.
 public export
 %macro
 auditEcosystemMasterProof : Elab (Reflect.Auditor.Evolution.auditReplEngineProofExport = True)

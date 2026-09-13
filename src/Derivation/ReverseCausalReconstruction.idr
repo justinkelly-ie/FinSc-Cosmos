@@ -25,6 +25,12 @@ reconstructQuarksFromBiomodule : Box BiomoduleToken -> Box ColorCharge
 reconstructQuarksFromBiomodule cellState =
   applyPullbackExpansion tTotalFunctorialPipeline cellState
 
+||| ScaleFunctor-powered reverse-causal reconstruction operator (f^*).
+public export
+reconstructFromScaleFunctor : Eq micro => Eq macro => ScaleFunctor src tgt micro macro -> Box macro -> Box micro
+reconstructFromScaleFunctor (MkScaleFunctor transform) macroState =
+  applyPullbackExpansion transform macroState
+
 ------------------------------------------------------------------------
 -- 2. GALOIS ADJUNCTION DUALITY WITNESSES (f_* ⊣ f^*)
 ------------------------------------------------------------------------
