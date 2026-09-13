@@ -268,6 +268,28 @@ public export
 auditElectronKnotMassRatio : Elab (Reflect.Auditor.Evolution.auditElectronKnotMassRatioProofExport = True)
 auditElectronKnotMassRatio = auditWitness auditElectronKnotMassRatioProofExport
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+evolutionCatalogWitnesses : List Bool
+evolutionCatalogWitnesses =
+  [ auditEpoch38CollapseProofExport
+  , auditLandauerTokenConservationProofExport
+  , auditLinearQTTConservationProofExport
+  , auditZeroTemperatureGroundStateCollapseProofExport
+  , auditQuantumStressTensorProofExport
+  , auditActiveInferenceNeuralNetworkProofExport
+  , auditElectronKnotMassRatioProofExport
+  ]
+
+public export
+%macro
+auditEvolutionCatalog : Elab (allTrue Reflect.Auditor.Evolution.evolutionCatalogWitnesses = True)
+auditEvolutionCatalog = auditCatalogWitnesses evolutionCatalogWitnesses
+
+
 
 
 

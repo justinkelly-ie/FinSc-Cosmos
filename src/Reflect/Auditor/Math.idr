@@ -925,6 +925,42 @@ public export
 auditMuonG2Anomaly : Elab (Reflect.Auditor.Math.auditMuonG2AnomalyProofExport = True)
 auditMuonG2Anomaly = auditWitness auditMuonG2AnomalyProofExport
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+mathCatalogWitnesses : List Bool
+mathCatalogWitnesses =
+  [ auditTernaryClosureProofExport
+  , auditCliffordGeometricProductProofExport
+  , auditDiscreteNoetherConservationProofExport
+  , auditChromogeometricBudgetProofExport
+  , auditUnitaryProbabilityConservationProofExport
+  , auditWilsonLoopGaugeInvarianceProofExport
+  , auditDiscreteBornTransitionTallyProofExport
+  , auditWilsonPolyhedronBianchiClosureProofExport
+  , auditChromogeometricColorGaugeInvarianceProofExport
+  , auditHadronSingletPolyhedralInvarianceProofExport
+  , auditFourGeometriesDeterminantsProofExport
+  , auditFourGeometriesCosmicSynthesisProofExport
+  , auditDiscreteEulerLagrangeEquivalenceProofExport
+  , auditSubstrateActionAsymmetryProofExport
+  , auditGeodesicLeastActionOptimalityProofExport
+  , auditDiscreteMomentumConservationProofExport
+  , auditParabolicNullMomentumZeroProofExport
+  , auditSectorSpecificActionSignaturesProofExport
+  , auditHiggsVacuumStabilityProofExport
+  , auditVacuumPolarizationProofExport
+  , auditMuonG2AnomalyProofExport
+  ]
+
+public export
+%macro
+auditMathCatalog : Elab (allTrue Reflect.Auditor.Math.mathCatalogWitnesses = True)
+auditMathCatalog = auditCatalogWitnesses mathCatalogWitnesses
+
+
 
 
 
