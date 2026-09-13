@@ -183,3 +183,33 @@ public export
 auditMagicMaxelConservation : Elab (Reflect.Auditor.Core.auditMagicMaxelConservationProofExport = True)
 auditMagicMaxelConservation = auditWitness auditMagicMaxelConservationProofExport
 
+------------------------------------------------------------------------
+-- BATCH CATALOG WITNESS REFLECTION AUDITOR
+------------------------------------------------------------------------
+
+public export
+coreCatalogWitnesses : List Bool
+coreCatalogWitnesses =
+  [ auditRowExtractionProofExport
+  , auditUnixelFractionPositivityProofExport
+  , auditRationalEquivalenceProofExport
+  , auditOnSeqClipExtractionProofExport
+  , auditHehnerScaleConversionProofExport
+  , auditMultisetInformationDistanceProofExport
+  , auditMultisetCrossEntropyProofExport
+  , auditMultisetCompactnessProofExport
+  , auditMultisetTreeLookupProofExport
+  , auditMultisetTreeTokenSumProofExport
+  , auditCaretProductIdentityProofExport
+  , auditFIAEulerProductProofExport
+  , auditBoxOrderingAndContourWalkProofExport
+  , auditVexelBalanceArrayProofExport
+  , auditMagicMaxelConservationProofExport
+  ]
+
+public export
+%macro
+auditCoreCatalog : Elab (allTrue Reflect.Auditor.Core.coreCatalogWitnesses = True)
+auditCoreCatalog = auditCatalogWitnesses coreCatalogWitnesses
+
+
