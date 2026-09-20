@@ -2,7 +2,7 @@ module Derivation.PureGeometricClassifier
 
 import Evolution.State
 import Math.LinAlgebra.MetricTensor
-import Math.FourGeometries
+import Core
 import Math.RationalTrig
 import Core.BoxInt
 import Core.VexelMaxel

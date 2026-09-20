@@ -4,7 +4,7 @@ import Core.BoxInt
 import Core.VexelMaxel
 import Core.Polynumber
 import Core.UnixelFraction
-import Core.TransformMultiset
+import Core.MaxelTransform
 import Evolution.State
 import Evolution.LinearPipeline
 import Evolution.Expansion
@@ -77,12 +77,12 @@ interactPhysicsChannels (MkPhysicsChannel stA) (MkPhysicsChannel stB) w =
 -- 2. PROTOCOL CHANNEL TRANSITION OPERATORS (CLOCK TICKS)
 ------------------------------------------------------------------------
 
-channelScalePullbackTransform : TransformMultiset Nat Nat
+channelScalePullbackTransform : MaxelTransform Nat Nat
 channelScalePullbackTransform = mkTransformBox HyperbolicSector (mkUnixelFraction (intToBoxInt 1) 4) [((1, 1), intToBoxInt 1)]
 
 ||| Channel Galois Pushforward (f_*) Scale-Jump Transform (G: EllipticConfinement, Z: 137/210 contraction)
 public export
-channelScalePushforwardTransform : TransformMultiset Nat Nat
+channelScalePushforwardTransform : MaxelTransform Nat Nat
 channelScalePushforwardTransform = mkTransformBox EllipticSector (mkUnixelFraction (intToBoxInt 137) 210) [((1, 1), intToBoxInt 1)]
 
 ||| Automated Galois Pullback (f^*) Scale-Jump:

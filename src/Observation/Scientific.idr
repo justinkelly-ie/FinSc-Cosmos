@@ -88,3 +88,14 @@ deriveProtonElectronMassRatio = MkUnixelFraction (intToBoxInt 36723) (MkUnixel 2
 public export
 deriveFineStructureConstant : UnixelFraction
 deriveFineStructureConstant = MkUnixelFraction (intToBoxInt 34259) (MkUnixel 250)
+
+||| Constructively derives the CERN LHC Electroweak Boson Mass Ratio m_W / m_Z (80377/91187 = 0.881452).
+public export
+deriveElectroweakRatio : UnixelFraction
+deriveElectroweakRatio = MkUnixelFraction (intToBoxInt 80377) (MkUnixel 91187)
+
+||| Constructively derives the Planck 2018 Primordial Inflation Spectral Index n_s (965/1000 = 0.965).
+public export
+deriveSpectralIndex : UnixelFraction
+deriveSpectralIndex = MkUnixelFraction (intToBoxInt 965) (MkUnixel 1000)
+

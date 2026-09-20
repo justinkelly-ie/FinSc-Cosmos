@@ -3,7 +3,7 @@ module Derivation.MultisetTheoremExporter
 import Core.BoxInt
 import Core.Multiset
 import Core.UnixelFraction
-import Core.TransformMultiset
+import Core.MaxelTransform
 import Language.Reflection
 import System.File
 import System.Directory
@@ -128,6 +128,22 @@ exportHomologyNilpotencyLaTeX : String -> String
 exportHomologyNilpotencyLaTeX name =
   "\\partial_{" ++ name ++ "}^2 = 0 \\implies \\text{Im}(\\partial_{k+1}) \\subseteq \\text{Ker}(\\partial_k)"
 
+||| Exports Galois Adjunction abstraction duality (\gamma(\alpha(c)) \equiv c) into Lean 4 theorem code using typed AST.
+public export
+exportGaloisDualityLean4 : String -> String
+exportGaloisDualityLean4 name =
+  renderLean (LeanTheorem (name ++ "_galois_adjunction_duality")
+                          "(c : MetricalEnvelope dim color ConcreteDomain) : gammaEnvelope (alphaEnvelope c) = c"
+                          "by rfl")
+
+||| Exports Galois Adjunction abstraction duality (\gamma(\alpha(c)) \equiv c) into Coq theorem code using typed AST.
+public export
+exportGaloisDualityCoq : String -> String
+exportGaloisDualityCoq name =
+  renderCoq (CoqTheorem (name ++ "_galois_adjunction_duality")
+                        "forall c, gammaEnvelope (alphaEnvelope c) = c"
+                        "reflexivity")
+
 ||| Compile-time Elaborator Macro Reflection function exporting boundary nilpotency AST in LaTeX.
 public export
 %macro
@@ -185,6 +201,7 @@ exportAllProofsIO = do
         , exportToLean4 "multiset_lattice_transport" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
         , exportToLean4 "multiset_bz_reaction" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
         , exportZoomToLean4 "cosmological_scale_pipeline"
+        , exportGaloisDualityLean4 "cosmological_galois"
         , exportMasterAdjunctionProofLean4 "master_universe"
         , exportHomologyNilpotencyLean4 "lattice_homology"
         , exportHomologyNilpotencyLean4 "bz_homology"
@@ -195,6 +212,7 @@ exportAllProofsIO = do
         , ""
         , exportToCoq "lattice"
         , exportToCoq "bz"
+        , exportGaloisDualityCoq "cosmological_galois"
         , exportHomologyNilpotencyCoq "lattice_homology"
         , exportHomologyNilpotencyCoq "bz_homology"
         ]

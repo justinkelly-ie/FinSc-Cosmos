@@ -3,7 +3,7 @@ module Derivation.ReverseCausalReconstruction
 import Core.BoxInt
 import Core.Multiset
 import Core.UnixelFraction
-import Core.TransformMultiset
+import Core.MaxelTransform
 import Core.MultisetTensor
 import Core.Category.Adjunction
 import Derivation.FunctorialScalePipeline
@@ -29,7 +29,7 @@ MultisetScaleAdjunction (Box ColorCharge) (Box BiomoduleToken) where
 
 ||| Single-stage reverse-causal multiset reconstruction operator (f^*).
 public export
-reconstructMicroState : Eq micro => Eq macro => TransformMultiset micro macro -> Box macro -> Box micro
+reconstructMicroState : Eq micro => Eq macro => MaxelTransform micro macro -> Box macro -> Box micro
 reconstructMicroState transform macroState =
   applyPullbackExpansion transform macroState
 

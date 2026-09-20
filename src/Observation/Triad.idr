@@ -3,7 +3,7 @@ module Observation.Triad
 import Core.BoxInt
 import Core.VexelMaxel
 import Core.UnixelFraction
-import Math.FourGeometries
+import Core
 import Observation.Algebraic
 import Observation.Scientific
 import Observation.Dataset

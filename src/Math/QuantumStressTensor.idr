@@ -3,7 +3,7 @@ module Math.QuantumStressTensor
 import Core.BoxInt
 import Core.Multiset
 import Core.UnixelFraction
-import Core.TransformMultiset
+import Core.MaxelTransform
 import Data.List
 
 %default total

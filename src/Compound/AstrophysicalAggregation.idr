@@ -3,7 +3,7 @@ module Compound.AstrophysicalAggregation
 import Core.BoxInt
 import Core.Multiset
 import Core.UnixelFraction
-import Core.TransformMultiset
+import Core.MaxelTransform
 import Math.LawAlgebra
 import Math.DegeneracyMassLimit
 import Math.GravitationalCollapseLimit
@@ -46,7 +46,7 @@ record StellarRemnant where
 
 ||| Astrophysical Remnant Transform Multiset (G ⊗ Z ⊗ J)
 public export
-astrophysicalRemnantTransform : TransformMultiset MassToken MassToken
+astrophysicalRemnantTransform : MaxelTransform MassToken MassToken
 astrophysicalRemnantTransform = mkTransformBox EllipticSector unitUnixelFraction [((MkMassToken 1, MkMassToken 1), intToBoxInt 1)]
 
 ||| Aggregates stellar mass tokens into a Stellar Remnant.

@@ -1,4 +1,4 @@
-package Idris2-Universe
+package Idris2-Cosmos
 version = 0.3.1
 authors = "Justin Kelly"
 brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
@@ -6,7 +6,8 @@ brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 depends = Idris2-Biology, Idris2-Chemistry, Idris2-Geometry, Idris2-Hadron, Idris2-Multiset-Core, Idris2-Multiset-Transform, Idris2-Physics, base, linear
 sourcedir = "src"
 
-modules = Compound.AstrophysicalAggregation,
+modules = Cosmos,
+          Compound.AstrophysicalAggregation,
           Compound.LinearEpsilonRouting,
           Compound.SymplecticIntegrator,
           Compound.VelocityLensing,

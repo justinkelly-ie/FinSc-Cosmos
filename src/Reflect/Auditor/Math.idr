@@ -3,7 +3,7 @@ module Reflect.Auditor.Math
 import public Core.BoxInt
 import public Core.VexelMaxel
 import public Core.Multiset
-import public Core.TransformMultiset
+import public Core.MaxelTransform
 import public Reflect.Auditor.Core
 
 import Data.Vect
@@ -68,8 +68,8 @@ import Math.NeutrinoOscillation
 import Math.MuonG2Anomaly
 import Math.LawAlgebra
 import Math.SubstrateMetricTensor55
-import Math.MultisetMetricTensor55
-import Math.FourGeometries
+import Core
+import Geometry
 import Math.FractionalQuantumHall
 import Math.GalacticRotationCurve
 import Math.GaugeSpinorCoupling
@@ -885,7 +885,7 @@ auditNeutrinoOscillation = auditWitness auditNeutrinoOscillationProofExport
 -- Witness 183: Parallelized O(log N) Transform Multiset Tree Pushforward Evaluation
 public export
 auditParallelPushforwardProofExport : Bool
-auditParallelPushforwardProofExport = Core.TransformMultiset.auditParallelPushforwardProof
+auditParallelPushforwardProofExport = Core.MaxelTransform.auditParallelPushforwardProof
 
 public export
 %macro

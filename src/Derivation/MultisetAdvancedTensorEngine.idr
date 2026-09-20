@@ -1,10 +1,7 @@
 module Derivation.MultisetAdvancedTensorEngine
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.TransformMultiset
-import Math.LawAlgebra
+import Core
+import Transform
 import Math.ChromoCategory
 import Data.List
 import Data.Vect
@@ -22,12 +19,12 @@ import Data.Fuel
 
 ||| Evaluates whether a given transform is a Unitary Isomorphism (η = I_a, ε = I_b).
 public export
-auditUnitaryIsomorphism : Eq a => Eq b => List a -> List b -> TransformMultiset a b -> Bool
+auditUnitaryIsomorphism : Eq a => Eq b => List a -> List b -> MaxelTransform a b -> Bool
 auditUnitaryIsomorphism domA domB t = isUnitaryTransform domA domB t
 
 ||| Computes the Lie Bracket Commutator Matrix [T1, T2] = T1 ∘ T2 - T2 ∘ T1.
 public export
-computeLieCommutator : Eq a => TransformMultiset a a -> TransformMultiset a a -> TransformMultiset a a
+computeLieCommutator : Eq a => MaxelTransform a a -> MaxelTransform a a -> MaxelTransform a a
 computeLieCommutator t1 t2 = commutatorTransforms t1 t2
 
 ||| Evaluates the Quantum Subsystem Partial Trace ρ_A = Tr_B(ρ_AB).
