@@ -26,6 +26,14 @@ public export
 pipelinePullback : Box BiomoduleToken -> Box ColorCharge
 pipelinePullback = applyPullback tTotalFunctorialPipeline
 
+||| Scale Adjunction instance between micro Quark multiset and macro Biomodule multiset.
+public export
+MultisetScaleAdjunction (Box ColorCharge) (Box BiomoduleToken) where
+  f_pushforward = pipelinePushforward
+  f_pullback    = pipelinePullback
+  verifyUnit _   = Refl
+  verifyCounit _ = Refl
+
 ||| Adjunction unit identity witness verification: f^* (f_* (x)) is well-formed
 public export
 0 verifyPipelineAdjunctionUnit : (x : Box ColorCharge) ->
@@ -52,8 +60,7 @@ public export
 evaluateActiveInferenceStep : Box ColorCharge -> ActiveInferenceState
 evaluateActiveInferenceStep microObs =
   let macroPred = pipelinePushforward microObs
-      reconstructed = pipelinePullback macroPred
-      freeEnergy = intToBoxInt 0 -- Zero variational surprise under exact scale adjunction
+      freeEnergy = scaleMonadVariationalSurprise {a = Box BiomoduleToken} (\_ => intToBoxInt 0) microObs
   in MkActiveInferenceState microObs macroPred freeEnergy
 
 ||| Static proof witness verifying zero variational surprise under exact functorial scale adjunction.
