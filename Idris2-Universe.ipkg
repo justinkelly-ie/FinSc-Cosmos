@@ -1,141 +1,58 @@
 package Idris2-Universe
-version = 0.3.0
+version = 0.3.1
 authors = "Justin Kelly"
 brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 
-depends = base
-        , Idris2-Multiset-Core
-        , Idris2-Multiset-Transform
-        , Idris2-Geometry
-
+depends = Idris2-Biology, Idris2-Chemistry, Idris2-Geometry, Idris2-Hadron, Idris2-Multiset-Core, Idris2-Multiset-Transform, Idris2-Physics, base, linear
 sourcedir = "src"
 
-modules =         Compound.AstrophysicalAggregation
-        , Compound.LinearEpsilonRouting
-        , Compound.SymplecticIntegrator
-        , Compound.VelocityLensing
-        , Core.CosmicScaleTransform
-        , Core.OnSeq
-        , Core.Polynomial
-        , Derivation.FreeEnergyMinimizer
-        , Derivation.FunctorialScalePipeline
-        , Derivation.MultisetAdvancedTensorEngine
-        , Derivation.MultisetTensorEngine
-        , Derivation.MultisetTheoremExporter
-        , Derivation.PureGeometricClassifier
-        , Derivation.ReplTransformEngine
-        , Derivation.ReverseCausalReconstruction
-        , Derivation.TreeTransformEngine
-        , DocGen
-        , Evolution.Bootstrap
-        , Evolution.Contraction
-        , Evolution.Expansion
-        , Evolution.Init
-        , Evolution.LinearPipeline
-        , Evolution.ProtocolChannel
-        , Evolution.ReplEngine
-        , Evolution.State
-        , Evolution.StructuralAccounting
-        , Evolution.Thermodynamics
-        , Evolution.ThreeMetricEvolution
-        , Evolution.ToricSyndrome
-        , Evolution.UniverseApp
-        , Geometry.GaloisCurvature
-        , Geometry.GrassmannCalculus
-        , Geometry.InformationGeometry
-        , Geometry.LatticeTopology
-        , Geometry.SpinNetwork
-        , Math.ActionPotentialKinetics
-        , Math.ActionPrinciple
-        , Math.AllostericCooperativity
-        , Math.BlackHolePhaseTransition
-        , Math.CavityQuantumElectrodynamics
-        , Math.ChiralAnomaly
-        , Math.CliffordAlgebra
-        , Math.ConstructiveBaryogenesis
-        , Math.CosmicGenesis
-        , Math.CosmicInflation
-        , Math.CosmologicalWaveEquation
-        , Math.DegeneracyMassLimit
-        , Math.DensityMatrix
-        , Math.ElectromagneticEnergyFlow
-        , Math.EntanglementAreaLaw
-        , Math.EnzymeKinetics
-        , Math.EvaporationEntropyCurve
-        , Math.ExclusionPrinciple
-        , Math.FineStructure
-        , Math.FlavorMixing
-        , Math.FluctuationTheorem
-        , Math.FractionalQuantumHall
-        , Math.GalacticRotationCurve
-        , Math.GaugeSpinorCoupling
-        , Math.GravitationalCollapseLimit
-        , Math.GravitationalWaveDynamics
-        , Math.HallViscosity
-        , Math.HelmholtzFreeEnergy
-        , Math.HolographicBound
-        , Math.HolonomyPhase
-        , Math.HorizonRadiation
-        , Math.HydrogenBonding
-        , Math.Infinitesimal
-        , Math.InformationErasureCost
-        , Math.LatticeFluidTransport
-        , Math.LawAlgebra
-        , Math.LinAlgebra.BilinearProduct
-        , Math.LinAlgebra.MetricTensor
-        , Math.LinAlgebra.TernaryClassifier
-        , Math.MacromolecularChirality
-        , Math.Magnetohydrodynamics
-        , Math.MultiTerminalConduction
-        , Math.MultisetMetricTensor55
-        , Math.MuonG2Anomaly
-        , Math.NeutrinoOscillation
-        , Math.NucleicAcidBasePairing
-        , Math.OscillatingReactions
-        , Math.PeakBindingEnergy
-        , Math.PhaseInvarianceMeasure
-        , Math.PlasmaRecombination
-        , Math.PrefixCodeOptimality
-        , Math.QuantumPotential
-        , Math.QuantumStressTensor
-        , Math.QuantumTeleportation
-        , Math.QuantumTransition
-        , Math.RGDecimator
-        , Math.RationalKepler
-        , Math.RationalRefraction
-        , Math.RationalTrig
-        , Math.ReciprocalTransport
-        , Math.RelativisticSpinor
-        , Math.RenormalizationInformationFlow
-        , Math.RetardedDipoleForce
-        , Math.RibosomalTranslation
-        , Math.RotatingSpacetime
-        , Math.StringTension
-        , Math.SubstrateMetricTensor55
-        , Math.SuperconductingFluxQuantization
-        , Math.SuperconductingGap
-        , Math.ThermalDistribution
-        , Math.TopologicalChernNumber
-        , Math.TopologicalGaugeMass
-        , Math.TopologicalInsulator
-        , Math.ToricCode
-        , Math.ToroidalAstrodynamics
-        , Math.TripleAlphaNucleosynthesis
-        , Math.VacuumDispersion
-        , Math.WilsonPolyhedra
-        , Math.WorkFreeEnergyEquality
-        , Observation.Algebraic
-        , Observation.Dataset
-        , Observation.HolographicStream
-        , Observation.Scientific
-        , Observation.Triad
-        , Reflect.Auditor.Compound
-        , Reflect.Auditor.Core
-        , Reflect.Auditor.Evolution
-        , Reflect.Auditor.Geometry
-        , Reflect.Auditor.Math
-        , Reflect.Auditor.Observation
-        , Reflect.EcosystemAudit
-        , Reflect.InvariantAuditor
-        , Reflect.PermutationSolver
-        , TestCompoundWitness
+modules = Compound.AstrophysicalAggregation,
+          Compound.LinearEpsilonRouting,
+          Compound.SymplecticIntegrator,
+          Compound.VelocityLensing,
+          Derivation.FreeEnergyMinimizer,
+          Derivation.FunctorialScalePipeline,
+          Derivation.MultisetAdvancedTensorEngine,
+          Derivation.MultisetTensorEngine,
+          Derivation.MultisetTheoremExporter,
+          Derivation.PureGeometricClassifier,
+          Derivation.ReplTransformEngine,
+          Derivation.ReverseCausalReconstruction,
+          Derivation.ScalePipelineStream,
+          Derivation.TreeTransformEngine,
+          DocGen,
+          Evolution.Bootstrap,
+          Evolution.Contraction,
+          Evolution.Expansion,
+          Evolution.Init,
+          Evolution.LinearPipeline,
+          Evolution.ProtocolChannel,
+          Evolution.ReplEngine,
+          Evolution.State,
+          Evolution.StructuralAccounting,
+          Evolution.Thermodynamics,
+          Evolution.ThreeMetricEvolution,
+          Evolution.ToricSyndrome,
+          Evolution.UniverseApp,
+          Geometry.GaloisCurvature,
+          Geometry.SpinNetwork,
+          Math.CosmicInflation,
+          Math.FineStructure,
+          Math.QuantumStressTensor,
+          Observation.Algebraic,
+          Observation.Dataset,
+          Observation.EmpiricalMeasurement,
+          Observation.HolographicStream,
+          Observation.Scientific,
+          Observation.Triad,
+          Reflect.Auditor.Compound,
+          Reflect.Auditor.Core,
+          Reflect.Auditor.Evolution,
+          Reflect.Auditor.Geometry,
+          Reflect.Auditor.Math,
+          Reflect.Auditor.Observation,
+          Reflect.EcosystemAudit,
+          Reflect.InvariantAuditor,
+          Reflect.PermutationSolver,
+          TestCompoundWitness
+

@@ -5,6 +5,7 @@ import Core.VexelMaxel
 import Evolution.State
 import Evolution.Expansion
 import Evolution.Contraction
+import Math.ChromoCategory
 import Data.Vect
 
 %default total
@@ -30,6 +31,20 @@ runLinearCosmicCycle {vm} {k} (MkUniverseState vmData deData dmData) newTokens r
       updatedDE = foldVisibleIntoDE expandedVM deData
       updatedDM = remainder :: dmData
   in MkUniverseState resetVM updatedDE updatedDM
+
+------------------------------------------------------------------------
+-- 2. CATEGORICAL MORPHISM STATE TRANSITION
+------------------------------------------------------------------------
+
+||| Executes a cosmic state transition verified by a ChromoCategory Maxel morphism.
+public export
+executeChromoCategoryTransition : {dIn, dOut : Nat} -> {cIn, cOut : MetricColor} ->
+                                   (0 src : VexelSpace dIn cIn) ->
+                                   (0 tgt : VexelSpace dOut cOut) ->
+                                   (morphism : Maxel) ->
+                                   (state : Vexel) ->
+                                   Vexel
+executeChromoCategoryTransition src tgt morphism state = actMaxelVexel morphism state
 
 ------------------------------------------------------------------------
 -- 2. CONSTRUCTIVE FORMAL AUDIT PROOFS

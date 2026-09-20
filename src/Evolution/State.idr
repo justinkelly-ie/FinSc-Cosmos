@@ -15,13 +15,13 @@ import Data.Vect
 public export
 record UniverseState (vmSize : Nat) (deSize : Nat) (dmSize : Nat) where
   constructor MkUniverseState
-  visibleMatter : Vect vmSize BoxInt -- Active spatial field lattice
-  darkEnergy    : Vect deSize BoxInt -- Background ROM capacity
-  darkMatter    : Vect dmSize BoxInt -- Historical error/residue ledger
+  visibleMatter : Vect vmSize Core.BoxInt.BoxInt -- Active spatial field lattice
+  darkEnergy    : Vect deSize Core.BoxInt.BoxInt -- Background ROM capacity
+  darkMatter    : Vect dmSize Core.BoxInt.BoxInt -- Historical error/residue ledger
 
 ||| Extracts the Dark Matter log as a read-only reference.
 public export
-dmLog : UniverseState vm de dm -> Vect dm BoxInt
+dmLog : UniverseState vm de dm -> Vect dm Core.BoxInt.BoxInt
 dmLog (MkUniverseState _ _ dmData) = dmData
 
 ||| Calculates total active state energy across all memory pools.
@@ -64,9 +64,9 @@ public export
 auditCosmicMultisetBudgetProof : Bool
 auditCosmicMultisetBudgetProof =
   let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (intToBoxInt 1))
-                    (replicate 128 (intToBoxInt 1))
-                    (replicate 55 (intToBoxInt 1))
+                    (replicate 27 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 128 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 55 (Core.BoxInt.intToBoxInt 1))
       cMultiset = stateToCosmicMultiset mockState
   in totalCosmicMultisetBudget cMultiset == 210
 
@@ -93,14 +93,14 @@ linearVectCombine (x :: xs) r = x :: linearVectCombine xs r
 ||| Linear token relocation (Landauer's Principle):
 ||| Consumes an erased active spatial token and relocates it into the Dark Matter history ledger.
 public export
-linearTokenRelocate : BoxInt -> Vect k BoxInt -> Vect (S k) BoxInt
+linearTokenRelocate : Core.BoxInt.BoxInt -> Vect k Core.BoxInt.BoxInt -> Vect (S k) Core.BoxInt.BoxInt
 linearTokenRelocate token dm = token :: dm
 
 ||| Audits that linear vector split and combine preserve vector length exactly.
 public export
 auditLinearQTTConservationProof : Bool
 auditLinearQTTConservationProof =
-  intToBoxInt 5 == intToBoxInt 5
+  Core.BoxInt.intToBoxInt 5 == Core.BoxInt.intToBoxInt 5
 
 
 ------------------------------------------------------------------------
@@ -125,9 +125,9 @@ public export
 auditUniverseStateDyckSerializationProof : Bool
 auditUniverseStateDyckSerializationProof =
   let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (intToBoxInt 1))
-                    (replicate 128 (intToBoxInt 1))
-                    (replicate 55 (intToBoxInt 1))
+                    (replicate 27 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 128 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 55 (Core.BoxInt.intToBoxInt 1))
       dyckBits = serializeUniverseStateDyck mockState
       decoded = fromContourWalk dyckBits
   in isDyckPath dyckBits && isJust decoded
