@@ -196,7 +196,7 @@ exportAllProofsIO = do
   _ <- createDir "export/coq"
   let leanContent = unlines
         [ "-- Certified Lean 4 Mathlib Export for Multiset System Theorems"
-        , "-- Generated automatically by Idris2-Universe MultisetTheoremExporter"
+        , "-- Generated automatically by FinSc-Universe MultisetTheoremExporter"
         , ""
         , exportToLean4 "multiset_lattice_transport" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
         , exportToLean4 "multiset_bz_reaction" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
@@ -208,7 +208,7 @@ exportAllProofsIO = do
         ]
   let coqContent = unlines
         [ "(* Certified Coq SSReflect Export for Multiset System Theorems *)"
-        , "(* Generated automatically by Idris2-Universe MultisetTheoremExporter *)"
+        , "(* Generated automatically by FinSc-Universe MultisetTheoremExporter *)"
         , ""
         , exportToCoq "lattice"
         , exportToCoq "bz"

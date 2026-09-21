@@ -98,7 +98,7 @@ public export
 printLaws : Has [Console] e => App e ()
 printLaws = do
   putStrLn "========================================================"
-  putStrLn "📜 The 55 Formal Emergent Laws of Physics (Idris2-Universe)"
+  putStrLn "📜 The 55 Formal Emergent Laws of Physics (FinSc-Universe)"
   putStrLn "========================================================"
   putStrLn "  Law 1:  Conservation of Total Primorial Capacity 210"
   putStrLn "  Law 2:  Discrete Helmholtz Free Energy Global Minimum F = -1320"

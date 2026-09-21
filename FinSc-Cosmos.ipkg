@@ -1,9 +1,9 @@
-package Idris2-Cosmos
+package FinSc-Cosmos
 version = 0.3.1
 authors = "Justin Kelly"
 brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 
-depends = Idris2-Biology, Idris2-Chemistry, Idris2-Geometry, Idris2-Hadron, Idris2-Multiset-Core, Idris2-Multiset-Transform, Idris2-Physics, base, linear
+depends = FinSc-Biology, FinSc-Chemistry, FinSc-Geometry, FinSc-Hadron, FinSc-Multiset-Core, FinSc-Multiset-Transform, FinSc-Physics, base, linear
 sourcedir = "src"
 
 modules = Cosmos,

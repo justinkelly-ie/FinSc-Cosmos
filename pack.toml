@@ -1,49 +1,49 @@
 [package]
-name = "Idris2-Cosmos"
+name = "FinSc-Cosmos"
 version = "0.3.0"
-ipkg = "Idris2-Cosmos.ipkg"
+ipkg = "FinSc-Cosmos.ipkg"
 
-[custom.all.Idris2-Multiset-Core]
+[custom.all.FinSc-Multiset-Core]
 type = "local"
-path = "../Idris2-Multiset-Core"
-ipkg = "Idris2-Multiset-Core.ipkg"
+path = "../FinSc-Multiset-Core"
+ipkg = "FinSc-Multiset-Core.ipkg"
 
-[custom.all.Idris2-Multiset-Transform]
+[custom.all.FinSc-Multiset-Transform]
 type = "local"
-path = "../Idris2-Multiset-Transform"
-ipkg = "Idris2-Multiset-Transform.ipkg"
+path = "../FinSc-Multiset-Transform"
+ipkg = "FinSc-Multiset-Transform.ipkg"
 
-[custom.all.Idris2-Multiset-Binary]
+[custom.all.FinSc-Multiset-Binary]
 type = "local"
-path = "../Idris2-Multiset-Binary"
-ipkg = "Idris2-Multiset-Binary.ipkg"
+path = "../FinSc-Multiset-Binary"
+ipkg = "FinSc-Multiset-Binary.ipkg"
 
-[custom.all.Idris2-Multiset-Ternary]
+[custom.all.FinSc-Multiset-Ternary]
 type = "local"
-path = "../Idris2-Multiset-Ternary"
-ipkg = "Idris2-Multiset-Ternary.ipkg"
+path = "../FinSc-Multiset-Ternary"
+ipkg = "FinSc-Multiset-Ternary.ipkg"
 
-[custom.all.Idris2-Geometry]
+[custom.all.FinSc-Geometry]
 type = "local"
-path = "../Idris2-Geometry"
-ipkg = "Idris2-Geometry.ipkg"
+path = "../FinSc-Geometry"
+ipkg = "FinSc-Geometry.ipkg"
 
-[custom.all.Idris2-Physics]
+[custom.all.FinSc-Physics]
 type = "local"
-path = "../Idris2-Physics"
-ipkg = "Idris2-Physics.ipkg"
+path = "../FinSc-Physics"
+ipkg = "FinSc-Physics.ipkg"
 
-[custom.all.Idris2-Hadron]
+[custom.all.FinSc-Hadron]
 type = "local"
-path = "../Idris2-Hadron"
-ipkg = "Idris2-Hadron.ipkg"
+path = "../FinSc-Hadron"
+ipkg = "FinSc-Hadron.ipkg"
 
-[custom.all.Idris2-Chemistry]
+[custom.all.FinSc-Chemistry]
 type = "local"
-path = "../Idris2-Chemistry"
-ipkg = "Idris2-Chemistry.ipkg"
+path = "../FinSc-Chemistry"
+ipkg = "FinSc-Chemistry.ipkg"
 
-[custom.all.Idris2-Biology]
+[custom.all.FinSc-Biology]
 type = "local"
-path = "../Idris2-Biology"
-ipkg = "Idris2-Biology.ipkg"
+path = "../FinSc-Biology"
+ipkg = "FinSc-Biology.ipkg"

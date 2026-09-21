@@ -1,10 +1,10 @@
-# 🌌 Idris2-Universe (Layer 7 / Master Universe Engine)
+# 🌌 FinSc-Universe (Layer 7 / Master Universe Engine)
 
 [![Idris 2 Verification](https://img.shields.io/badge/Idris_2-0.8.0-blue.svg)](https://www.idris-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Verification Suite](https://img.shields.io/badge/Witnesses-174%2F174%20PASSED-brightgreen.svg)]()
 
-`Idris2-Universe` forms the top-level master physical universe engine in the 13-repository constructive non-linear multiset science framework. It integrates 174 formal proof witnesses, Category-Theoretic Multiset Adjunctions ($L \dashv R$), deforested `FusedStream` scale pipelines, and CODATA empirical measurement ranges across the physical law ecosystem.
+`FinSc-Universe` forms the top-level master physical universe engine in the 13-repository constructive non-linear multiset science framework. It integrates 174 formal proof witnesses, Category-Theoretic Multiset Adjunctions ($L \dashv R$), deforested `FusedStream` scale pipelines, and CODATA empirical measurement ranges across the physical law ecosystem.
 
 ---
 
