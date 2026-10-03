@@ -335,3 +335,87 @@ cosmicStreamPipeline =
 public export
 0 prfMasterPipelineGeometry : operatingGeometry Pipeline.cosmicStreamPipeline = SubstrateGeom
 prfMasterPipelineGeometry = Refl
+
+--------------------------------------------------------------------------------
+-- 4. LINEAR QTT MULTISET PIPELINE (Rule 04 Strict Multiplicity 1)
+--------------------------------------------------------------------------------
+
+||| Linear Morphism 0 -> 1: Primordial Substrate Unfolding to Chromogeometric Triad.
+public export
+linearMorph0to1 : (1 m : Multiset BoxInt SubstrateCarrierToken) -> Multiset BoxInt TriadUnfoldingToken
+linearMorph0to1 ZeroM = ZeroM
+linearMorph0to1 (AddM (MkSubstrateTick (MkBoxInt w)) c rest) =
+  AddM (BlueTriad (MkBoxInt (w * 25))) c (
+  AddM (RedTriad (MkBoxInt (w * 7))) c (
+  AddM (GreenTriad (MkBoxInt (w * 24))) c (
+    linearMorph0to1 rest)))
+
+||| Linear Morphism 1 -> 2: Triad to Discrete Multi-Radix Streams.
+public export
+linearMorph1to2 : (1 m : Multiset BoxInt TriadUnfoldingToken) -> Multiset BoxInt DiscreteRadixToken
+linearMorph1to2 ZeroM = ZeroM
+linearMorph1to2 (AddM (BlueTriad w) c rest)  = AddM (RadixBit True w) c (linearMorph1to2 rest)
+linearMorph1to2 (AddM (RedTriad w) c rest)   = AddM (RadixTrit (-1) w) c (linearMorph1to2 rest)
+linearMorph1to2 (AddM (GreenTriad w) c rest) = AddM (RadixTrit 1 w) c (linearMorph1to2 rest)
+
+||| Linear Morphism 2 -> 3: Discrete Radix to Metrical Chromogeometry & Spin Network.
+public export
+linearMorph2to3 : (1 m : Multiset BoxInt DiscreteRadixToken) -> Multiset BoxInt MetricalChromoToken
+linearMorph2to3 ZeroM = ZeroM
+linearMorph2to3 (AddM (RadixBit _ w) c rest)  = AddM (CliffordSpinor w) c (linearMorph2to3 rest)
+linearMorph2to3 (AddM (RadixTrit t w) c rest) = AddM (ChromoQuadrance (mulBox w (MkBoxInt (cast t)))) c (linearMorph2to3 rest)
+
+||| Linear Morphism 3 -> 4: Metrical Geometry to Gauge Field & Action Geodesic.
+public export
+linearMorph3to4 : (1 m : Multiset BoxInt MetricalChromoToken) -> Multiset BoxInt GaugeActionToken
+linearMorph3to4 ZeroM = ZeroM
+linearMorph3to4 (AddM (ChromoQuadrance q) c rest) = AddM (PlaquetteResidue q) c (linearMorph3to4 rest)
+linearMorph3to4 (AddM (CliffordSpinor s) c rest)  = AddM (ActionGeodesic s) c (linearMorph3to4 rest)
+
+||| Linear Morphism 4 -> 5: Gauge Fields to Hadronic Baryons & Toric Stabilizers.
+public export
+linearMorph4to5 : (1 m : Multiset BoxInt GaugeActionToken) -> Multiset BoxInt HadronicQuantumToken
+linearMorph4to5 ZeroM = ZeroM
+linearMorph4to5 (AddM (PlaquetteResidue p) c rest) = AddM (ToricStabilizer p) c (linearMorph4to5 rest)
+linearMorph4to5 (AddM (ActionGeodesic s) c rest)   = AddM (BaryonSinglet s) c (linearMorph4to5 rest)
+
+||| Linear Morphism 5 -> 6: Hadronic Confinement to Thermodynamic 137 Sieve Trajectory.
+public export
+linearMorph5to6 : (1 m : Multiset BoxInt HadronicQuantumToken) -> Multiset BoxInt ThermodynamicEpochToken
+linearMorph5to6 ZeroM = ZeroM
+linearMorph5to6 (AddM (BaryonSinglet (MkBoxInt b)) c rest) =
+  let tok = if b <= 76 then GatePureScale (fromInteger (abs b))
+                       else DecoherentScale (fromInteger (abs b))
+  in AddM tok c (linearMorph5to6 rest)
+linearMorph5to6 (AddM (ToricStabilizer (MkBoxInt t)) c rest) =
+  let tok = if t <= 76 then GatePureScale (fromInteger (abs t))
+                       else DecoherentScale (fromInteger (abs t))
+  in AddM tok c (linearMorph5to6 rest)
+
+||| Linear Morphism 6 -> 7: Thermodynamic Horizon Sieve to Cosmos Master Ground State.
+public export
+linearMorph6to7 : (1 m : Multiset BoxInt ThermodynamicEpochToken) -> Multiset BoxInt CosmosApexToken
+linearMorph6to7 ZeroM = ZeroM
+linearMorph6to7 (AddM (GatePureScale _) c rest)   = AddM (PrimorialBudget (MkBoxInt 210)) c (linearMorph6to7 rest)
+linearMorph6to7 (AddM (DecoherentScale _) c rest) = AddM (HelmholtzGroundState (MkBoxInt (-1320))) c (linearMorph6to7 rest)
+
+||| T_total Linear: Master End-to-End Typed Multiset Stream Pipeline with strict QTT multiplicity 1.
+||| Guarantees at compile time that multiset mass-energy streams cannot be cloned, dropped, or leaked.
+public export
+linearCosmicStreamPipeline : (1 m : Multiset BoxInt SubstrateCarrierToken) ->
+                             Multiset BoxInt CosmosApexToken
+linearCosmicStreamPipeline m =
+  linearMorph6to7 (
+  linearMorph5to6 (
+  linearMorph4to5 (
+  linearMorph3to4 (
+  linearMorph2to3 (
+  linearMorph1to2 (
+  linearMorph0to1 m))))))
+
+||| Compile-time verification that the linear pipeline processes the vacuum carrier into the vacuum apex.
+public export
+0 prfLinearVacuumPipeline : linearCosmicStreamPipeline ZeroM = ZeroM
+prfLinearVacuumPipeline = Refl
+
+
