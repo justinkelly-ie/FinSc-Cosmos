@@ -2,9 +2,9 @@ module Derivation.ScalePipelineStream
 
 import Data.List
 import Data.Fuel
-import Math.OnSeq.FusedStream
+import Stage0.OnSeq.FusedStream
 import Derivation.FunctorialScalePipeline
-import Core.ScaleCategory
+import Stage1.MultisetDuality
 
 %default total
 

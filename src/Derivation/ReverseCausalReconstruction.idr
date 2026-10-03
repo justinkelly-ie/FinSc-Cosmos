@@ -1,11 +1,13 @@
 module Derivation.ReverseCausalReconstruction
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.MaxelTransform
-import Core.MultisetTensor
-import Core.Category.Adjunction
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
+import Stage1.MultisetTensor
+import Stage1.MultisetDuality
+import Stage1.ScaleHierarchy
+import Stage1.ScalePipeline
 import Derivation.FunctorialScalePipeline
 import Data.List
 

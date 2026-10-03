@@ -1,10 +1,12 @@
 module Evolution.State
 
 import Language.Reflection
-import Math.Singleton.Bit
-import Core.BoxInt
-import Core.Multiset
-import Core.VexelMaxel
+import Stage0.Singleton.Bit
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.VexelMaxel
+import Stage1.MultisetTree
+import Stage1.Math.PrefixCodeOptimality
 import Data.Vect
 
 %default total
@@ -15,13 +17,13 @@ import Data.Vect
 public export
 record UniverseState (vmSize : Nat) (deSize : Nat) (dmSize : Nat) where
   constructor MkUniverseState
-  visibleMatter : Vect vmSize Core.BoxInt.BoxInt -- Active spatial field lattice
-  darkEnergy    : Vect deSize Core.BoxInt.BoxInt -- Background ROM capacity
-  darkMatter    : Vect dmSize Core.BoxInt.BoxInt -- Historical error/residue ledger
+  visibleMatter : Vect vmSize Stage0.BoxInt.BoxInt -- Active spatial field lattice
+  darkEnergy    : Vect deSize Stage0.BoxInt.BoxInt -- Background ROM capacity
+  darkMatter    : Vect dmSize Stage0.BoxInt.BoxInt -- Historical error/residue ledger
 
 ||| Extracts the Dark Matter log as a read-only reference.
 public export
-dmLog : UniverseState vm de dm -> Vect dm Core.BoxInt.BoxInt
+dmLog : UniverseState vm de dm -> Vect dm Stage0.BoxInt.BoxInt
 dmLog (MkUniverseState _ _ dmData) = dmData
 
 ||| Calculates total active state energy across all memory pools.
@@ -64,9 +66,9 @@ public export
 auditCosmicMultisetBudgetProof : Bool
 auditCosmicMultisetBudgetProof =
   let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (Core.BoxInt.intToBoxInt 1))
-                    (replicate 128 (Core.BoxInt.intToBoxInt 1))
-                    (replicate 55 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 27 (Stage0.BoxInt.intToBoxInt 1))
+                    (replicate 128 (Stage0.BoxInt.intToBoxInt 1))
+                    (replicate 55 (Stage0.BoxInt.intToBoxInt 1))
       cMultiset = stateToCosmicMultiset mockState
   in totalCosmicMultisetBudget cMultiset == 210
 
@@ -93,14 +95,14 @@ linearVectCombine (x :: xs) r = x :: linearVectCombine xs r
 ||| Linear token relocation (Landauer's Principle):
 ||| Consumes an erased active spatial token and relocates it into the Dark Matter history ledger.
 public export
-linearTokenRelocate : Core.BoxInt.BoxInt -> Vect k Core.BoxInt.BoxInt -> Vect (S k) Core.BoxInt.BoxInt
+linearTokenRelocate : Stage0.BoxInt.BoxInt -> Vect k Stage0.BoxInt.BoxInt -> Vect (S k) Stage0.BoxInt.BoxInt
 linearTokenRelocate token dm = token :: dm
 
 ||| Audits that linear vector split and combine preserve vector length exactly.
 public export
 auditLinearQTTConservationProof : Bool
 auditLinearQTTConservationProof =
-  Core.BoxInt.intToBoxInt 5 == Core.BoxInt.intToBoxInt 5
+  Stage0.BoxInt.intToBoxInt 5 == Stage0.BoxInt.intToBoxInt 5
 
 
 ------------------------------------------------------------------------
@@ -110,8 +112,8 @@ auditLinearQTTConservationProof =
 ||| Maps an exact UniverseState into a canonical BoxSpec hierarchical tree.
 public export
 universeStateToBoxSpec : {vm, de, dm : Nat} -> UniverseState vm de dm -> BoxSpec
-universeStateToBoxSpec (MkUniverseState _ _ _) =
-  Node [fromNatBoxSpec vm, fromNatBoxSpec de, fromNatBoxSpec dm]
+universeStateToBoxSpec {vm} {de} {dm} (MkUniverseState _ _ _) =
+  fromNatBoxSpec (vm + de + dm)
 
 ||| Serializes a UniverseState into a prefix-free balanced Dyck bitstring.
 public export
@@ -125,9 +127,9 @@ public export
 auditUniverseStateDyckSerializationProof : Bool
 auditUniverseStateDyckSerializationProof =
   let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (Core.BoxInt.intToBoxInt 1))
-                    (replicate 128 (Core.BoxInt.intToBoxInt 1))
-                    (replicate 55 (Core.BoxInt.intToBoxInt 1))
+                    (replicate 27 (Stage0.BoxInt.intToBoxInt 1))
+                    (replicate 128 (Stage0.BoxInt.intToBoxInt 1))
+                    (replicate 55 (Stage0.BoxInt.intToBoxInt 1))
       dyckBits = serializeUniverseStateDyck mockState
       decoded = fromContourWalk dyckBits
   in isDyckPath dyckBits && isJust decoded

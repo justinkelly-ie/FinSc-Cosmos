@@ -2,11 +2,11 @@ module Compound.VelocityLensing
 
 import Evolution.State
 import Evolution.StructuralAccounting
-import Math.LinAlgebra.MetricTensor
-import Math.Infinitesimal
+import Stage1.LinAlgebra.MetricTensor
+import Stage1.Math.Infinitesimal
 import Compound.LinearEpsilonRouting
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Data.Vect
 
 %default total

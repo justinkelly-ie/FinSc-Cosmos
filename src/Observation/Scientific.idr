@@ -1,8 +1,8 @@
 module Observation.Scientific
 
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.UnixelFraction
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.UnixelFraction
 
 %default total
 

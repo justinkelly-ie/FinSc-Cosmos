@@ -1,8 +1,8 @@
 module Geometry.GaloisCurvature
 
-import Core.BoxInt
-import Core.VexelMaxel
-import Math.LawAlgebra
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.Math.LawAlgebra
 import Evolution.State
 import Data.Vect
 

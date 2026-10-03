@@ -1,7 +1,7 @@
 module Observation.HolographicStream
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Evolution.State
 import Observation.Dataset
 import Data.Vect

@@ -1,6 +1,6 @@
 module Evolution.Bootstrap
 
-import Core.BoxInt
+import Stage0.BoxInt
 import Evolution.State
 import Evolution.Init
 import Evolution.Expansion

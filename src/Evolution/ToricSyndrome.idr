@@ -1,7 +1,7 @@
 module Evolution.ToricSyndrome
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Evolution.State
 import Data.Vect
 

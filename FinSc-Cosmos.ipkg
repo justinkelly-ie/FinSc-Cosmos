@@ -3,10 +3,25 @@ version = 0.3.1
 authors = "Justin Kelly"
 brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 
-depends = FinSc-Biology, FinSc-Chemistry, FinSc-Geometry, FinSc-Hadron, FinSc-Multiset-Core, FinSc-Multiset-Transform, FinSc-Physics, base, linear
+depends = FinSc-Geometry, FinSc-Hadron, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Multiset-Transform, FinSc-Action-Dynamics, FinSc-Cosmology, base, linear
 sourcedir = "src"
 
 modules = Cosmos,
+          Epoch,
+          Epoch.Stage0,
+          Epoch.Stage1,
+          Stage0.Epoch.GohStreamTransducer,
+          Stage0.Epoch.PrimeGohFactorization,
+          Stage0.Epoch.StateSpaceExhaustion,
+          Stage0.Epoch.StreamingUniverse,
+          Stage0.Epoch.ThreeLevelConjugateHylo,
+          Stage0.Epoch.TwoLevelConjugateHylo,
+          Stage1.Epoch.ChromogeometryLaw,
+          Stage1.Epoch.ExpansionCollapse,
+          Stage1.Epoch.Observer37Hypothesis,
+          Stage1.Epoch.ObserverFixedPoint,
+          Stage1.Epoch.Trajectory,
+          Stage1.Epoch.ScaleTrajectorySieve,
           Compound.AstrophysicalAggregation,
           Compound.LinearEpsilonRouting,
           Compound.SymplecticIntegrator,

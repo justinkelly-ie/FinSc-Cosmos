@@ -6,6 +6,8 @@ import Reflect.Auditor.Math
 import Reflect.Auditor.Evolution
 import Reflect.Auditor.Geometry
 import Reflect.Auditor.Observation
+import Stage1.TypeTheory.Staging
+import Stage1.TypeTheory.TwoLevel
 import Reflect.Auditor.Compound
 
 %default total
@@ -27,3 +29,10 @@ public export
 %macro
 auditEcosystemMasterProof : Elab (Reflect.Auditor.Evolution.auditReplEngineProofExport = True)
 auditEcosystemMasterProof = pure Refl
+
+||| Top-level compile-time 2LTT subfibration proof erasure macro auditor.
+public export
+%macro
+auditStagedErasureMasterProof : Elab (Reflect.Auditor.Math.auditStagedScaleAdjunction = True)
+auditStagedErasureMasterProof = pure Refl
+

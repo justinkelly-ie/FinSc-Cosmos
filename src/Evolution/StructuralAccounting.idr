@@ -1,9 +1,9 @@
 module Evolution.StructuralAccounting
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Evolution.State
-import Math.InformationErasureCost
+import Stage1.Math.InformationErasureCost
 import Data.Vect
 
 %default total

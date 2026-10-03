@@ -1,8 +1,8 @@
 module Reflect.Auditor.Observation
 
-import public Core.BoxInt
-import public Core.Multiset
-import public Core.UnixelFraction
+import public Stage0.BoxInt
+import public Stage0.Multiset
+import public Stage1.UnixelFraction
 import public Reflect.Auditor.Core
 import Language.Reflection
 import public Observation.Algebraic
@@ -20,7 +20,7 @@ import public Observation.HolographicStream
 -- Witness 12: Multiset Born Rule & Hehner Triad
 public export
 auditMultisetHehnerTriadProofExport : Bool
-auditMultisetHehnerTriadProofExport = Core.UnixelFraction.auditMultisetHehnerTriadProof
+auditMultisetHehnerTriadProofExport = Stage1.UnixelFraction.auditMultisetHehnerTriadProof
 
 
 -- Witness 159: Empirical Scientific Observation Dataset Consistency

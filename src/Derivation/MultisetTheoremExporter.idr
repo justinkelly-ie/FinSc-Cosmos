@@ -1,9 +1,9 @@
 module Derivation.MultisetTheoremExporter
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.MaxelTransform
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
 import Language.Reflection
 import System.File
 import System.Directory
@@ -182,10 +182,57 @@ exportJarzynskiMacro name = do
   nameTerm <- quote name
   pure `( exportJarzynskiLaTeX ~nameTerm )
 
+||| Exports the Pythagorean Fixed Point Triad (25^2 = 7^2 + 24^2) into Lean 4 AST.
+public export
+exportPythagoreanTriadLean4 : String -> String
+exportPythagoreanTriadLean4 name =
+  renderLean (LeanTheorem (name ++ "_pythagorean_fixed_point_triad") "(25 : Nat)^2 = 7^2 + 24^2" "by rfl")
+
+||| Exports the Pythagorean Fixed Point Triad (25^2 = 7^2 + 24^2) into Coq AST.
+public export
+exportPythagoreanTriadCoq : String -> String
+exportPythagoreanTriadCoq name =
+  renderCoq (CoqTheorem (name ++ "_pythagorean_fixed_point_triad") "25 * 25 = 7 * 7 + 24 * 24" "reflexivity")
+
+||| Exports the Primorial 210 Budget Saturation (27 + 128 + 55 = 210) into Lean 4 AST.
+public export
+exportPrimorialBudgetLean4 : String -> String
+exportPrimorialBudgetLean4 name =
+  renderLean (LeanTheorem (name ++ "_budget_saturation") "(27 : Nat) + 128 + 55 = 210" "by rfl")
+
+||| Exports the Primorial 210 Budget Saturation (27 + 128 + 55 = 210) into Coq AST.
+public export
+exportPrimorialBudgetCoq : String -> String
+exportPrimorialBudgetCoq name =
+  renderCoq (CoqTheorem (name ++ "_budget_saturation") "27 + 128 + 55 = 210" "reflexivity")
+
+||| Exports the 137-Scale Trajectory Sieve Partition (76 + 61 = 137) into Lean 4 AST.
+public export
+exportTrajectorySieveLean4 : String -> String
+exportTrajectorySieveLean4 name =
+  renderLean (LeanTheorem (name ++ "_trajectory_sieve_partition") "(76 : Nat) + 61 = 137" "by rfl")
+
+||| Exports the 137-Scale Trajectory Sieve Partition (76 + 61 = 137) into Coq AST.
+public export
+exportTrajectorySieveCoq : String -> String
+exportTrajectorySieveCoq name =
+  renderCoq (CoqTheorem (name ++ "_trajectory_sieve_partition") "76 + 61 = 137" "reflexivity")
+
+||| Exports the Discrete Helmholtz Free Energy Ground State (-1320) into Lean 4 AST.
+public export
+exportHelmholtzGroundStateLean4 : String -> String
+exportHelmholtzGroundStateLean4 name =
+  renderLean (LeanTheorem (name ++ "_helmholtz_ground_state") "(120 : Int) - (210 * 7 - 30) = -1320" "by rfl")
+
+||| Exports the Discrete Helmholtz Free Energy Ground State (-1320) into Coq AST.
+public export
+exportHelmholtzGroundStateCoq : String -> String
+exportHelmholtzGroundStateCoq name =
+  renderCoq (CoqTheorem (name ++ "_helmholtz_ground_state") "120 - (210 * 7 - 30) = -1320" "reflexivity")
+
 ------------------------------------------------------------------------
 -- 4. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
 ------------------------------------------------------------------------
-
 
 ||| Exports all certified proof theorems to disk in Lean 4 and Coq format.
 public export
@@ -205,6 +252,10 @@ exportAllProofsIO = do
         , exportMasterAdjunctionProofLean4 "master_universe"
         , exportHomologyNilpotencyLean4 "lattice_homology"
         , exportHomologyNilpotencyLean4 "bz_homology"
+        , exportPythagoreanTriadLean4 "primordial"
+        , exportPrimorialBudgetLean4 "primordial"
+        , exportTrajectorySieveLean4 "primordial"
+        , exportHelmholtzGroundStateLean4 "primordial"
         ]
   let coqContent = unlines
         [ "(* Certified Coq SSReflect Export for Multiset System Theorems *)"
@@ -215,6 +266,10 @@ exportAllProofsIO = do
         , exportGaloisDualityCoq "cosmological_galois"
         , exportHomologyNilpotencyCoq "lattice_homology"
         , exportHomologyNilpotencyCoq "bz_homology"
+        , exportPythagoreanTriadCoq "primordial"
+        , exportPrimorialBudgetCoq "primordial"
+        , exportTrajectorySieveCoq "primordial"
+        , exportHelmholtzGroundStateCoq "primordial"
         ]
   resLean <- writeFile "export/lean4/MultisetTheorems.lean" leanContent
   case resLean of
@@ -231,4 +286,6 @@ auditMultisetTheoremExporterProof : Bool
 auditMultisetTheoremExporterProof =
   let leanZoom = exportZoomToLean4 "scale_pipeline"
       coqAdjunction = exportToCoq "scale_pipeline"
-  in (leanZoom /= "") && (coqAdjunction /= "")
+      leanPyth = exportPythagoreanTriadLean4 "primordial"
+      coqSieve = exportTrajectorySieveCoq "primordial"
+  in (leanZoom /= "") && (coqAdjunction /= "") && (leanPyth /= "") && (coqSieve /= "")

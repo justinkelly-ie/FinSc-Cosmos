@@ -1,9 +1,9 @@
 module Math.QuantumStressTensor
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.MaxelTransform
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
 import Data.List
 
 %default total
@@ -21,7 +21,7 @@ record SpacetimeIndex where
 
 public export
 Eq SpacetimeIndex where
-  (MkSpacetimeIndex m1 n1) == (MkSpacetimeIndex m2 n2) = natEq m1 m2 && natEq n1 n2
+  (MkSpacetimeIndex m1 n1) == (MkSpacetimeIndex m2 n2) = (m1 == m2) && (n1 == n2)
 
 ||| Vacuum Expectation Stress-Energy Tensor <T_μν> State.
 public export

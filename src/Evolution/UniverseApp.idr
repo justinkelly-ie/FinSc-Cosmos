@@ -2,9 +2,9 @@ module Evolution.UniverseApp
 
 import Control.App
 import Control.App.Console
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.Polynumber
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.Polynumber
 import Evolution.State
 import Evolution.LinearPipeline
 import Evolution.Expansion
@@ -43,7 +43,7 @@ runUniverseAppFold : Has [Console] e =>
                     (1 ch : PhysicsChannel poly vm de dm) ->
                     (newTokens : Vect k BoxInt) ->
                     (remainder : BoxInt) ->
-                    App e (PhysicsChannel (snd (foldEpochPolynumber poly Core.Polynumber.cyclotomic137Polynumber)) (vm + k) de (S dm))
+                    App e (PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + k) de (S dm))
 runUniverseAppFold (MkPhysicsChannel st) newTokens remainder = do
   putStrLn "  [Control.App] Executing Cyclotomic 137 Epoch Division & Folding..."
   pure (MkPhysicsChannel (runLinearCosmicCycle st newTokens remainder))
@@ -58,7 +58,7 @@ runUniverseAppPipeline : Has [Console] e =>
                          (1 ch : PhysicsChannel poly vm de dm) ->
                          (budgetTokens : Vect k BoxInt) ->
                          (remainder : BoxInt) ->
-                         App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) k)) Core.Polynumber.cyclotomic137Polynumber)) ((vm + k) + k) de (S dm))
+                         App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) k)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + k) + k) de (S dm))
 runUniverseAppPipeline (MkPhysicsChannel st) budgetTokens remainder = do
   putStrLn "========================================================"
   putStrLn "🚀 Booting Finite-Science Universe App (Option 3 Harness)"
@@ -128,7 +128,7 @@ autoScaleUniverseApp : Has [Console] e =>
                       (1 ch : PhysicsChannel poly vm de dm) ->
                       (gridTokens : Vect 4 BoxInt) ->
                       (remainder : BoxInt) ->
-                      App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Core.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
+                      App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
 autoScaleUniverseApp (MkPhysicsChannel st) gridTokens remainder = do
   putStrLn "  [Galois-App] Executing Galois Pullback (f^*) Grid Expansion (1x1 -> 2x2)..."
   let stExpanded = expandUniverseStateLinear st gridTokens
@@ -145,7 +145,7 @@ runGaloisScaleJumpPipeline : Has [Console] e =>
                             (1 ch : PhysicsChannel poly vm de dm) ->
                             (gridTokens : Vect 4 BoxInt) ->
                             (remainder : BoxInt) ->
-                            App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Core.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
+                            App e (PhysicsChannel (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
 runGaloisScaleJumpPipeline (MkPhysicsChannel st) gridTokens remainder = do
   putStrLn "========================================================"
   putStrLn "🔄 Booting Automated Galois Scale-Jump Harness (f_* ⊣ f^*)"

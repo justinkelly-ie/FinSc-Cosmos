@@ -1,9 +1,9 @@
 module Observation.Triad
 
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.UnixelFraction
-import Core
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.UnixelFraction
+import Stage1.FourGeometries
 import Observation.Algebraic
 import Observation.Scientific
 import Observation.Dataset

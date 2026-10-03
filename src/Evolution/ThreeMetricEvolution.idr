@@ -1,9 +1,9 @@
 module Evolution.ThreeMetricEvolution
 
 import Language.Reflection
-import Math.Singleton.Bit
-import Core.BoxInt
-import Core.Multiset
+import Stage0.Singleton.Bit
+import Stage0.BoxInt
+import Stage0.Multiset
 import Evolution.Init
 import Evolution.State
 import Data.Vect

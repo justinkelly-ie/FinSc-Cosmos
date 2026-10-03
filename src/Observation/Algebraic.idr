@@ -1,8 +1,8 @@
 module Observation.Algebraic
 
-import Core.BoxInt
-import Core.UnixelFraction
-import Core
+import Stage0.BoxInt
+import Stage1.UnixelFraction
+import Stage1.FourGeometries
 
 %default total
 

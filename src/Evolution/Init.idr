@@ -1,6 +1,6 @@
 module Evolution.Init
 
-import Core.BoxInt
+import Stage0.BoxInt
 import Evolution.State
 import Data.Vect
 import Data.Nat
@@ -16,6 +16,12 @@ import Data.Nat
 public export
 computeVMSize : (gridDim : Nat) -> Nat
 computeVMSize dim = dim * dim * dim
+
+||| Helper to calculate 2^n for Nat buffer depth.
+public export
+fastNatPower2 : Nat -> Nat
+fastNatPower2 Z = 1
+fastNatPower2 (S k) = 2 * fastNatPower2 k
 
 ||| Relational scaling function for Dark Energy binary ROM buffer depth.
 ||| Binary depth b produces 2^b conserved archival capacity slots (e.g. 7 -> 128).

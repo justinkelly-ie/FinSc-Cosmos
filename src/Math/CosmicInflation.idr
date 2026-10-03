@@ -1,9 +1,9 @@
 module Math.CosmicInflation
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.MaxelTransform
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
 import Data.List
 
 %default total
@@ -21,7 +21,7 @@ record InflatonState where
 
 public export
 Eq InflatonState where
-  (MkInflatonState f1 e1) == (MkInflatonState f2 e2) = natEq f1 f2 && (e1 == e2)
+  (MkInflatonState f1 e1) == (MkInflatonState f2 e2) = (f1 == f2) && (e1 == e2)
 
 ||| Primordial Cosmic Perturbation Power Spectrum (n_s, r).
 public export

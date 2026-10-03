@@ -1,7 +1,7 @@
 module Compound.SymplecticIntegrator
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Compound.LinearEpsilonRouting
 
 %default total

@@ -1,12 +1,11 @@
 module Derivation.PureGeometricClassifier
 
 import Evolution.State
-import Math.LinAlgebra.MetricTensor
-import Core
-import Math.RationalTrig
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.UnixelFraction
+import Stage1.LinAlgebra.MetricTensor
+import Stage1.RationalTrig
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.UnixelFraction
 
 %default total
 
@@ -47,9 +46,9 @@ inferMetricFromStatePure {vm} {de} {dm} _ =
       g22Raw : Integer
       g22Raw = (if vmInt == 0 then deInt else deInt `div` vmInt) - dmInt
       
-  in MkMetricTensor2D (Core.BoxInt.intToBoxInt g11Raw)
-                      (Core.BoxInt.intToBoxInt g12Raw)
-                      (Core.BoxInt.intToBoxInt g22Raw)
+  in MkMetricTensor2D (Stage0.BoxInt.intToBoxInt g11Raw)
+                      (Stage0.BoxInt.intToBoxInt g12Raw)
+                      (Stage0.BoxInt.intToBoxInt g22Raw)
 
 ------------------------------------------------------------------------
 -- 2. PURE CONSTRUCTIVE DETERMINANT CLASSIFIER
@@ -58,7 +57,7 @@ inferMetricFromStatePure {vm} {de} {dm} _ =
 
 ||| Evaluates metric determinant det g = g11 * g22 - g12^2.
 public export
-metricDeterminant2D : MetricTensor2D -> Core.BoxInt.BoxInt
+metricDeterminant2D : MetricTensor2D -> Stage0.BoxInt.BoxInt
 metricDeterminant2D = detMetric
 
 ||| Classifies any 2D metric into the 4 fundamental geometries:
@@ -69,12 +68,12 @@ metricDeterminant2D = detMetric
 public export
 classifyMetricGeometry : MetricTensor2D -> String
 classifyMetricGeometry m =
-  if g22 m == Core.BoxInt.intToBoxInt 0 && g12 m /= Core.BoxInt.intToBoxInt 0
+  if g22 m == Stage0.BoxInt.intToBoxInt 0 && g12 m /= Stage0.BoxInt.intToBoxInt 0
     then "Substrate"
     else let detG = detMetric m
-         in if detG > Core.BoxInt.intToBoxInt 0
+         in if detG > Stage0.BoxInt.intToBoxInt 0
               then "Elliptic"
-              else if detG < Core.BoxInt.intToBoxInt 0
+              else if detG < Stage0.BoxInt.intToBoxInt 0
                 then "Hyperbolic"
                 else "Parabolic"
 
@@ -91,12 +90,12 @@ classifyMetricGeometry m =
 public export
 auditPureGeometricClassificationProof : Bool
 auditPureGeometricClassificationProof =
-  let detEll : Core.BoxInt.BoxInt = Core.BoxInt.intToBoxInt 1
-      detHyp : Core.BoxInt.BoxInt = Core.BoxInt.intToBoxInt (-1)
-      detPar : Core.BoxInt.BoxInt = Core.BoxInt.intToBoxInt 0
-  in detEll == Core.BoxInt.intToBoxInt 1 &&
-     detHyp == Core.BoxInt.intToBoxInt (-1) &&
-     detPar == Core.BoxInt.intToBoxInt 0
+  let detEll : Stage0.BoxInt.BoxInt = Stage0.BoxInt.intToBoxInt 1
+      detHyp : Stage0.BoxInt.BoxInt = Stage0.BoxInt.intToBoxInt (-1)
+      detPar : Stage0.BoxInt.BoxInt = Stage0.BoxInt.intToBoxInt 0
+  in detEll == Stage0.BoxInt.intToBoxInt 1 &&
+     detHyp == Stage0.BoxInt.intToBoxInt (-1) &&
+     detPar == Stage0.BoxInt.intToBoxInt 0
 
 ------------------------------------------------------------------------
 -- 4. RATIONAL SPREAD CLASSIFIER BETWEEN VEXELS (CH. 18-20)
@@ -111,9 +110,9 @@ classifyVexelSpreadAngle : (v1 : Vexel) -> (v2 : Vexel) -> (String, UnixelFracti
 classifyVexelSpreadAngle v1 v2 =
   let origin = MkVexel []
       s = vexelSpread v1 origin v2
-  in if rationalEquiv s (mkUnixelFraction (Core.BoxInt.intToBoxInt 1) 1)
+  in if rationalEquiv s (mkUnixelFraction (Stage0.BoxInt.intToBoxInt 1) 1)
        then ("Orthogonal", s)
-       else if rationalEquiv s (mkUnixelFraction (Core.BoxInt.intToBoxInt 0) 1)
+       else if rationalEquiv s (mkUnixelFraction (Stage0.BoxInt.intToBoxInt 0) 1)
          then ("Collinear", s)
          else ("Rational Angle", s)
 
@@ -123,7 +122,7 @@ classifyVexelSpreadAngle v1 v2 =
 public export
 auditVexelSpreadClassificationProof : Bool
 auditVexelSpreadClassificationProof =
-  (Core.BoxInt.intToBoxInt 1 == Core.BoxInt.intToBoxInt 1) && (Core.BoxInt.intToBoxInt 0 == Core.BoxInt.intToBoxInt 0)
+  (Stage0.BoxInt.intToBoxInt 1 == Stage0.BoxInt.intToBoxInt 1) && (Stage0.BoxInt.intToBoxInt 0 == Stage0.BoxInt.intToBoxInt 0)
 
 
 

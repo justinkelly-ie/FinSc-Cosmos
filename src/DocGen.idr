@@ -1,7 +1,7 @@
 module DocGen
 
-import Core.BoxInt
-import Core.UnixelFraction
+import Stage0.BoxInt
+import Stage1.UnixelFraction
 import System
 
 %default total

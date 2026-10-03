@@ -1,7 +1,7 @@
 module Math.FineStructure
 
-import Core.BoxInt
-import Core.Polynumber
+import Stage0.BoxInt
+import Stage1.Polynumber
 import Data.Nat
 
 %default total

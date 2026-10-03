@@ -1,10 +1,10 @@
 module Evolution.ProtocolChannel
 
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.Polynumber
-import Core.UnixelFraction
-import Core.MaxelTransform
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.Polynumber
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
 import Evolution.State
 import Evolution.LinearPipeline
 import Evolution.Expansion
@@ -52,7 +52,7 @@ foldPhysicsChannel137 : {vm, de, dm, k : Nat} ->
                        (1 ch : PhysicsChannel poly vm de dm) ->
                        (newTokens : Vect k BoxInt) ->
                        (remainder : BoxInt) ->
-                       PhysicsChannel (snd (foldEpochPolynumber poly Core.Polynumber.cyclotomic137Polynumber))
+                       PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber))
                                       (vm + k) de (S dm)
 foldPhysicsChannel137 (MkPhysicsChannel st) newTokens remainder =
   MkPhysicsChannel (runLinearCosmicCycle st newTokens remainder)
@@ -105,7 +105,7 @@ autoScaleGaloisPushforward : {vm, de, dm : Nat} ->
                              {poly : Polynumber} ->
                              (1 ch : PhysicsChannel poly vm de dm) ->
                              (remainder : BoxInt) ->
-                             PhysicsChannel (snd (foldEpochPolynumber poly Core.Polynumber.cyclotomic137Polynumber)) (vm + 1) de (S dm)
+                             PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + 1) de (S dm)
 autoScaleGaloisPushforward (MkPhysicsChannel st) remainder =
   MkPhysicsChannel (runLinearCosmicCycle st [intToBoxInt 0] remainder)
 

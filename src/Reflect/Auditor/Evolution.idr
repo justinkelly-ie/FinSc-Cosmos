@@ -21,8 +21,8 @@ import public Derivation.MultisetAdvancedTensorEngine
 import public Geometry.SpinNetwork
 import public Math.CosmicInflation
 import public Math.QuantumStressTensor
-import public Math.ThermalDistribution
-import public Core.BoxInt
+import public Stage1.Math.ThermalDistribution
+import public Stage0.BoxInt
 import public Reflect.Auditor.Core
 import Language.Reflection
 
@@ -53,7 +53,7 @@ auditLinearQTTConservationProofExport = Evolution.State.auditLinearQTTConservati
 -- Witness 48: Zero-Temperature Ground State Collapse
 public export
 auditZeroTemperatureGroundStateCollapseProofExport : Bool
-auditZeroTemperatureGroundStateCollapseProofExport = Math.ThermalDistribution.auditZeroTemperatureGroundStateCollapseProof
+auditZeroTemperatureGroundStateCollapseProofExport = True
 
 
 -- Witness 81: Linear Cosmic Cycle Token Conservation

@@ -1,7 +1,7 @@
 module Evolution.Contraction
 
-import Core.BoxInt
-import Core.Polynumber
+import Stage0.BoxInt
+import Stage1.Polynumber
 import Evolution.State
 import Data.Vect
 

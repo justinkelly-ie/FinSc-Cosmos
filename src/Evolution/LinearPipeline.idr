@@ -1,11 +1,11 @@
 module Evolution.LinearPipeline
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Evolution.State
 import Evolution.Expansion
 import Evolution.Contraction
-import Math.ChromoCategory
+import Stage1.ChromoCategory
 import Data.Vect
 
 %default total

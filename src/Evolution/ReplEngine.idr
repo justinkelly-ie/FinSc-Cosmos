@@ -2,9 +2,9 @@ module Evolution.ReplEngine
 
 import Control.App
 import Control.App.Console
-import Core.BoxInt
-import Core.VexelMaxel
-import Core.Polynumber
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.Polynumber
 import Evolution.State
 import Evolution.ProtocolChannel
 import Evolution.UniverseApp

@@ -1,7 +1,7 @@
 module Evolution.Expansion
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Evolution.State
 import Evolution.StructuralAccounting
 import Data.Vect

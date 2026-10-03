@@ -1,9 +1,9 @@
 module Observation.EmpiricalMeasurement
 
-import Core.BoxInt
-import Core.UnixelFraction
-import Core.Goh
-import Math.OnSeq.FusedStream
+import Stage0.BoxInt
+import Stage1.UnixelFraction
+import Stage1.Goh
+import Stage0.OnSeq.FusedStream
 
 %default total
 

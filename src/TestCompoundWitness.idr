@@ -3,7 +3,7 @@ module TestCompoundWitness
 import Compound.SymplecticIntegrator
 import Compound.VelocityLensing
 import Compound.AstrophysicalAggregation
-import Core.BoxInt
+import Stage0.BoxInt
 import Language.Reflection
 
 %default total

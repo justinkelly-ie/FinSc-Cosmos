@@ -1,7 +1,7 @@
 module Derivation.MultisetTensorEngine
 
-import Core
-import Transform
+import Stage0.Multiset
+import Stage1.MaxelTransform
 import Data.List
 
 %default total

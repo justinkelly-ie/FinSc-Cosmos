@@ -4,7 +4,7 @@ import public Compound.AstrophysicalAggregation
 import public Compound.LinearEpsilonRouting
 import public Compound.SymplecticIntegrator
 import public Compound.VelocityLensing
-import public Core.BoxInt
+import public Stage0.BoxInt
 import public Reflect.Auditor.Core
 import Language.Reflection
 

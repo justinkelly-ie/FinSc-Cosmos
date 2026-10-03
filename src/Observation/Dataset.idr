@@ -1,7 +1,7 @@
 module Observation.Dataset
 
-import Core.BoxInt
-import Core.UnixelFraction
+import Stage0.BoxInt
+import Stage1.UnixelFraction
 import Observation.Scientific
 
 %default total

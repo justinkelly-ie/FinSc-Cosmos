@@ -28,10 +28,10 @@ type = "local"
 path = "../FinSc-Geometry"
 ipkg = "FinSc-Geometry.ipkg"
 
-[custom.all.FinSc-Physics]
+[custom.all.FinSc-Action-Dynamics]
 type = "local"
-path = "../FinSc-Physics"
-ipkg = "FinSc-Physics.ipkg"
+path = "../FinSc-Action-Dynamics"
+ipkg = "FinSc-Action-Dynamics.ipkg"
 
 [custom.all.FinSc-Hadron]
 type = "local"

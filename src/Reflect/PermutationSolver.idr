@@ -1,10 +1,11 @@
 module Reflect.PermutationSolver
 
-import Core.BoxInt
-import Core.VexelMaxel
+import Stage0.BoxInt
+import Stage1.VexelMaxel
 import Data.Vect
 import Data.List
 import Language.Reflection
+import public Reflect.Auditor.Core
 
 %default total
 
@@ -131,15 +132,15 @@ auditPermutationMaxelActionProof =
                   , (MkUnixel 3, intToBoxInt 30)
                   ]
       vPerm = permuteVexel perm v
-  in lookupUnixel (MkUnixel 1) vPerm == intToBoxInt 20 &&
-     lookupUnixel (MkUnixel 2) vPerm == intToBoxInt 30 &&
-     lookupUnixel (MkUnixel 3) vPerm == intToBoxInt 10
+  in boxEq (lookupUnixel (MkUnixel 1) vPerm) (intToBoxInt 20) &&
+     boxEq (lookupUnixel (MkUnixel 2) vPerm) (intToBoxInt 30) &&
+     boxEq (lookupUnixel (MkUnixel 3) vPerm) (intToBoxInt 10)
 
 ||| Compile-time macro verifying permutation action on Vexels via permutation Maxels.
 export
 %macro
 auditPermutationMaxelAction : Elab (Reflect.PermutationSolver.auditPermutationMaxelActionProof = True)
-auditPermutationMaxelAction = pure Refl
+auditPermutationMaxelAction = auditWitness auditPermutationMaxelActionProof
 
 ------------------------------------------------------------------------
 -- YOUNG TABLEAUX HOOK-LENGTH FORMULA & Sn REPRESENTATIONS
@@ -226,4 +227,4 @@ auditHookLengthProof =
 export
 %macro
 auditHookLengthFormula : Elab (Reflect.PermutationSolver.auditHookLengthProof = True)
-auditHookLengthFormula = pure Refl
+auditHookLengthFormula = auditWitness auditHookLengthProof

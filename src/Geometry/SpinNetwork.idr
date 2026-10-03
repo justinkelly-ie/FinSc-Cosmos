@@ -1,7 +1,10 @@
 module Geometry.SpinNetwork
 
-import Core
-import Transform
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
+import Stage1.FourGeometries
 import Data.List
 
 %default total
@@ -19,7 +22,7 @@ record SpinNode where
 
 public export
 Eq SpinNode where
-  (MkSpinNode id1 v1) == (MkSpinNode id2 v2) = natEq id1 id2 && natEq v1 v2
+  (MkSpinNode id1 v1) == (MkSpinNode id2 v2) = (id1 == id2) && (v1 == v2)
 
 ||| A discrete 2D Area Quantum Edge connecting Spin Network Nodes.
 public export
@@ -32,7 +35,7 @@ record SpinEdge where
 public export
 Eq SpinEdge where
   (MkSpinEdge s1 t1 a1) == (MkSpinEdge s2 t2 a2) =
-    natEq s1 s2 && natEq t1 t2 && natEq a1 a2
+    (s1 == s2) && (t1 == t2) && (a1 == a2)
 
 ||| A Spin Network State represented as a Multiset of Node-Edge geometric pairs.
 public export

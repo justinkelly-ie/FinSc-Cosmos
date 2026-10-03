@@ -1,7 +1,7 @@
 module Derivation.ReplTransformEngine
 
-import Core
-import Transform
+import Stage0.Multiset
+import Stage1.MaxelTransform
 import Derivation.FunctorialScalePipeline
 import Data.List
 import Data.String

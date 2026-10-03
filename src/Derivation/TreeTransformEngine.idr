@@ -1,7 +1,8 @@
 module Derivation.TreeTransformEngine
 
-import Core
-import Transform
+import Stage0.Multiset
+import Stage1.MultisetTree
+import Stage1.MaxelTransform
 import Derivation.FunctorialScalePipeline
 import Data.List
 

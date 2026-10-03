@@ -1,12 +1,12 @@
 module Compound.AstrophysicalAggregation
 
-import Core.BoxInt
-import Core.Multiset
-import Core.UnixelFraction
-import Core.MaxelTransform
-import Math.LawAlgebra
-import Math.DegeneracyMassLimit
-import Math.GravitationalCollapseLimit
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.UnixelFraction
+import Stage1.MaxelTransform
+import Stage1.Math.LawAlgebra
+import Stage1.Math.DegeneracyMassLimit
+import Stage1.Math.GravitationalCollapseLimit
 import Data.List
 
 %default total

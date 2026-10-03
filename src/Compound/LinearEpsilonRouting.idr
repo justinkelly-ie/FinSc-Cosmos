@@ -1,9 +1,9 @@
 module Compound.LinearEpsilonRouting
 
-import Core.BoxInt
-import Core.VexelMaxel
-import Math.LinAlgebra.MetricTensor
-import Math.Infinitesimal
+import Stage0.BoxInt
+import Stage1.VexelMaxel
+import Stage1.LinAlgebra.MetricTensor
+import Stage1.Math.Infinitesimal
 import Data.Vect
 
 %default total

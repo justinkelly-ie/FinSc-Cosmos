@@ -1,9 +1,9 @@
 module Evolution.Thermodynamics
 
-import Core.BoxInt
-import Core.Multiset
-import Core.Polynumber
-import Core.UnixelFraction
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.Polynumber
+import Stage1.UnixelFraction
 import Evolution.State
 import Evolution.Contraction
 import Data.Vect
