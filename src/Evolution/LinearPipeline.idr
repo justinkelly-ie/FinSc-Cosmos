@@ -32,6 +32,17 @@ runLinearCosmicCycle {vm} {k} (MkUniverseState vmData deData dmData) newTokens r
       updatedDM = remainder :: dmData
   in MkUniverseState resetVM updatedDE updatedDM
 
+||| Strict QTT Linearity in State Evolution (Rule 04).
+||| Guarantees at compile time that universe states cannot be duplicated, leaked, or silently dropped.
+public export
+stepUniverseLinear : {vm, de, dm : Nat} ->
+                     {k : Nat} ->
+                     (1 s : UniverseState vm de dm) ->
+                     (newMatter : Vect k BoxInt) ->
+                     UniverseState (vm + k) de (S dm)
+stepUniverseLinear s newMatter =
+  runLinearCosmicCycle s newMatter (intToBoxInt 0)
+
 ------------------------------------------------------------------------
 -- 2. CATEGORICAL MORPHISM STATE TRANSITION
 ------------------------------------------------------------------------
