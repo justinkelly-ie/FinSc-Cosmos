@@ -4,7 +4,7 @@ import public Stage0.BoxInt
 import public Stage0.Multiset
 import public Stage0.OnSeq.FusedStream
 import public Stage1.QuadStream
-import public Cosmology
+import public CosmicHorizon
 import public Stage1.Cosmology.MultisetAdjunction
 import public Stage1.FourGeometries
 import public Stage1.FourGeometriesActions

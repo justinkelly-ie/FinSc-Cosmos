@@ -4,7 +4,7 @@ import public Stage0.BoxInt
 import public Stage0.Multiset
 import public Stage1.MetricSignature
 import public Stage0.Cosmology.MetricLawLedger
-import public Cosmology
+import public CosmicHorizon
 
 %default total
 

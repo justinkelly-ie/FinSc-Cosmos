@@ -2,7 +2,7 @@ module Stage0.Epoch.StateSpaceExhaustion
 
 import public Stage0.BoxInt
 import public Stage0.Multiset
-import public Cosmology
+import public CosmicHorizon
 import public Stage1.Epoch.ChromogeometryLaw
 import public Stage1.Epoch.ExpansionCollapse
 import public Stage1.Epoch.Trajectory
