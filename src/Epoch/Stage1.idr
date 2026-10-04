@@ -6,5 +6,6 @@ import public Stage1.Epoch.Observer37Hypothesis
 import public Stage1.Epoch.ObserverFixedPoint
 import public Stage1.Epoch.Trajectory
 import public Stage1.Epoch.ScaleTrajectorySieve
+import public Stage1.Epoch.CosmicPartitionAuditor
 
 %default total
