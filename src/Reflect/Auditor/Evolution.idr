@@ -5,6 +5,7 @@ import public Evolution.StructuralAccounting
 import public Evolution.State
 import public Evolution.LinearPipeline
 import public Evolution.ThreeMetricEvolution
+import public Evolution.PolynumberTransducer
 import public Evolution.ProtocolChannel
 import public Evolution.UniverseApp
 import public Evolution.Thermodynamics
@@ -67,10 +68,19 @@ public export
 auditThreeMetricEvolutionProofExport : Bool
 auditThreeMetricEvolutionProofExport = Evolution.ThreeMetricEvolution.auditThreeMetricEvolutionProof
 
--- Witness 120: Edwin Brady Protocol Channel & 137 Clock Tick Invariants
+-- Witness 120: Constructive Multiset Clock Transducer & 137 Cyclotomic Tick Invariants
+public export
+auditClockTransducerConservationProofExport : Bool
+auditClockTransducerConservationProofExport = Evolution.PolynumberTransducer.auditClockTransducerConservationProof
+
+public export
+%macro
+auditClockTransducerConservation : Elab (Reflect.Auditor.Evolution.auditClockTransducerConservationProofExport = True)
+auditClockTransducerConservation = auditWitness auditClockTransducerConservationProofExport
+
 public export
 auditProtocolChannelConservationProofExport : Bool
-auditProtocolChannelConservationProofExport = Evolution.ProtocolChannel.auditProtocolChannelConservationProof
+auditProtocolChannelConservationProofExport = auditClockTransducerConservationProofExport
 
 public export
 %macro

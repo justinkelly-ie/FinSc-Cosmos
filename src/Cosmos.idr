@@ -20,7 +20,7 @@ import public Evolution.Contraction
 import public Evolution.Expansion
 import public Evolution.Init
 import public Evolution.LinearPipeline
-import public Evolution.ProtocolChannel
+import public Evolution.PolynumberTransducer
 import public Evolution.ReplEngine
 import public Evolution.State
 import public Evolution.StructuralAccounting

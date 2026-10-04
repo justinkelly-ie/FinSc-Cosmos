@@ -6,7 +6,7 @@ import Stage0.BoxInt
 import Stage1.VexelMaxel
 import Stage1.Polynumber
 import Evolution.State
-import Evolution.ProtocolChannel
+import Evolution.PolynumberTransducer
 import Evolution.UniverseApp
 import Geometry.GaloisCurvature
 import Data.List

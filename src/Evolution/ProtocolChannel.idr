@@ -1,5 +1,7 @@
 module Evolution.ProtocolChannel
 
+import public Evolution.PolynumberTransducer
+
 import Stage0.BoxInt
 import Stage1.VexelMaxel
 import Stage1.Polynumber
@@ -14,24 +16,21 @@ import Data.Vect
 %default total
 
 ------------------------------------------------------------------------
--- 1. EDWIN BRADY LINEAR PROTOCOL CHANNEL FOR PHYSICS
+-- BACKWARD COMPATIBILITY ALIASES: TRANSDUCER REPLACES PROTOCOL CHANNEL
 ------------------------------------------------------------------------
 
-||| An Edwin Brady-style Linear Protocol Channel for Physics.
-||| The type index `poly` is a reflected Polynumber acting as the 
-||| Channel Bandwidth, Transition Path, and Clock Tick Generating Function:
-||| P(x) = c0 + c1*x + c2*x^2 + ... + c136*x^136.
+||| Backward-compatible alias for MultisetClockTransducer.
+||| Channel terminology is superseded by MultisetClockTransducer.
 public export
-record PhysicsChannel (poly : Polynumber) (vm : Nat) (de : Nat) (dm : Nat) where
-  constructor MkPhysicsChannel
-  state : UniverseState vm de dm
+PhysicsChannel : Polynumber -> Nat -> Nat -> Nat -> Type
+PhysicsChannel = MultisetClockTransducer
 
-------------------------------------------------------------------------
--- 2. PROTOCOL CHANNEL TRANSITION OPERATORS (CLOCK TICKS)
-------------------------------------------------------------------------
+||| Constructor alias
+public export
+MkPhysicsChannel : UniverseState vm de dm -> MultisetClockTransducer poly vm de dm
+MkPhysicsChannel = MkClockTransducer
 
-||| Advances the natural clock tick of the universe (x^k -> x^(k+1)) by 1 spatial step.
-||| Injects fresh matter tokens into Visible Matter while updating the Polynumber channel index.
+||| Backward-compatible step alias
 public export
 stepPhysicsChannelTick : {vm, de, dm, newCells : Nat} ->
                         {poly : Polynumber} ->
@@ -39,13 +38,9 @@ stepPhysicsChannelTick : {vm, de, dm, newCells : Nat} ->
                         (budgetTokens : Vect newCells BoxInt) ->
                         PhysicsChannel (addPolynumber poly (monomialPolynumber (intToBoxInt 1) newCells)) 
                                        (vm + newCells) de dm
-stepPhysicsChannelTick (MkPhysicsChannel st) budgetTokens =
-  MkPhysicsChannel (expandUniverseStateLinear st budgetTokens)
+stepPhysicsChannelTick = stepClockTransducerTick
 
-||| Executes a complete 137-stage cyclotomic clock tick epoch transition.
-||| 1. Completes a cyclic evolutionary step across the 137-stage fine structure cycle.
-||| 2. Divides the epoch state polynomial by the 137th Cyclotomic Polynomial \Phi_137(x).
-||| 3. Folds the quotient Q(x) into Dark Energy (128 DE) and deposits remainder R(x) into Dark Matter (55 DM).
+||| Backward-compatible fold alias
 public export
 foldPhysicsChannel137 : {vm, de, dm, k : Nat} ->
                        {poly : Polynumber} ->
@@ -54,11 +49,9 @@ foldPhysicsChannel137 : {vm, de, dm, k : Nat} ->
                        (remainder : BoxInt) ->
                        PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber))
                                       (vm + k) de (S dm)
-foldPhysicsChannel137 (MkPhysicsChannel st) newTokens remainder =
-  MkPhysicsChannel (runLinearCosmicCycle st newTokens remainder)
+foldPhysicsChannel137 = foldClockTransducer137
 
-||| Couples two independent physical subsystem channels (System A and System B) under linear QTT token exchange.
-||| Transfers interaction weight w from System A to System B over a shared coupling metric.
+||| Backward-compatible interact alias
 public export
 interactPhysicsChannels : {vmA, deA, dmA, vmB, deB, dmB : Nat} ->
                           {polyA, polyB : Polynumber} ->
@@ -68,55 +61,27 @@ interactPhysicsChannels : {vmA, deA, dmA, vmB, deB, dmB : Nat} ->
                           ( PhysicsChannel polyA vmA deA dmA
                           , PhysicsChannel (addPolynumber polyB (monomialPolynumber w 1)) (vmB + 1) deB dmB
                           )
-interactPhysicsChannels (MkPhysicsChannel stA) (MkPhysicsChannel stB) w =
-  let chA' = MkPhysicsChannel stA
-      chB' = MkPhysicsChannel (expandUniverseStateLinear stB [w])
-  in (chA', chB')
+interactPhysicsChannels = interactClockTransducers
 
-------------------------------------------------------------------------
--- 2. PROTOCOL CHANNEL TRANSITION OPERATORS (CLOCK TICKS)
-------------------------------------------------------------------------
-
-channelScalePullbackTransform : MaxelTransform Nat Nat
-channelScalePullbackTransform = mkTransformBox HyperbolicSector (mkUnixelFraction (intToBoxInt 1) 4) [((1, 1), intToBoxInt 1)]
-
-||| Channel Galois Pushforward (f_*) Scale-Jump Transform (G: EllipticConfinement, Z: 137/210 contraction)
-public export
-channelScalePushforwardTransform : MaxelTransform Nat Nat
-channelScalePushforwardTransform = mkTransformBox EllipticSector (mkUnixelFraction (intToBoxInt 137) 210) [((1, 1), intToBoxInt 1)]
-
-||| Automated Galois Pullback (f^*) Scale-Jump:
-||| Expands a 1x1 scalar macrostate channel into a 2x2 Maxel microstate canvas
-||| via chiral outer product expansion under Hyperbolic channelScalePullbackTransform.
+||| Backward-compatible pullback alias
 public export
 autoScaleGaloisPullback : {vm, de, dm : Nat} ->
                           {poly : Polynumber} ->
                           (1 ch : PhysicsChannel poly vm de dm) ->
                           (gridTokens : Vect 4 BoxInt) ->
                           PhysicsChannel (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) (vm + 4) de dm
-autoScaleGaloisPullback (MkPhysicsChannel st) gridTokens =
-  MkPhysicsChannel (expandUniverseStateLinear st gridTokens)
+autoScaleGaloisPullback = autoScaleGaloisPullbackTransducer
 
-||| Automated Galois Pushforward (f_*) Scale-Jump:
-||| Coarse-grains a 2x2 microstate channel into a 1x1 macrostate cell
-||| via 137-stage cyclotomic division under Elliptic channelScalePushforwardTransform.
+||| Backward-compatible pushforward alias
 public export
 autoScaleGaloisPushforward : {vm, de, dm : Nat} ->
                              {poly : Polynumber} ->
                              (1 ch : PhysicsChannel poly vm de dm) ->
                              (remainder : BoxInt) ->
                              PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + 1) de (S dm)
-autoScaleGaloisPushforward (MkPhysicsChannel st) remainder =
-  MkPhysicsChannel (runLinearCosmicCycle st [intToBoxInt 0] remainder)
+autoScaleGaloisPushforward = autoScaleGaloisPushforwardTransducer
 
-------------------------------------------------------------------------
--- 3. CONSTRUCTIVE FORMAL AUDIT PROOFS FOR PROTOCOL CHANNELS
-------------------------------------------------------------------------
-
-||| Audits the Edwin Brady Protocol Channel & 137 Clock Tick Invariants:
-||| 1. QTT Linear Channel State Conservation: (200 == 200).
-||| 2. Cyclotomic 137 Polynomial Division Degree & Remainder Bound:
-|||    \Phi_137(x) has degree 136, remainder degree < 136.
+||| Backward-compatible audit alias
 public export
 auditProtocolChannelConservationProof : Bool
-auditProtocolChannelConservationProof = True
+auditProtocolChannelConservationProof = auditClockTransducerConservationProof
