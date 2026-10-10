@@ -84,3 +84,27 @@ streamTokenConjugateRoundtrip : FusedStream (ColorCharge, BoxInt) -> FusedStream
 streamTokenConjugateRoundtrip strm =
   streamPipelinePullbackTokens (streamPipelinePushforwardTokens strm)
 
+------------------------------------------------------------------------
+-- 3. COSMOLOGICAL SPACETIME TRUNK STREAMING
+------------------------------------------------------------------------
+
+||| Deforested stream pushforward for the Cosmological Hadronization Stage (Quarks -> Hadrons).
+public export
+fusedCosmicHadronPushforward : FusedStream (Box ColorCharge) -> FusedStream (Box HadronToken)
+fusedCosmicHadronPushforward = mapStream cosmicHadronPushforward
+
+||| Deforested stream pullback for the Cosmological Hadronization Stage (Hadrons -> Quarks).
+public export
+fusedCosmicHadronPullback : FusedStream (Box HadronToken) -> FusedStream (Box ColorCharge)
+fusedCosmicHadronPullback = mapStream cosmicHadronPullback
+
+||| Token-level deforested stream pushforward for the Cosmological Hadronization Stage:
+public export
+streamCosmicHadronPushforwardTokens : FusedStream (ColorCharge, BoxInt) -> FusedStream (HadronToken, BoxInt)
+streamCosmicHadronPushforwardTokens = streamMaxelAction tCosmicHadronizationPipeline
+
+||| Token-level deforested stream pullback for the Cosmological Hadronization Stage:
+public export
+streamCosmicHadronPullbackTokens : FusedStream (HadronToken, BoxInt) -> FusedStream (ColorCharge, BoxInt)
+streamCosmicHadronPullbackTokens = streamMaxelAction (transposeMaxel tCosmicHadronizationPipeline)
+

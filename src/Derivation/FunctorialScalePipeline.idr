@@ -30,11 +30,29 @@ public export
 pipelinePullback : Box BiomoduleToken -> Box ColorCharge
 pipelinePullback = applyPullback tTotalFunctorialPipeline
 
+||| The Cosmological Spacetime Trunk Hadronization Pushforward (f_*)
+public export
+cosmicHadronPushforward : Box ColorCharge -> Box HadronToken
+cosmicHadronPushforward = applyPushforward tCosmicHadronizationPipeline
+
+||| The Cosmological Spacetime Trunk Hadronization Pullback (f^*)
+public export
+cosmicHadronPullback : Box HadronToken -> Box ColorCharge
+cosmicHadronPullback = applyPullback tCosmicHadronizationPipeline
+
 ||| Scale Adjunction instance between micro Quark multiset and macro Biomodule multiset.
 public export
 MultisetScaleAdjunction (Box ColorCharge) (Box BiomoduleToken) where
   f_pushforward = pipelinePushforward
   f_pullback    = pipelinePullback
+  verifyUnit _   = Refl
+  verifyCounit _ = Refl
+
+||| Scale Adjunction instance for the Cosmological Hadronization stage.
+public export
+MultisetScaleAdjunction (Box ColorCharge) (Box HadronToken) where
+  f_pushforward = cosmicHadronPushforward
+  f_pullback    = cosmicHadronPullback
   verifyUnit _   = Refl
   verifyCounit _ = Refl
 
