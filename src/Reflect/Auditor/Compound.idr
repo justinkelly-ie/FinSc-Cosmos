@@ -29,6 +29,21 @@ public export
 auditAstrophysicalAggregationProofExport : Bool
 auditAstrophysicalAggregationProofExport = Compound.AstrophysicalAggregation.auditAstrophysicalAggregationProof
 
+-- Witness 4: Geodesic Flow Orbit Invariance
+public export
+auditGeodesicOrbitProofExport : Bool
+auditGeodesicOrbitProofExport = Compound.SymplecticIntegrator.auditGeodesicOrbitProof
+
+-- Witness 5: Coinductive Symplectic Orbit Stream Invariance
+public export
+auditStreamSymplecticOrbitProofExport : Bool
+auditStreamSymplecticOrbitProofExport = Compound.SymplecticIntegrator.auditStreamSymplecticOrbitProof
+
+-- Witness 6: Dissipative Langevin Horizon Coupling
+public export
+auditDissipativeLangevinHorizonProofExport : Bool
+auditDissipativeLangevinHorizonProofExport = Compound.SymplecticIntegrator.auditDissipativeLangevinHorizonProof
+
 ------------------------------------------------------------------------
 -- BATCH CATALOG WITNESS REFLECTION AUDITOR
 ------------------------------------------------------------------------
@@ -39,9 +54,13 @@ compoundCatalogWitnesses =
   [ auditSymplecticPhaseInvarianceProofExport
   , auditRelativisticVelocityLensingProofExport
   , auditAstrophysicalAggregationProofExport
+  , auditGeodesicOrbitProofExport
+  , auditStreamSymplecticOrbitProofExport
+  , auditDissipativeLangevinHorizonProofExport
   ]
 
 public export
 %macro
 auditCompoundCatalog : Elab (allTrue Reflect.Auditor.Compound.compoundCatalogWitnesses = True)
 auditCompoundCatalog = auditCatalogWitnesses compoundCatalogWitnesses
+

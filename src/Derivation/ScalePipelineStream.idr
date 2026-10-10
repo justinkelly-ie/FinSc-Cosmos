@@ -2,7 +2,10 @@ module Derivation.ScalePipelineStream
 
 import Data.List
 import Data.Fuel
+import Stage0.BoxInt
 import Stage0.OnSeq.FusedStream
+import Stage1.MaxelTransform
+import Stage1.ScalePipeline
 import Derivation.FunctorialScalePipeline
 import Stage1.MultisetDuality
 
@@ -33,7 +36,7 @@ runBiomoduleStream : Fuel -> FusedStream (Box BiomoduleToken) -> List (Box Biomo
 runBiomoduleStream = runFueledStream
 
 ||| Evaluates an end-to-end multiscale pipeline pushforward/pullback roundtrip stream.
-public export covering
+public export
 fusedScalePipelineHylomorphism : Fuel -> List (Box ColorCharge) -> List (Box ColorCharge)
 fusedScalePipelineHylomorphism f charges =
   let pushStrm = fusedPipelinePushforward (stream charges)
@@ -46,16 +49,38 @@ fusedConjugateHylomorphism : FusedStream (Box ColorCharge) -> FusedStream (Box C
 fusedConjugateHylomorphism strm =
   fusedPipelinePullback (fusedPipelinePushforward strm)
 
-||| Zero-Allocation Default Execution Engine for Scale Pipeline Jumps
-public export covering
+||| Zero-Allocation Default Execution Engine for Scale Pipeline Jumps bounded by structural input size.
+public export
 runScalePipelineDefault : List (Box ColorCharge) -> List (Box ColorCharge)
-runScalePipelineDefault = fusedScalePipelineHylomorphism (limit 100)
+runScalePipelineDefault charges = fusedScalePipelineHylomorphism substrateFuel charges
 
 ||| Equivalence witness asserting static pipeline behavior matches fused streaming engine.
-public export covering
+public export
 auditStreamingScalePipelineEquivalence : List (Box ColorCharge) -> Bool
 auditStreamingScalePipelineEquivalence inputs =
   let staticRes = map (pipelinePullback . pipelinePushforward) inputs
       streamRes = runScalePipelineDefault inputs
   in staticRes == streamRes
+
+------------------------------------------------------------------------
+-- 2. TOKEN-LEVEL ZERO-ALLOCATION SCALE PIPELINE STREAMING
+------------------------------------------------------------------------
+
+||| Zero-allocation token-level deforested scale pipeline pushforward:
+||| Streams individual (ColorCharge, BoxInt) pairs through the 4-tier scale jumps
+||| directly without constructing intermediate Box multiset wrappers.
+public export
+streamPipelinePushforwardTokens : FusedStream (ColorCharge, BoxInt) -> FusedStream (BiomoduleToken, BoxInt)
+streamPipelinePushforwardTokens = streamMaxelAction tTotalFunctorialPipeline
+
+||| Zero-allocation token-level deforested scale pipeline pullback:
+public export
+streamPipelinePullbackTokens : FusedStream (BiomoduleToken, BoxInt) -> FusedStream (ColorCharge, BoxInt)
+streamPipelinePullbackTokens = streamMaxelAction (transposeMaxel tTotalFunctorialPipeline)
+
+||| Deforested token roundtrip conjugate stream:
+public export
+streamTokenConjugateRoundtrip : FusedStream (ColorCharge, BoxInt) -> FusedStream (ColorCharge, BoxInt)
+streamTokenConjugateRoundtrip strm =
+  streamPipelinePullbackTokens (streamPipelinePushforwardTokens strm)
 

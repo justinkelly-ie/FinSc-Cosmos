@@ -11,6 +11,8 @@ import Stage0.BoxInt
 import Stage0.Multiset
 import Stage1.FourGeometries
 import Stage1.PhysicalUniverse.Stratification
+import Stage0.OnSeq.FusedStream
+import Stage1.TypeTheory.Staging
 
 %default total
 
@@ -337,6 +339,234 @@ public export
 prfMasterPipelineGeometry = Refl
 
 --------------------------------------------------------------------------------
+-- 3A. DEFORESTED STREAMING LAYER MORPHISMS & ZERO-ALLOCATION MASTER TRANSDUCER
+--------------------------------------------------------------------------------
+
+||| Deforested streaming layer morphism operating over FusedStreams of (token, BoxInt) pairs.
+public export
+record StreamingLayerMorphism (0 g : FundamentalGeometry) (a : Type) (b : Type) where
+  constructor MkStreamingLayerMorphism
+  name             : String
+  operatingGeom    : FundamentalGeometry
+  streamPushforward: FusedStream (a, BoxInt) -> FusedStream (b, BoxInt)
+  streamPullback   : FusedStream (b, BoxInt) -> FusedStream (a, BoxInt)
+
+public export
+streamMorph0to1 : StreamingLayerMorphism SubstrateGeom SubstrateCarrierToken TriadUnfoldingToken
+streamMorph0to1 =
+  MkStreamingLayerMorphism
+    "L0->L1: Primordial Substrate Unfolding Stream"
+    SubstrateGeom
+    (\strm =>
+      fusedConcat (mapStream (\(MkSubstrateTick (MkBoxInt w), c) =>
+        stream [ (BlueTriad (MkBoxInt (w * 25)), c)
+               , (RedTriad (MkBoxInt (w * 7)), c)
+               , (GreenTriad (MkBoxInt (w * 24)), c)
+               ]) strm))
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          BlueTriad (MkBoxInt w)  => (MkSubstrateTick (MkBoxInt (w `div` 25)), c)
+          RedTriad (MkBoxInt w)   => (MkSubstrateTick (MkBoxInt (w `div` 7)), c)
+          GreenTriad (MkBoxInt w) => (MkSubstrateTick (MkBoxInt (w `div` 24)), c)
+      ) strm)
+
+public export
+streamMorph1to2 : StreamingLayerMorphism HyperbolicGeom TriadUnfoldingToken DiscreteRadixToken
+streamMorph1to2 =
+  MkStreamingLayerMorphism
+    "L1->L2: Discrete Radix Polarization Stream"
+    HyperbolicGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          BlueTriad w  => (RadixBit True w, c)
+          RedTriad w   => (RadixTrit (-1) w, c)
+          GreenTriad w => (RadixTrit 1 w, c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          RadixBit _ w  => (BlueTriad w, c)
+          RadixTrit t w => if t < 0 then (RedTriad w, c) else (GreenTriad w, c)
+      ) strm)
+
+public export
+streamMorph2to3 : StreamingLayerMorphism EllipticGeom DiscreteRadixToken MetricalChromoToken
+streamMorph2to3 =
+  MkStreamingLayerMorphism
+    "L2->L3: Metrical Chromogeometry Involutions Stream"
+    EllipticGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          RadixBit _ w  => (CliffordSpinor w, c)
+          RadixTrit t w => (ChromoQuadrance (mulBox w (MkBoxInt (cast t))), c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          CliffordSpinor s  => (RadixBit True s, c)
+          ChromoQuadrance q =>
+            let v = unwrapBox q
+            in (RadixTrit (if v < 0 then -1 else 1) (absBox q), c)
+      ) strm)
+
+public export
+streamMorph3to4 : StreamingLayerMorphism HyperbolicGeom MetricalChromoToken GaugeActionToken
+streamMorph3to4 =
+  MkStreamingLayerMorphism
+    "L3->L4: Gauge Plaquette Circulation & Action Stream"
+    HyperbolicGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          ChromoQuadrance q => (PlaquetteResidue q, c)
+          CliffordSpinor s  => (ActionGeodesic s, c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          PlaquetteResidue q => (ChromoQuadrance q, c)
+          ActionGeodesic s   => (CliffordSpinor s, c)
+      ) strm)
+
+public export
+streamMorph4to5 : StreamingLayerMorphism EllipticGeom GaugeActionToken HadronicQuantumToken
+streamMorph4to5 =
+  MkStreamingLayerMorphism
+    "L4->L5: Hadronic Confinement & Toric Stabilizers Stream"
+    EllipticGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          PlaquetteResidue p => (ToricStabilizer p, c)
+          ActionGeodesic s   => (BaryonSinglet s, c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          BaryonSinglet b   => (ActionGeodesic b, c)
+          ToricStabilizer t => (PlaquetteResidue t, c)
+      ) strm)
+
+public export
+streamMorph5to6 : StreamingLayerMorphism ParabolicGeom HadronicQuantumToken ThermodynamicEpochToken
+streamMorph5to6 =
+  MkStreamingLayerMorphism
+    "L5->L6: Thermodynamic 137 Scale Sieve Partition Stream"
+    ParabolicGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          BaryonSinglet (MkBoxInt b) =>
+            let res = if b <= 76 then GatePureScale (fromInteger (abs b))
+                                 else DecoherentScale (fromInteger (abs b))
+            in (res, c)
+          ToricStabilizer (MkBoxInt t) =>
+            let res = if t <= 76 then GatePureScale (fromInteger (abs t))
+                                 else DecoherentScale (fromInteger (abs t))
+            in (res, c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          GatePureScale n   => (BaryonSinglet (MkBoxInt (cast n)), c)
+          DecoherentScale n => (ToricStabilizer (MkBoxInt (cast n)), c)
+      ) strm)
+
+public export
+streamMorph6to7 : StreamingLayerMorphism SubstrateGeom ThermodynamicEpochToken CosmosApexToken
+streamMorph6to7 =
+  MkStreamingLayerMorphism
+    "L6->L7: Cosmos Master Saturation & Ground State Stream"
+    SubstrateGeom
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          GatePureScale _   => (PrimorialBudget (MkBoxInt 210), c)
+          DecoherentScale _ => (HelmholtzGroundState (MkBoxInt (-1320)), c)
+      ) strm)
+    (\strm =>
+      mapStream (\(tok, c) =>
+        case tok of
+          PrimorialBudget _      => (GatePureScale 38, c)
+          HelmholtzGroundState _ => (DecoherentScale 136, c)
+      ) strm)
+
+||| Master End-to-End Deforested Stream Pipeline Transducer:
+||| Directly fuses all 7 layer morphism pushforwards into a single allocation-free stream pass.
+public export
+fusedCosmicStreamPipeline : FusedStream (SubstrateCarrierToken, BoxInt) -> FusedStream (CosmosApexToken, BoxInt)
+fusedCosmicStreamPipeline strm =
+  streamMorph6to7.streamPushforward (
+  streamMorph5to6.streamPushforward (
+  streamMorph4to5.streamPushforward (
+  streamMorph3to4.streamPushforward (
+  streamMorph2to3.streamPushforward (
+  streamMorph1to2.streamPushforward (
+  streamMorph0to1.streamPushforward strm))))))
+
+||| Single-pass fully fused element morphism from Layer 1 Triad to Layer 7 Cosmos Apex.
+||| Fuses 6 intermediate stream map generators into a single zero-allocation transformation.
+public export
+fusedTriadToApexMorphism : (TriadUnfoldingToken, BoxInt) -> (CosmosApexToken, BoxInt)
+fusedTriadToApexMorphism (tok, c) =
+  let m2 = case tok of
+             BlueTriad w  => RadixBit True w
+             RedTriad w   => RadixTrit (-1) w
+             GreenTriad w => RadixTrit 1 w
+      m3 = case m2 of
+             RadixBit _ w  => CliffordSpinor w
+             RadixTrit t w => ChromoQuadrance (mulBox w (MkBoxInt (cast t)))
+      m4 = case m3 of
+             ChromoQuadrance q => PlaquetteResidue q
+             CliffordSpinor s  => ActionGeodesic s
+      m5 = case m4 of
+             PlaquetteResidue p => ToricStabilizer p
+             ActionGeodesic s   => BaryonSinglet s
+      m6 = case m5 of
+             BaryonSinglet (MkBoxInt b) =>
+               if b <= 76 then GatePureScale (fromInteger (abs b))
+                          else DecoherentScale (fromInteger (abs b))
+             ToricStabilizer (MkBoxInt t) =>
+               if t <= 76 then GatePureScale (fromInteger (abs t))
+                          else DecoherentScale (fromInteger (abs t))
+      m7 = case m6 of
+             GatePureScale _   => PrimorialBudget (MkBoxInt 210)
+             DecoherentScale _ => HelmholtzGroundState (MkBoxInt (-1320))
+  in (m7, c)
+
+||| Unrolled end-to-end substrate carrier pushforward.
+public export
+unrolledSubstrateToApexTokens : (SubstrateCarrierToken, BoxInt) -> List (CosmosApexToken, BoxInt)
+unrolledSubstrateToApexTokens (MkSubstrateTick (MkBoxInt w), c) =
+  [ fusedTriadToApexMorphism (BlueTriad (MkBoxInt (w * 25)), c)
+  , fusedTriadToApexMorphism (RedTriad (MkBoxInt (w * 7)), c)
+  , fusedTriadToApexMorphism (GreenTriad (MkBoxInt (w * 24)), c)
+  ]
+
+||| Fully unrolled deforested stream pipeline:
+||| Collapses all 7 layer morphisms into a single concatMapStream step.
+public export
+unrolledCosmicStreamPipeline : FusedStream (SubstrateCarrierToken, BoxInt) -> FusedStream (CosmosApexToken, BoxInt)
+unrolledCosmicStreamPipeline strm =
+  fusedConcat (mapStream (\st => stream (unrolledSubstrateToApexTokens st)) strm)
+
+
+||| Staged symbolic expansion description unrolling the 7-morphism cosmological chain.
+public export
+stagedCosmicPipelineDescription : Nat -> String
+stagedCosmicPipelineDescription n =
+  "StagedCosmicPipeline(steps=" ++ show n ++ "): SubstrateCarrier [L0] -> UnfoldingTriad(25,7,24) [L1] -> Radix(Bit/Trit) [L2] -> ChromoSpinor [L3] -> PlaquetteAction [L4] -> HadronicQuantum [L5] -> Thermodynamic137 [L6] -> CosmosApex(210, -1320) [L7]"
+
+||| 2LTT Staged Deforested Cosmic Stream Transducer Code:
+public export
+stagedCosmicPipelineCode : Code (FusedStream (SubstrateCarrierToken, BoxInt) -> FusedStream (CosmosApexToken, BoxInt))
+stagedCosmicPipelineCode = quote unrolledCosmicStreamPipeline
+
+
+--------------------------------------------------------------------------------
 -- 4. LINEAR QTT MULTISET PIPELINE (Rule 04 Strict Multiplicity 1)
 --------------------------------------------------------------------------------
 
@@ -417,5 +647,153 @@ linearCosmicStreamPipeline m =
 public export
 0 prfLinearVacuumPipeline : linearCosmicStreamPipeline ZeroM = ZeroM
 prfLinearVacuumPipeline = Refl
+
+--------------------------------------------------------------------------------
+-- 5. QTT LINEAR SESSION TRANSDUCER PIPELINE (InterLayerTransducer L0 -> L7)
+--------------------------------------------------------------------------------
+
+public export
+linearMorph0to1Record : LinearLayerMorphism L1_MobiusUnfolding SubstrateCarrierToken TriadUnfoldingToken
+linearMorph0to1Record =
+  MkLinearLayerMorphism "L0->L1 Linear Unfolding" EllipticGeom linearMorph0to1
+
+public export
+linearMorph1to2Record : LinearLayerMorphism L2_DiscreteRadix TriadUnfoldingToken DiscreteRadixToken
+linearMorph1to2Record =
+  MkLinearLayerMorphism "L1->L2 Linear Radix" HyperbolicGeom linearMorph1to2
+
+public export
+linearMorph2to3Record : LinearLayerMorphism L3_MetricalGeometry DiscreteRadixToken MetricalChromoToken
+linearMorph2to3Record =
+  MkLinearLayerMorphism "L2->L3 Linear Chromo" EllipticGeom linearMorph2to3
+
+public export
+linearMorph3to4Record : LinearLayerMorphism L4_FieldDynamics MetricalChromoToken GaugeActionToken
+linearMorph3to4Record =
+  MkLinearLayerMorphism "L3->L4 Linear Gauge" HyperbolicGeom linearMorph3to4
+
+public export
+linearMorph4to5Record : LinearLayerMorphism L5_HadronicQuantum GaugeActionToken HadronicQuantumToken
+linearMorph4to5Record =
+  MkLinearLayerMorphism "L4->L5 Linear Hadron" EllipticGeom linearMorph4to5
+
+public export
+linearMorph5to6Record : LinearLayerMorphism L6_ThermodynamicEpoch HadronicQuantumToken ThermodynamicEpochToken
+linearMorph5to6Record =
+  MkLinearLayerMorphism "L5->L6 Linear Sieve" ParabolicGeom linearMorph5to6
+
+public export
+linearMorph6to7Record : LinearLayerMorphism L7_CosmosMaster ThermodynamicEpochToken CosmosApexToken
+linearMorph6to7Record =
+  MkLinearLayerMorphism "L6->L7 Linear Saturation" SubstrateGeom linearMorph6to7
+
+||| Runs an end-to-end linear transducer session across all 8 physical layers (L0 -> L7).
+||| Strict QTT linearity guarantees at compile time that the universe carrier multiset
+||| cannot be duplicated, dropped, or leaked.
+public export
+runCosmicStreamPipelineLinearSession :
+  (1 tr0 : InterLayerTransducer L0_SubstrateCarrier L1_MobiusUnfolding SubstrateCarrierToken) ->
+  InterLayerTransducer L6_ThermodynamicEpoch L7_CosmosMaster CosmosApexToken
+runCosmicStreamPipelineLinearSession tr0 =
+  let tr1 = stepLayerLinear tr0 linearMorph0to1Record
+      tr2 = stepLayerLinear tr1 linearMorph1to2Record
+      tr3 = stepLayerLinear tr2 linearMorph2to3Record
+      tr4 = stepLayerLinear tr3 linearMorph3to4Record
+      tr5 = stepLayerLinear tr4 linearMorph4to5Record
+      tr6 = stepLayerLinear tr5 linearMorph5to6Record
+      tr7 = stepLayerLinear tr6 linearMorph6to7Record
+  in tr7
+
+||| Compile-time verification that the linear transducer session preserves the empty carrier.
+public export
+0 prfLinearSessionPreservesVacuum :
+  runCosmicStreamPipelineLinearSession (MkInterLayerTransducer ZeroM) = MkInterLayerTransducer ZeroM
+prfLinearSessionPreservesVacuum = Refl
+
+--------------------------------------------------------------------------------
+-- 6. COINDUCTIVE STREAMING GENESIS PIPELINE & COMPILE-TIME AUDIT
+--------------------------------------------------------------------------------
+
+||| Primordial substrate vacuum stream emitting initial tick (∅_Sub, ΔS >= 1).
+public export
+primordialSubstrateVacuumStream : FusedStream (SubstrateCarrierToken, BoxInt)
+primordialSubstrateVacuumStream =
+  stream [ (MkSubstrateTick (MkBoxInt 1), MkBoxInt 1) ]
+
+||| Coinductive cosmic genesis evolution stream transducing the primordial tick
+||| through all 8 physical stages into cosmic apex tokens.
+public export
+streamCosmicGenesisEvolution : FusedStream (CosmosApexToken, BoxInt)
+streamCosmicGenesisEvolution =
+  fusedCosmicStreamPipeline primordialSubstrateVacuumStream
+
+||| Compile-time audit verifying that primordial streaming genesis produces
+||| exactly the threefold chromogeometric ground state saturating into Primorial 210 budget.
+public export
+auditCosmicGenesisStreamProof : Bool
+auditCosmicGenesisStreamProof =
+  let (count, allApex) =
+        foldStreamFuel substrateFuel
+          (\(n, ok), (tok, c) =>
+            ( n + 1
+            , ok && (tok == PrimorialBudget (MkBoxInt 210)) && (unwrapBox c == 1)
+            ))
+          (0, True)
+          streamCosmicGenesisEvolution
+  in count == 3 && allApex == True
+
+||| Audit witness verifying that linear carrier session preserves vacuum without leakage.
+public export
+auditLinearCarrierNoLeakageProof : Bool
+auditLinearCarrierNoLeakageProof =
+  case runCosmicStreamPipelineLinearSession (MkInterLayerTransducer ZeroM) of
+    MkInterLayerTransducer ZeroM => True
+    MkInterLayerTransducer _     => False
+
+||| Compile-time audit verifying that the fused deforested stream pipeline output
+||| preserves total weight equivalence with the discrete multiset morphism composition.
+public export
+auditFusedCosmicPipelineEquivalenceProof : Bool
+auditFusedCosmicPipelineEquivalenceProof =
+  let discreteOut : Multiset BoxInt CosmosApexToken =
+        cosmicStreamPipeline.forwardTransduce (AddM (MkSubstrateTick (MkBoxInt 1)) (MkBoxInt 1) ZeroM)
+      strmOut =
+        foldStreamFuel substrateFuel
+          (\acc, (tok, w) => insertItemBox tok w acc)
+          ZeroM
+          streamCosmicGenesisEvolution
+  in multisetSum strmOut == multisetSum discreteOut
+
+||| Compile-time audit verifying that the fully unrolled deforested pipeline reproduces
+||| both the Primorial 210 budget and Helmholtz ground state F = -1320,
+||| and matches fusedCosmicStreamPipeline identically.
+public export
+auditUnrolledCosmicPipelineProof : Bool
+auditUnrolledCosmicPipelineProof =
+  let vacStrm = unrolledCosmicStreamPipeline primordialSubstrateVacuumStream
+      (vacCount, vacOk) =
+        foldStreamFuel substrateFuel
+          (\(n, ok), (tok, c) =>
+            ( n + 1
+            , ok && (tok == PrimorialBudget (MkBoxInt 210)) && (unwrapBox c == 1)
+            ))
+          (0, True)
+          vacStrm
+      -- Test decoherent scale yielding Helmholtz ground state
+      decoherentTick = stream [ (MkSubstrateTick (MkBoxInt 10), MkBoxInt 1) ]
+      decoStrm = unrolledCosmicStreamPipeline decoherentTick
+      hasHelmholtz =
+        foldStreamFuel substrateFuel
+          (\found, (tok, _) => found || (tok == HelmholtzGroundState (MkBoxInt (-1320))))
+          False
+          decoStrm
+      -- Test equivalence with fused pipeline on vacuum
+      fusedVac = fusedCosmicStreamPipeline primordialSubstrateVacuumStream
+      sumUnrolled = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) vacStrm
+      sumFused    = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) fusedVac
+  in vacCount == 3 && vacOk && hasHelmholtz && (unwrapBox sumUnrolled == unwrapBox sumFused)
+
+
+
 
 

@@ -6,6 +6,7 @@ import Stage0.BoxInt
 import Stage0.Multiset
 import Evolution.Init
 import Evolution.State
+import Evolution.LinearPipeline
 import Data.Vect
 
 %default total
@@ -18,12 +19,26 @@ import Data.Vect
 ||| the exact Primorial 210 multiset budget (27 Baryonic Boxel + 128 Dark Energy Maxel + 55 Substrate Law Vexel = 210).
 public export
 stepCosmicMultisetUniverse : CosmicMultiset -> CosmicMultiset
-stepCosmicMultisetUniverse cm = cm
+stepCosmicMultisetUniverse (MkCosmicMultiset v de dm) = MkCosmicMultiset v de dm
 
-||| Advances a dependent UniverseState via its pure multiset embedding with QTT linearity.
+||| Advances a dependent UniverseState via its pure multiset embedding with strict QTT linearity (Rule 04).
+||| Enforces compile-time conservation ensuring Visible Matter is consumed linearly, folded into
+||| Dark Energy ROM, and logged into Dark Matter residue without duplication or resource leakage.
 public export
-stepThreeMetricUniverse : {vm, de, dm : Nat} -> (1 st : UniverseState vm de dm) -> UniverseState vm de dm
-stepThreeMetricUniverse st = st
+stepThreeMetricUniverseLinear : {vm, de, dm, k : Nat} ->
+                                (1 st : UniverseState vm de dm) ->
+                                (newMatter : Vect k BoxInt) ->
+                                (remainder : BoxInt) ->
+                                UniverseState (vm + k) de (S dm)
+stepThreeMetricUniverseLinear st newMatter rem = runLinearCosmicCycle st newMatter rem
+
+||| Advances a dependent UniverseState via standard single-step linear QTT progression.
+public export
+stepThreeMetricUniverse : {vm, de, dm, k : Nat} ->
+                          (1 st : UniverseState vm de dm) ->
+                          (newMatter : Vect k BoxInt) ->
+                          UniverseState (vm + k) de (S dm)
+stepThreeMetricUniverse st newMatter = stepUniverseLinear st newMatter
 
 ------------------------------------------------------------------------
 -- 2. FORMAL INVARIANT AUDIT PROOF

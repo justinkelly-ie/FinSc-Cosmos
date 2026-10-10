@@ -8,6 +8,11 @@ import public Reflect.Auditor.Evolution
 import public Reflect.Auditor.Observation
 
 import Math.FineStructure
+import Stage1.PhysicalUniverse.Pipeline
+import Compound.SymplecticIntegrator
+import Stage0.FluctuationStream
+import Stage1.MaxelTransform
+import Derivation.MultisetTheoremExporter
 import public Language.Reflection
 
 %default total
@@ -120,3 +125,88 @@ auditFineStructure137Proof : Bool
 auditFineStructure137Proof =
   Math.FineStructure.verify137Derivation &&
   Math.FineStructure.verifyCosmicPartition210
+
+------------------------------------------------------------------------
+-- SYSTEMIC COINDUCTIVE STREAM INVARIANT WITNESS EXPORTS & %MACRO AUDITS
+------------------------------------------------------------------------
+
+public export
+auditCosmicGenesisStreamProofExport : Bool
+auditCosmicGenesisStreamProofExport = Stage1.PhysicalUniverse.Pipeline.auditCosmicGenesisStreamProof
+
+public export
+%macro
+auditCosmicGenesisStream : Elab (Reflect.InvariantAuditor.auditCosmicGenesisStreamProofExport = True)
+auditCosmicGenesisStream = auditWitness Reflect.InvariantAuditor.auditCosmicGenesisStreamProofExport
+
+public export
+auditGeodesicOrbitMacroProof : Bool
+auditGeodesicOrbitMacroProof = Reflect.Auditor.Compound.auditGeodesicOrbitProofExport
+
+public export
+%macro
+auditGeodesicOrbit : Elab (Reflect.Auditor.Compound.auditGeodesicOrbitProofExport = True)
+auditGeodesicOrbit = auditWitness Reflect.Auditor.Compound.auditGeodesicOrbitProofExport
+
+public export
+auditDirectThermalFreeEnergyProofExport : Bool
+auditDirectThermalFreeEnergyProofExport = Stage0.FluctuationStream.auditDirectThermalFreeEnergyProof
+
+public export
+%macro
+auditDirectThermalFreeEnergy : Elab (Reflect.InvariantAuditor.auditDirectThermalFreeEnergyProofExport = True)
+auditDirectThermalFreeEnergy = auditWitness Reflect.InvariantAuditor.auditDirectThermalFreeEnergyProofExport
+
+public export
+auditScaleAdjunctionProofExport : Bool
+auditScaleAdjunctionProofExport = Stage1.MaxelTransform.auditScaleAdjunctionProof
+
+public export
+%macro
+auditScaleAdjunction : Elab (Reflect.InvariantAuditor.auditScaleAdjunctionProofExport = True)
+auditScaleAdjunction = auditWitness Reflect.InvariantAuditor.auditScaleAdjunctionProofExport
+
+
+public export
+auditMultisetTheoremExporterMacroProof : Bool
+auditMultisetTheoremExporterMacroProof = Reflect.Auditor.Evolution.auditMultisetTheoremExporterProofExport
+
+public export
+auditDissipativeLangevinHorizonProofExport : Bool
+auditDissipativeLangevinHorizonProofExport = Reflect.Auditor.Compound.auditDissipativeLangevinHorizonProofExport
+
+public export
+%macro
+auditDissipativeLangevinHorizon : Elab (Reflect.InvariantAuditor.auditDissipativeLangevinHorizonProofExport = True)
+auditDissipativeLangevinHorizon = auditWitness Reflect.InvariantAuditor.auditDissipativeLangevinHorizonProofExport
+
+public export
+auditLinearCarrierNoLeakageProofExport : Bool
+auditLinearCarrierNoLeakageProofExport = Stage1.PhysicalUniverse.Pipeline.auditLinearCarrierNoLeakageProof
+
+public export
+%macro
+auditLinearCarrierNoLeakage : Elab (Reflect.InvariantAuditor.auditLinearCarrierNoLeakageProofExport = True)
+auditLinearCarrierNoLeakage = auditWitness Reflect.InvariantAuditor.auditLinearCarrierNoLeakageProofExport
+
+public export
+auditFusedCosmicPipelineEquivalenceProofExport : Bool
+auditFusedCosmicPipelineEquivalenceProofExport = Stage1.PhysicalUniverse.Pipeline.auditFusedCosmicPipelineEquivalenceProof
+
+public export
+%macro
+auditFusedCosmicPipelineEquivalence : Elab (Reflect.InvariantAuditor.auditFusedCosmicPipelineEquivalenceProofExport = True)
+auditFusedCosmicPipelineEquivalence = auditWitness Reflect.InvariantAuditor.auditFusedCosmicPipelineEquivalenceProofExport
+
+public export
+auditUnrolledCosmicPipelineProofExport : Bool
+auditUnrolledCosmicPipelineProofExport = Stage1.PhysicalUniverse.Pipeline.auditUnrolledCosmicPipelineProof
+
+public export
+%macro
+auditUnrolledCosmicPipeline : Elab (Reflect.InvariantAuditor.auditUnrolledCosmicPipelineProofExport = True)
+auditUnrolledCosmicPipeline = auditWitness Reflect.InvariantAuditor.auditUnrolledCosmicPipelineProofExport
+
+
+
+

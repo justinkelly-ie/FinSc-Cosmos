@@ -86,7 +86,7 @@ galoisAdjunction2Cell f1 f2 = idChromo
 ------------------------------------------------------------------------
 
 ||| Evaluates zero-allocation stream hyper-tensor contraction over streaming MPS / PEPS networks.
-public export covering
+public export
 fusedContractHyperTensors : Eq a => Fuel -> List (Vect 2 a, BoxInt) -> List (Vect 2 a, BoxInt) -> List ((a, a), BoxInt)
 fusedContractHyperTensors f items1 items2 =
   runFueledStream f $
@@ -108,12 +108,13 @@ auditMultisetAdvancedTensorEngineProof : Bool
 auditMultisetAdvancedTensorEngineProof = True
 
 ||| Audit witness verifying equivalence of fusedContractHyperTensors and contractMultisetHyperTensors.
-public export covering
+public export
 auditFusedHyperTensorContractionProof : Bool
 auditFusedHyperTensorContractionProof =
   let ht1 : HyperTensor 2 Nat = MkBox [([1, 2], intToBoxInt 3)]
       ht2 : HyperTensor 2 Nat = MkBox [([2, 3], intToBoxInt 4)]
       c1 = contractMultisetHyperTensors ht1 ht2
-      c2 = fusedContractHyperTensors (limit 10) (items ht1) (items ht2)
+      fuel = limit (length (items ht1) + length (items ht2) + 2)
+      c2 = fusedContractHyperTensors fuel (items ht1) (items ht2)
   in length (items c1) == length c2
 

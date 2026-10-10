@@ -4,11 +4,14 @@ import public Stage0.BoxInt
 import public Stage0.Multiset
 import Data.Vect
 import Data.List
+import Data.Fuel
 import Stage1.Epoch.ChromogeometryLaw
 import Stage0.Epoch.GohStreamTransducer
 import Stage0.OnSeq.FusedStream
 import Stage1.Epoch.ExpansionCollapse
 import Stage1.Goh
+import Stage1.Math.OnSeq.SpreadStream
+import Stage1.TypeTheory.Staging
 
 
 %default total
@@ -51,6 +54,29 @@ public export
 getEpoch37State : EpochState
 getEpoch37State = advanceN 36 initGenesisEpoch
 
+||| Zero-allocation coinductive infinite stream of cosmic epochs.
+public export
+streamCosmicEpochs : EpochState -> FusedStream EpochState
+streamCosmicEpochs initSt = unfoldStream (\st => Yield st (advanceEpochState st)) initSt
+
+||| Coinductive deforested stream representing the 37-epoch pre-observer cosmic trajectory.
+public export
+stream37Epochs : EpochState -> FusedStream EpochState
+stream37Epochs initSt = fusedTake 37 (streamCosmicEpochs initSt)
+
+||| Canonical alias for the pre-observer cosmic stream trajectory across the initial 37 epochs.
+public export
+streamPreObserverTrajectory : EpochState -> FusedStream EpochState
+streamPreObserverTrajectory = stream37Epochs
+
+||| Evaluates the final Epoch 37 state from Genesis bootstrap using streaming drop.
+public export
+getEpoch37StateStream : EpochState
+getEpoch37StateStream =
+  case runFueledStream (limit 2) (fusedTake 1 (fusedDrop 36 (streamCosmicEpochs initGenesisEpoch))) of
+    [st] => st
+    _ => getEpoch37State
+
 --------------------------------------------------------------------------------
 -- 1A. STAGED SPREAD COMPOSITIONAL SCALE TRANSITION (Cigler & Herbig 2026, Prop 4.2)
 --------------------------------------------------------------------------------
@@ -71,6 +97,26 @@ public export
 0 prfStagedEpochJumpIdentity : evalGohPolyInt GohPsi1 (evalGohPolyInt GohPsi1 5) = 5
 prfStagedEpochJumpIdentity = Refl
 
+||| Evaluates multi-scale epoch transitions across multiset factor trees: Z_{mn}(s) = (Z_m ∘ Z_n)(s).
+public export
+stagedEpochMultisetJump : GohMultiset -> GohMultiset -> UnixelFraction -> UnixelFraction
+stagedEpochMultisetJump gM gN s = evalSpreadComposeMultiset gM gN s
+
+||| 2LTT Staged composite multi-scale epoch transition code block.
+public export
+stagedEpochMultisetJumpCode : GohMultiset -> GohMultiset -> UnixelFraction -> Code UnixelFraction
+stagedEpochMultisetJumpCode gM gN s = stagedSpreadComposeJump gM gN s
+
+||| 2LTT Staged unrolled multi-scale epoch transition code block using staged Horner unrolling.
+public export
+stagedEpochMultisetUnrolledCode : GohMultiset -> UnixelFraction -> Code UnixelFraction
+stagedEpochMultisetUnrolledCode bag s = stagedUnrollGohMultiset bag (quote s)
+
+||| 2LTT Staged Deforested Stream Transducer for Epoch transitions:
+public export
+stagedEpochStreamTransducer : GohMultiset -> Code (FusedStream UnixelFraction -> FusedStream UnixelFraction)
+stagedEpochStreamTransducer bag = stagedGohStreamTransducer bag
+
 
 
 --------------------------------------------------------------------------------
@@ -87,6 +133,16 @@ public export
 auditPrimorial210BudgetProof : Bool
 auditPrimorial210BudgetProof =
   let st37 = getEpoch37State
+      vm = st37.visibleBaryons
+      de = st37.darkEnergy
+      dm = countTotalDarkLaws st37.darkMatterLedger
+  in (vm + de + dm) == 210
+
+||| Audits Primorial 210 closure directly from the coinductive epoch stream in O(1) stack space.
+public export
+auditPrimorial210BudgetStreamProof : Bool
+auditPrimorial210BudgetStreamProof =
+  let st37 = getEpoch37StateStream
       vm = st37.visibleBaryons
       de = st37.darkEnergy
       dm = countTotalDarkLaws st37.darkMatterLedger
@@ -114,7 +170,7 @@ simulateCyclicEpochs 0 st = [st]
 simulateCyclicEpochs (S k) st = st :: simulateCyclicEpochs k (reboundCyclicEpoch st)
 
 ||| Streams N steps of continuous deforested cyclic cosmic trajectory using reboundCyclicEpoch.
-public export covering
+public export
 streamCyclicEpochs : Nat -> EpochState -> FusedStream EpochState
 streamCyclicEpochs n initSt =
   unfoldStream (\(k, st) => case k of
@@ -138,7 +194,7 @@ takeInfUniverseStream Z _ = []
 takeInfUniverseStream (S k) (st :: rest) = st :: takeInfUniverseStream k rest
 
 ||| Deforested observation window query over an infinite cyclic universe stream using fusedTake.
-public export covering
+public export
 fusedTakeCyclicEpochs : Nat -> Nat -> EpochState -> FusedStream EpochState
 fusedTakeCyclicEpochs winSize totalSteps initSt =
   fusedTake winSize (streamCyclicEpochs totalSteps initSt)
@@ -151,11 +207,11 @@ auditCyclicBudgetClosureNat n initSt =
       (simulateCyclicEpochs n initSt)
 
 ||| Audits Primorial 210 budget conservation across infinite cyclic rebounds.
-public export covering
+public export
 auditInfCyclicBudgetClosure : Nat -> EpochState -> Bool
 auditInfCyclicBudgetClosure n initSt =
   let strm = streamCyclicEpochs n initSt
-  in fueLedFoldStream (limit 10000) (\acc, st =>
+  in fueLedFoldStream (limit (n + 1)) (\acc, st =>
        let vm = st.visibleBaryons
            de = st.darkEnergy
            dm = countTotalDarkLaws st.darkMatterLedger

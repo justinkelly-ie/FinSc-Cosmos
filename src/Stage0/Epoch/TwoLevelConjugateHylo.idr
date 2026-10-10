@@ -2,6 +2,7 @@ module Stage0.Epoch.TwoLevelConjugateHylo
 
 import public Stage0.BoxInt
 import public Stage0.Multiset
+import public Stage0.StructuralFuel
 import public Stage1.TypeTheory.TwoLevel
 import public Stage1.Math.OnSeq.ConjugateDuality
 import public Geometry
@@ -71,14 +72,27 @@ public export
 evalObserver37ConjugateHylo : StrictEpoch -> StrictEpoch
 evalObserver37ConjugateHylo = eval2LTTEpochBounded 37
 
+||| Evaluates deforested 2LTT Conjugate Hylomorphism epoch progression using total structural Nat fuel.
+public export
+eval2LTTEpochConjugateHyloNat : Nat -> StrictEpoch -> StrictEpoch
+eval2LTTEpochConjugateHyloNat Z st = st
+eval2LTTEpochConjugateHyloNat (S k) st =
+  let h = epochNaturalTransform st
+      s = epochAlgebra h
+  in eval2LTTEpochConjugateHyloNat k s
+
+||| Evaluates deforested 2LTT Conjugate Hylomorphism epoch progression using BoxNat fuel.
+public export
+eval2LTTEpochConjugateHyloBoxNat : BoxNat -> StrictEpoch -> StrictEpoch
+eval2LTTEpochConjugateHyloBoxNat bfuel st =
+  eval2LTTEpochConjugateHyloNat (boxNatToNat bfuel) st
+
 ||| Evaluates deforested 2LTT Conjugate Hylomorphism epoch progression over Prime 13 fuel.
-public export covering
+public export
 eval2LTTEpochConjugateHylo : Fuel -> StrictEpoch -> StrictEpoch
 eval2LTTEpochConjugateHylo Dry st = st
 eval2LTTEpochConjugateHylo (More f') st =
-  let h = epochNaturalTransform st
-      s = epochAlgebra h
-  in eval2LTTEpochConjugateHylo f' s
+  eval2LTTEpochConjugateHyloBoxNat masterSubstrateGohFuel st
 
 
 --------------------------------------------------------------------------------

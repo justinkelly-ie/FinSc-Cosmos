@@ -7,6 +7,7 @@ import public Stage1.ScalePipeline
 import public Stage1.MaxelTransform
 import public Stage1.MultisetTensor
 import public Stage1.MultisetDuality
+import public Stage0.OnSeq.FusedStream
 
 %default total
 
@@ -71,6 +72,20 @@ public export
 0 verifyActiveInferenceFreeEnergyMinimization : (x : Box ColorCharge) ->
                                                 (evaluateActiveInferenceStep x).variationalSurprise = intToBoxInt 0
 verifyActiveInferenceFreeEnergyMinimization _ = Refl
+
+--------------------------------------------------------------------------------
+-- 3. CONTINUOUS STREAMING ACTIVE INFERENCE PERCEPTION TRANSDUCER
+--------------------------------------------------------------------------------
+
+||| Continuous streaming Active Inference perception step:
+||| Transduces sensory inputs into macro predictions and evaluates variational free energy surprise.
+public export
+streamActiveInferencePerception : FusedStream (ColorCharge, BoxInt) ->
+                                  (FusedStream (BiomoduleToken, BoxInt), BoxInt)
+streamActiveInferencePerception sensoryStrm =
+  let predictions = streamMaxelAction tTotalFunctorialPipeline sensoryStrm
+      surprise = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) sensoryStrm
+  in (predictions, surprise)
 
 
 

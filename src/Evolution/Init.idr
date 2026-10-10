@@ -15,7 +15,7 @@ import Data.Nat
 ||| Grid dimension k produces k^3 active spatial slots (1 -> 1, 2 -> 8, 3 -> 27).
 public export
 computeVMSize : (gridDim : Nat) -> Nat
-computeVMSize dim = dim * dim * dim
+computeVMSize dim = dim * (dim * dim)
 
 ||| Helper to calculate 2^n for Nat buffer depth.
 public export
@@ -64,15 +64,27 @@ public export
 darkEnergyModeCapacity : Nat
 darkEnergyModeCapacity = computeDESize vacuumBinaryDepth
 
-||| Model-Derived Substrate Law Channels: 10×11/2 = 55.
+||| Computes triangular number T_n via structural induction without typeclass division.
+public export
+triangularSum : Nat -> Nat
+triangularSum Z = Z
+triangularSum (S k) = S k + triangularSum k
+
+||| Model-Derived Substrate Law Channels: T_10 = 10×11/2 = 55.
 public export
 substrateLawChannelCount : Nat
-substrateLawChannelCount = cast {to=Nat} (div (cast {to=Integer} (substratePhaseDim * (substratePhaseDim + 1))) 2)
+substrateLawChannelCount = triangularSum substratePhaseDim
 
 ||| Model-Derived Primorial Cosmic Budget: 27 + 128 + 55 = 210.
 public export
 primorialCosmicBudgetTotal : Nat
 primorialCosmicBudgetTotal = baryonicTokenCapacity + darkEnergyModeCapacity + substrateLawChannelCount
+
+||| Formal constructive proof witness certifying that the Model-Derived Primorial Cosmic Budget
+||| matches the 4th Primorial factorization: p_4# = 2 * 3 * 5 * 7 = 210.
+public export
+0 prfPrimorialCosmicBudgetMatchesFactorization : Evolution.Init.primorialCosmicBudgetTotal = 210
+prfPrimorialCosmicBudgetMatchesFactorization = Refl
 
 ------------------------------------------------------------------------
 -- 3. COSMIC VACUUM INITIALIZATION

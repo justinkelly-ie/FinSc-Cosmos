@@ -102,7 +102,7 @@ Show HyperCycleStreamToken where
 
 ||| Deforested 3LTT stream transducer advancing hyper-cycles u and epoch steps e = 1..137.
 ||| Automatically triggers cycleAdjointTransducer (eta_3) upon reaching saturation at e = 137.
-public export covering
+public export
 fused3LTTHyperCycleStream : Fuel -> (u : Nat) -> (e : Nat) -> EpochState -> FusedStream HyperCycleStreamToken
 fused3LTTHyperCycleStream f initU initE initSt = MkStream nextStep (initU, initE, initSt)
   where
@@ -119,7 +119,7 @@ fused3LTTHyperCycleStream f initU initE initSt = MkStream nextStep (initU, initE
 ||| End-to-End 3LTT Universe Stream running from FinSc-Cosmology through Stage2.ThreeLevel.
 ||| Transduces macro CyclicCosmicEpoch states into 3LTT ParameterizedCycleState tokens,
 ||| advancing Epoch to Epoch using generic conjugateHylo3 from Stage2.ThreeLevel.
-public export covering
+public export
 fused3LTTCosmicUniverseStream : Fuel -> CyclicCosmicEpoch -> FusedStream HyperCycleStreamToken
 fused3LTTCosmicUniverseStream f seedCosmo =
   let cosmoStream = fusedCosmologyStream f seedCosmo
@@ -151,17 +151,18 @@ fusedComputeCosmicEnergyTrajectoryNat (S k) s@(MkStrict st) =
   let s' = epochAlgebra (epochNaturalTransform s)
   in natToBoxInt (visibleBaryons st) + fusedComputeCosmicEnergyTrajectoryNat k s'
 
+||| Evaluates total accumulated visible baryonic mass across N 2LTT stream steps using BoxNat fuel.
+public export
+fusedComputeCosmicEnergyTrajectoryBoxNat : BoxNat -> StrictEpoch -> BoxInt
+fusedComputeCosmicEnergyTrajectoryBoxNat bfuel seedStrict =
+  fusedComputeCosmicEnergyTrajectoryNat (boxNatToNat bfuel) seedStrict
+
 ||| Evaluates total accumulated visible baryonic mass across N 2LTT stream steps using fusedHylomorphism.
-public export covering
+public export
 fusedComputeCosmicEnergyTrajectory : Fuel -> StrictEpoch -> BoxInt
-fusedComputeCosmicEnergyTrajectory f seedStrict =
-  fusedHylomorphism f
-    (\(curr, s@(MkStrict st)) =>
-       let s' = epochAlgebra (epochNaturalTransform s)
-       in Yield st (S curr, s'))
-    (\st, acc => natToBoxInt (visibleBaryons st) + acc)
-    (intToBoxInt 0)
-    (1, seedStrict)
+fusedComputeCosmicEnergyTrajectory (More f) seedStrict =
+  fusedComputeCosmicEnergyTrajectoryBoxNat masterSubstrateGohFuel seedStrict
+fusedComputeCosmicEnergyTrajectory Dry _ = intToBoxInt 0
 
 ||| Evaluates total dark matter laws accumulated across 3LTT hyper-cycle steps using structural Nat recursion.
 public export
@@ -173,20 +174,18 @@ fusedComputeHyperCycleDarkLawsAccumulationNat (S k) u e st =
       (nextU, nextE) = if e >= 137 then (S u, 1) else (u, S e)
   in tokenLaws + fusedComputeHyperCycleDarkLawsAccumulationNat k nextU nextE nextSt
 
+||| Evaluates total dark matter laws accumulated across 3LTT hyper-cycle stream steps using BoxNat fuel.
+public export
+fusedComputeHyperCycleDarkLawsAccumulationBoxNat : BoxNat -> (u : Nat) -> (e : Nat) -> EpochState -> BoxInt
+fusedComputeHyperCycleDarkLawsAccumulationBoxNat bfuel initU initE initSt =
+  fusedComputeHyperCycleDarkLawsAccumulationNat (boxNatToNat bfuel) initU initE initSt
+
 ||| Evaluates total dark matter laws accumulated across 3LTT hyper-cycle stream steps.
-public export covering
+public export
 fusedComputeHyperCycleDarkLawsAccumulation : Fuel -> (u : Nat) -> (e : Nat) -> EpochState -> BoxInt
-fusedComputeHyperCycleDarkLawsAccumulation f initU initE initSt =
-  fusedHylomorphism f
-    (\(u, e, st) =>
-       let token = MkHyperCycleToken u e st.visibleBaryons (countTotalDarkLaws st.darkMatterLedger)
-           nextSt = advanceEpochState st
-       in if e >= 137
-            then Yield token (S u, 1, nextSt)
-            else Yield token (u, S e, nextSt))
-    (\token, acc => natToBoxInt (darkLaws token) + acc)
-    (intToBoxInt 0)
-    (initU, initE, initSt)
+fusedComputeHyperCycleDarkLawsAccumulation (More f) initU initE initSt =
+  fusedComputeHyperCycleDarkLawsAccumulationBoxNat masterSubstrateGohFuel initU initE initSt
+fusedComputeHyperCycleDarkLawsAccumulation Dry _ _ _ = intToBoxInt 0
 
 --------------------------------------------------------------------------------
 -- 4. CONSTRUCTIVE 2LTT & 3LTT DUALITY VERIFICATION PROOFS

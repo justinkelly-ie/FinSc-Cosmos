@@ -174,7 +174,7 @@ epochTransducer : StreamTransducer EpochState EpochState
 epochTransducer = MkTransducer (\_, st => Yield (advanceEpochState st) ()) ()
 
 ||| Streams N steps of deforested cosmic epoch trajectories without intermediate list allocations.
-public export covering
+public export
 streamEpochTrajectory : Nat -> EpochState -> FusedStream EpochState
 streamEpochTrajectory n initSt =
   unfoldStream (\(k, st) => case k of

@@ -30,7 +30,7 @@ evalGohEnergyStreamNat (S steps) k ledger acc =
   in evalGohEnergyStreamNat steps (S k) ledger (gohStep :: acc)
 
 ||| Evaluates a Goh energy stream transducer over a Dark Energy law ledger using Prime 13 fuel.
-public export covering
+public export
 evalGohEnergyStream : Fuel -> Nat -> ChromogeometryLawLedger -> List GohEnergyStep -> List GohEnergyStep
 evalGohEnergyStream Dry _ _ acc = acc
 evalGohEnergyStream (More f') k ledger acc =
@@ -50,7 +50,7 @@ streamGohEnergyStreamNat maxSteps initK ledger =
                                    in Yield gohStep (steps', S k)) (maxSteps, initK)
 
 ||| Deforested stream unfolding of Goh energy steps using Prime 13 fuel without intermediate list allocations.
-public export covering
+public export
 streamGohEnergyStream : Fuel -> Nat -> ChromogeometryLawLedger -> FusedStream GohEnergyStep
 streamGohEnergyStream fuel initK ledger =
   unfoldStream (\(f, k) => case f of

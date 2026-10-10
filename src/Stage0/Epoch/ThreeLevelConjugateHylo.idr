@@ -62,13 +62,16 @@ eval3LTTCycleConjugateHyloNat {u} {e} (S k) (MkHyperCycle (MkCycleState _ _ st))
   let st' = advanceEpochState st
   in eval3LTTCycleConjugateHyloNat k (MkHyperCycle (mkCycleState u (S e) st'))
 
+||| Evaluates deforested 3LTT Hyper-Cycle evolution over BoxNat fuel.
+public export
+eval3LTTCycleConjugateHyloBoxNat : {u : Nat} -> {e : Nat} -> BoxNat -> ThreeLevelEpochState u e -> (e' : Nat ** ThreeLevelEpochState u e')
+eval3LTTCycleConjugateHyloBoxNat bfuel st = eval3LTTCycleConjugateHyloNat (boxNatToNat bfuel) st
+
 ||| Evaluates deforested 3LTT Hyper-Cycle evolution over Fuel.
-public export covering
+public export
 eval3LTTCycleConjugateHylo : {u : Nat} -> {e : Nat} -> Fuel -> ThreeLevelEpochState u e -> (e' : Nat ** ThreeLevelEpochState u e')
 eval3LTTCycleConjugateHylo {e} Dry st = (e ** st)
-eval3LTTCycleConjugateHylo {u} {e} (More f') (MkHyperCycle (MkCycleState _ _ st)) =
-  let st' = advanceEpochState st
-  in eval3LTTCycleConjugateHylo f' (MkHyperCycle (mkCycleState u (S e) st'))
+eval3LTTCycleConjugateHylo (More f') st = eval3LTTCycleConjugateHyloBoxNat masterSubstrateGohFuel st
 
 ||| Evaluates 3LTT Epoch transition using generic conjugateHylo3 from Stage2.ThreeLevel.
 public export

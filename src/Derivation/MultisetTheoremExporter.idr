@@ -20,24 +20,40 @@ public export
 data LeanAST =
     LeanDef String String String        -- name, type, body
   | LeanTheorem String String String    -- name, statement, proof
+  | LeanCoinductive String String (List (String, String)) -- name, corecType, unfoldCases
+  | LeanBisimulation String String String String String -- name, streamA, streamB, rel, proofBody
 
 ||| Total pretty-printer for Lean 4 AST nodes.
 public export
 renderLean : LeanAST -> String
 renderLean (LeanDef name ty body) = "def " ++ name ++ " : " ++ ty ++ " := " ++ body
 renderLean (LeanTheorem name stmt prf) = "theorem " ++ name ++ " : " ++ stmt ++ " := " ++ prf
+renderLean (LeanBisimulation name sA sB rel prf) =
+  "theorem " ++ name ++ "_bisimulation : Stream'.Bisim " ++ rel ++ " " ++ sA ++ " " ++ sB ++ " := " ++ prf
+renderLean (LeanCoinductive name ty cases) =
+  "def " ++ name ++ " : " ++ ty ++ " := { " ++ showCases cases ++ " }"
+  where
+    showCases : List (String, String) -> String
+    showCases [] = ""
+    showCases [(f, val)] = f ++ " := " ++ val
+    showCases ((f, val) :: rest) = f ++ " := " ++ val ++ ", " ++ showCases rest
 
 ||| Strongly-typed Abstract Syntax Tree for Coq theorem export terms.
 public export
 data CoqAST =
     CoqDefinition String String String -- name, type, body
   | CoqTheorem String String String    -- name, statement, proof
+  | CoqCoFixpoint String String String -- name, coType, body
+  | CoqBisimulation String String String String String -- name, streamA, streamB, rel, proofBody
 
 ||| Total pretty-printer for Coq AST nodes.
 public export
 renderCoq : CoqAST -> String
 renderCoq (CoqDefinition name ty body) = "Definition " ++ name ++ " : " ++ ty ++ " := " ++ body ++ "."
 renderCoq (CoqTheorem name stmt prf) = "Theorem " ++ name ++ " : " ++ stmt ++ ". Proof. " ++ prf ++ ". Qed."
+renderCoq (CoqCoFixpoint name ty body) = "CoFixpoint " ++ name ++ " : " ++ ty ++ " := " ++ body ++ "."
+renderCoq (CoqBisimulation name sA sB rel prf) =
+  "Theorem " ++ name ++ "_bisimulation : bisimilar " ++ rel ++ " " ++ sA ++ " " ++ sB ++ ". Proof. " ++ prf ++ ". Qed."
 
 ------------------------------------------------------------------------
 -- 2. MULTISET THEOREM EXPORTERS (LEAN 4, COQ, LATEX)
@@ -231,7 +247,71 @@ exportHelmholtzGroundStateCoq name =
   renderCoq (CoqTheorem (name ++ "_helmholtz_ground_state") "120 - (210 * 7 - 30) = -1320" "reflexivity")
 
 ------------------------------------------------------------------------
--- 4. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
+-- 4. COINDUCTIVE STREAM THEOREM EXPORTERS (137-SCALE TRAJECTORY & PAGE CURVE)
+------------------------------------------------------------------------
+
+||| Exports the Coinductive 137-Scale Trajectory Stream Unfolding into Lean 4 AST.
+public export
+exportCoinductiveTrajectoryLean4 : String -> String
+exportCoinductiveTrajectoryLean4 name =
+  renderLean (LeanCoinductive (name ++ "_scale_stream") "Stream' (ScaleIndex × Nat)"
+    [ ("head", "(0, 1)")
+    , ("tail", "stepTrajectoryStream 0")
+    ])
+
+||| Exports the Coinductive 137-Scale Trajectory Stream Unfolding into Coq SSReflect CoFixpoint AST.
+public export
+exportCoinductiveTrajectoryCoq : String -> String
+exportCoinductiveTrajectoryCoq name =
+  renderCoq (CoqCoFixpoint (name ++ "_scale_stream") "Stream (nat * nat)"
+    "Cons (0, 1) (stepTrajectoryStream 0)")
+
+||| Exports the Coinductive Page Curve Horizon Evaporation Stream into Lean 4 AST.
+public export
+exportCoinductivePageCurveLean4 : String -> String
+exportCoinductivePageCurveLean4 name =
+  renderLean (LeanCoinductive (name ++ "_page_curve_stream") "Stream' (Nat × Nat)"
+    [ ("head", "(0, 128)")
+    , ("tail", "stepPageCurveStream 0 128")
+    ])
+
+||| Exports the Coinductive Page Curve Horizon Evaporation Stream into Coq SSReflect CoFixpoint AST.
+public export
+exportCoinductivePageCurveCoq : String -> String
+exportCoinductivePageCurveCoq name =
+  renderCoq (CoqCoFixpoint (name ++ "_page_curve_stream") "Stream (nat * nat)"
+    "Cons (0, 128) (stepPageCurveStream 0 128)")
+
+||| Exports formal stream bisimulation theorem between cosmic genesis stream and step layers to Lean 4.
+public export
+exportCosmicGenesisBisimulationLean4 : String -> String
+exportCosmicGenesisBisimulationLean4 name =
+  renderLean (LeanBisimulation (name ++ "_genesis")
+    (name ++ "_scale_stream") "cosmic_genesis_stream" "Eq" "by { coinduction, rfl }")
+
+||| Exports formal stream bisimulation theorem between cosmic genesis stream and step layers to Coq SSReflect.
+public export
+exportCosmicGenesisBisimulationCoq : String -> String
+exportCosmicGenesisBisimulationCoq name =
+  renderCoq (CoqBisimulation (name ++ "_genesis")
+    (name ++ "_scale_stream") "cosmic_genesis_stream" "eq" "cofix CIH; constructor; [reflexivity | apply CIH]")
+
+||| Exports formal stream bisimulation theorem for Page curve horizon evaporation to Lean 4.
+public export
+exportPageCurveBisimulationLean4 : String -> String
+exportPageCurveBisimulationLean4 name =
+  renderLean (LeanBisimulation (name ++ "_page_curve")
+    (name ++ "_page_curve_stream") "unitary_page_curve_stream" "Eq" "by { coinduction, rfl }")
+
+||| Exports formal stream bisimulation theorem for Page curve horizon evaporation to Coq SSReflect.
+public export
+exportPageCurveBisimulationCoq : String -> String
+exportPageCurveBisimulationCoq name =
+  renderCoq (CoqBisimulation (name ++ "_page_curve")
+    (name ++ "_page_curve_stream") "unitary_page_curve_stream" "eq" "cofix CIH; constructor; [reflexivity | apply CIH]")
+
+------------------------------------------------------------------------
+-- 5. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
 ------------------------------------------------------------------------
 
 ||| Exports all certified proof theorems to disk in Lean 4 and Coq format.
@@ -256,6 +336,10 @@ exportAllProofsIO = do
         , exportPrimorialBudgetLean4 "primordial"
         , exportTrajectorySieveLean4 "primordial"
         , exportHelmholtzGroundStateLean4 "primordial"
+        , exportCoinductiveTrajectoryLean4 "primordial"
+        , exportCoinductivePageCurveLean4 "horizon"
+        , exportCosmicGenesisBisimulationLean4 "primordial"
+        , exportPageCurveBisimulationLean4 "horizon"
         ]
   let coqContent = unlines
         [ "(* Certified Coq SSReflect Export for Multiset System Theorems *)"
@@ -270,6 +354,10 @@ exportAllProofsIO = do
         , exportPrimorialBudgetCoq "primordial"
         , exportTrajectorySieveCoq "primordial"
         , exportHelmholtzGroundStateCoq "primordial"
+        , exportCoinductiveTrajectoryCoq "primordial"
+        , exportCoinductivePageCurveCoq "horizon"
+        , exportCosmicGenesisBisimulationCoq "primordial"
+        , exportPageCurveBisimulationCoq "horizon"
         ]
   resLean <- writeFile "export/lean4/MultisetTheorems.lean" leanContent
   case resLean of
@@ -288,4 +376,10 @@ auditMultisetTheoremExporterProof =
       coqAdjunction = exportToCoq "scale_pipeline"
       leanPyth = exportPythagoreanTriadLean4 "primordial"
       coqSieve = exportTrajectorySieveCoq "primordial"
-  in (leanZoom /= "") && (coqAdjunction /= "") && (leanPyth /= "") && (coqSieve /= "")
+      leanCoind = exportCoinductiveTrajectoryLean4 "primordial"
+      coqCoind = exportCoinductiveTrajectoryCoq "primordial"
+      leanBisim = exportCosmicGenesisBisimulationLean4 "primordial"
+      coqBisim = exportCosmicGenesisBisimulationCoq "primordial"
+  in (leanZoom /= "") && (coqAdjunction /= "") && (leanPyth /= "") && (coqSieve /= "") &&
+     (leanCoind /= "") && (coqCoind /= "") && (leanBisim /= "") && (coqBisim /= "")
+
