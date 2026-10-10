@@ -43,20 +43,6 @@ Show ScientificObservation where
 -- 2. EXACT RATIONAL INTERVAL CONSISTENCY
 ------------------------------------------------------------------------
 
-||| Evaluates whether fraction f1 is less than or equal to f2 using cross-multiplication:
-||| (n1 / d1) <= (n2 / d2) <=> n1 * d2 <= n2 * d1 (since d1, d2 > 0)
-public export
-rationalLTE : UnixelFraction -> UnixelFraction -> Bool
-rationalLTE (MkUnixelFraction n1 (MkUnixel d1)) (MkUnixelFraction n2 (MkUnixel d2)) =
-  let lhs = n1 * natToBoxInt d2
-      rhs = n2 * natToBoxInt d1
-  in lhs <= rhs
-
-||| Evaluates whether fraction f1 is greater than or equal to f2:
-public export
-rationalGTE : UnixelFraction -> UnixelFraction -> Bool
-rationalGTE f1 f2 = rationalLTE f2 f1
-
 ||| Evaluates whether the theoretical value sits strictly within the empirical bounds:
 ||| measuredLower <= exactTheory <= measuredUpper
 public export

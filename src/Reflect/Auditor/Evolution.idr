@@ -24,6 +24,7 @@ import public Math.CosmicInflation
 import public Math.QuantumStressTensor
 import public Stage1.Math.ThermalDistribution
 import public Stage0.BoxInt
+import public Observation.EmpiricalMeasurement
 import public Reflect.Auditor.Core
 import Language.Reflection
 
@@ -260,12 +261,42 @@ auditQuantumStressTensor = auditWitness auditQuantumStressTensorProofExport
 -- Witness 139: Electron Spatial Knot & Proton-to-Electron Mass Ratio (~1836.15)
 public export
 auditElectronKnotMassRatioProofExport : Bool
-auditElectronKnotMassRatioProofExport = True
+auditElectronKnotMassRatioProofExport = Observation.EmpiricalMeasurement.auditProtonElectronMassRatioErrorProof
 
 public export
 %macro
 auditElectronKnotMassRatio : Elab (Reflect.Auditor.Evolution.auditElectronKnotMassRatioProofExport = True)
 auditElectronKnotMassRatio = auditWitness auditElectronKnotMassRatioProofExport
+
+-- Witness 140: CODATA 2022 Fine Structure Constant Inverse Alpha^-1 Error < 1%
+public export
+auditFineStructureConstantProofExport : Bool
+auditFineStructureConstantProofExport = Observation.EmpiricalMeasurement.auditFineStructureConstantErrorProof
+
+public export
+%macro
+auditFineStructureConstant : Elab (Reflect.Auditor.Evolution.auditFineStructureConstantProofExport = True)
+auditFineStructureConstant = auditWitness auditFineStructureConstantProofExport
+
+-- Witness 141: CERN LHC Electroweak Boson Ratio mW/mZ Error < 1%
+public export
+auditElectroweakBosonRatioProofExport : Bool
+auditElectroweakBosonRatioProofExport = Observation.EmpiricalMeasurement.auditElectroweakBosonRatioErrorProof
+
+public export
+%macro
+auditElectroweakBosonRatio : Elab (Reflect.Auditor.Evolution.auditElectroweakBosonRatioProofExport = True)
+auditElectroweakBosonRatio = auditWitness auditElectroweakBosonRatioProofExport
+
+-- Witness 142: Planck 2018 Primordial Inflation Spectral Index ns Confidence Interval
+public export
+auditPlanckInflationSpectralIndexProofExport : Bool
+auditPlanckInflationSpectralIndexProofExport = Observation.EmpiricalMeasurement.auditPlanckInflationSpectralIndexProof
+
+public export
+%macro
+auditPlanckInflationSpectralIndex : Elab (Reflect.Auditor.Evolution.auditPlanckInflationSpectralIndexProofExport = True)
+auditPlanckInflationSpectralIndex = auditWitness auditPlanckInflationSpectralIndexProofExport
 
 ------------------------------------------------------------------------
 -- BATCH CATALOG WITNESS REFLECTION AUDITOR
@@ -280,6 +311,9 @@ evolutionCatalogWitnesses =
   , auditZeroTemperatureGroundStateCollapseProofExport
   , auditQuantumStressTensorProofExport
   , auditElectronKnotMassRatioProofExport
+  , auditFineStructureConstantProofExport
+  , auditElectroweakBosonRatioProofExport
+  , auditPlanckInflationSpectralIndexProofExport
   ]
 
 public export

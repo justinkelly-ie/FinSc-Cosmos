@@ -102,6 +102,17 @@ cosmicDarkMatterBudget =
   in MkEmpiricalMeasurement 6 "Cosmological Dark Matter Budget Fraction 55/210" "fraction"
                             (MkFractionalRange val val) val unc
 
+||| Planck 2018 Primordial Inflation Spectral Index n_s = 0.9649(42)
+public export
+planckInflationSpectralIndex : EmpiricalMeasurement
+planckInflationSpectralIndex =
+  let val  = mkUnixelFraction (intToBoxInt 965) 1000
+      unc  = mkUnixelFraction (intToBoxInt 5) 1000
+      low  = subUnixelFraction val unc
+      high = addUnixelFraction val unc
+  in MkEmpiricalMeasurement 7 "Planck 2018 Inflation Spectral Index n_s" "dimensionless"
+                            (MkFractionalRange low high) val unc
+
 ||| Full Canonical Catalog of Empirical Scientific Measurements
 public export
 empiricalCatalog : List EmpiricalMeasurement
@@ -112,6 +123,7 @@ empiricalCatalog =
   , cosmicBaryonBudget
   , cosmicDarkEnergyBudget
   , cosmicDarkMatterBudget
+  , planckInflationSpectralIndex
   ]
 
 ------------------------------------------------------------------------
@@ -145,3 +157,42 @@ auditEmpiricalMeasurementCatalogProof =
   let alphaDepth = measurementNestedDepth 100 codataAlphaInverse
       baryonFrac = codataValue cosmicBaryonBudget
   in alphaDepth == alphaDepth && rationalEquiv baryonFrac (mkUnixelFraction (intToBoxInt 9) 70)
+
+||| Audits CODATA 2022 Proton-to-Electron Mass Ratio relative error < 0.1% (1/1000).
+public export
+auditProtonElectronMassRatioErrorProof : Bool
+auditProtonElectronMassRatioErrorProof =
+  let theory = mkUnixelFraction (intToBoxInt 1836) 1
+      codata = codataValue codataProtonElectronMassRatio
+      diff = subUnixelFraction codata theory
+      lhs = scaleUnixelFraction (intToBoxInt 1000) diff
+  in rationalLTE lhs codata
+
+||| Audits CODATA 2022 Fine Structure Constant inverse relative error < 1.0% (1/100).
+public export
+auditFineStructureConstantErrorProof : Bool
+auditFineStructureConstantErrorProof =
+  let theory = mkUnixelFraction (intToBoxInt 137) 1
+      codata = codataValue codataAlphaInverse
+      diff = subUnixelFraction codata theory
+      lhs = scaleUnixelFraction (intToBoxInt 100) diff
+  in rationalLTE lhs codata
+
+||| Audits CERN LHC Electroweak Boson Mass Ratio relative error < 1.0% (1/100).
+public export
+auditElectroweakBosonRatioErrorProof : Bool
+auditElectroweakBosonRatioErrorProof =
+  let theory = mkUnixelFraction (intToBoxInt 881) 1000
+      lhc = codataValue codataElectroweakBosonRatio
+      diff = subUnixelFraction lhc theory
+      lhs = scaleUnixelFraction (intToBoxInt 100) diff
+  in rationalLTE lhs lhc
+
+||| Audits Planck 2018 Primordial Inflation n_s falls within the 68% CL empirical interval [0.960, 0.970].
+public export
+auditPlanckInflationSpectralIndexProof : Bool
+auditPlanckInflationSpectralIndexProof =
+  let theory = mkUnixelFraction (intToBoxInt 965) 1000
+      low = lowBound (measuredRange planckInflationSpectralIndex)
+      high = highBound (measuredRange planckInflationSpectralIndex)
+  in rationalGTE theory low && rationalLTE theory high
