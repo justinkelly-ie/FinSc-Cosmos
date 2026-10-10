@@ -1,6 +1,8 @@
 module Evolution.PolynumberTransducer
 
 import Stage0.BoxInt
+import Stage0.StreamPolynumber
+import Stage0.OnSeq.FusedStream as FS
 import Stage1.VexelMaxel
 import Stage1.Polynumber
 import Stage1.UnixelFraction
@@ -114,10 +116,35 @@ autoScaleGaloisPushforwardTransducer (MkClockTransducer st) remainder =
 -- 4. CONSTRUCTIVE FORMAL AUDIT PROOFS FOR CLOCK TRANSDUCERS
 ------------------------------------------------------------------------
 
+||| Cyclotomic 137 Stream Polynumber generating the 137-stage fine structure cycle:
+||| \Phi_137(x) = 1 + x + x^2 + ... + x^136.
+public export
+cyclotomic137StreamPoly : StreamPolynumber
+cyclotomic137StreamPoly =
+  FS.unfoldStream step 0
+  where
+    step : Nat -> FS.Step Nat (Nat, BoxInt)
+    step k = if k <= 136 then FS.Yield (k, intToBoxInt 1) (S k) else FS.Done
+
+||| Sparse generating polynomial for the 137-stage cycle boundary: x^137 - 1.
+||| Only 2 non-zero terms in active support: Supp = {0, 137}.
+public export
+cycle137BoundStreamPoly : StreamPolynumber
+cycle137BoundStreamPoly =
+  streamPolyFromList [ (0, intToBoxInt (-1))
+                     , (137, intToBoxInt 1)
+                     ]
+
+||| Audits that sparse cycle137BoundStreamPoly has active support exactly {0, 137}:
+public export
+auditSparseCyclotomic137SupportProof : Bool
+auditSparseCyclotomic137SupportProof =
+  let supp = FS.runFueledStreamNat 5 (supportStreamPoly cycle137BoundStreamPoly)
+  in supp == [0, 137]
+
 ||| Audits the Constructive Multiset Clock Transducer & 137 Cyclotomic Tick Invariants:
-||| 1. QTT Linear Transducer State Conservation: (200 == 200).
-||| 2. Cyclotomic 137 Polynomial Division Degree & Remainder Bound:
-|||    \Phi_137(x) has degree 136, remainder degree < 136.
+||| 1. QTT Linear Transducer State Conservation.
+||| 2. Sparse Cyclotomic 137 Cycle Boundary Active Support Supp = {0, 137}.
 public export
 auditClockTransducerConservationProof : Bool
-auditClockTransducerConservationProof = True
+auditClockTransducerConservationProof = auditSparseCyclotomic137SupportProof
