@@ -6,6 +6,8 @@
 module Stage1.Epoch.ScaleTrajectorySieve
 
 import Stage1.TypeTheory.Smooth13
+import Stage0.BoxInt
+import Stage1.Multiset.PrimordialUnfolding
 import Data.Nat
 
 %default total
@@ -89,3 +91,35 @@ auditGridWallDecoherenceProof =
   case evalScaleStepCoherence 136 of
     Decoherent => True
     GatePure   => False
+
+--------------------------------------------------------------------------------
+-- 3. DYNAMIC FLRW SCALE FACTOR & COSMOLOGICAL DECELERATION
+--------------------------------------------------------------------------------
+
+||| Evaluates the dynamic FLRW scale factor squared a(k)^2 = Q_Blue(x_k, y_k) at epoch k.
+public export
+epochScaleFactorSquared : Nat -> BoxInt
+epochScaleFactorSquared k =
+  let (x, y) = epochPythagoreanCoordinate k
+  in (x * x) + (y * y)
+
+||| Evaluates the cosmological deceleration numerator q_num(k) = Q_Red(x_k, y_k) = x^2 - y^2 at epoch k.
+||| The exact rational deceleration is q(k) = Q_Red / Q_Blue = 1 - 2 * s(k).
+public export
+epochDecelerationNumerator : Nat -> BoxInt
+epochDecelerationNumerator k =
+  let (x, y) = epochPythagoreanCoordinate k
+  in (x * x) - (y * y)
+
+||| Invariant audit verifying the FLRW Deceleration & Spread Diagonal Identity across epochs:
+||| (2 * a(k)^2 - 4 * y^2) == 2 * q_num(k).
+public export
+auditEpochDecelerationSpreadIdentity : Nat -> Bool
+auditEpochDecelerationSpreadIdentity k =
+  let (x, y) = epochPythagoreanCoordinate k
+      qBlue = (x * x) + (y * y)
+      qRed  = (x * x) - (y * y)
+      lhs = (intToBoxInt 2 * qBlue) - (intToBoxInt 4 * (y * y))
+      rhs = intToBoxInt 2 * qRed
+  in boxEq lhs rhs
+
