@@ -2,7 +2,7 @@ module Observation.FundamentalSubstrateLaws
 
 import Stage0.BoxInt
 import Stage1.FourGeometries
-import Stage1.SubstrateMetricTensor
+import public Stage1.SubstrateMetricTensor
 import Evolution.Init
 import Data.Fin
 import Data.Vect
@@ -13,16 +13,6 @@ import Data.List
 ------------------------------------------------------------------------
 -- 1. MODEL CONSTANTS & GEOMETRIC CAPACITIES
 ------------------------------------------------------------------------
-
-||| Canonical Model Capacity for the Parabolic Dark Matter Substrate (T_10 = 55).
-public export
-DarkMatterCapacity : Nat
-DarkMatterCapacity = Stage1.FourGeometries.darkMatterTriangularResidue
-
-||| Canonical 10D Phase Space Basis Dimension (4 Spacetime + 3 Color + 3 Scale).
-public export
-PhaseSpaceBasisDim : Nat
-PhaseSpaceBasisDim = Stage1.FourGeometries.phaseSpaceBasisDim
 
 ||| Exact Discrete Cosmological Capacity partitioned across the 4 Fundamental Geometries:
 ||| - Elliptic:   27 states (Baryon Spatial Grid VM, 3^3)
@@ -227,19 +217,19 @@ auditFundamentalSubstrateLawsProof =
 ||| Definitional proof that the fundamental substrate catalog vector has length exactly 55.
 public export
 0 prfFundamentalSubstrateCatalogLengthIs55 :
-  Data.Vect.length FundamentalSubstrateCatalog = 55
+  Data.Vect.length FundamentalSubstrateCatalog = (the Nat 55)
 prfFundamentalSubstrateCatalogLengthIs55 = Refl
 
 ||| Definitional proof that the Dark Matter substrate law channels count from Evolution.Init is 55.
 public export
 0 prfSubstrateLawCountMatchesEvolutionInit :
-  Evolution.Init.substrateLawChannelCount = 55
+  Evolution.Init.substrateLawChannelCount = (the Nat 55)
 prfSubstrateLawCountMatchesEvolutionInit = Refl
 
 ||| Definitional proof that DarkMatterCapacity is exactly 55.
 public export
 0 prfDarkMatterCapacityMatchesTriangularResidue :
-  DarkMatterCapacity = 55
+  DarkMatterCapacity = (the Nat 55)
 prfDarkMatterCapacityMatchesTriangularResidue = Refl
 
 ||| Definitional proof that DarkMatterCapacity matches Evolution.Init.substrateLawChannelCount.

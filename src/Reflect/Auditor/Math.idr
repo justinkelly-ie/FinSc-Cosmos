@@ -28,8 +28,8 @@ import Stage1.Math.PeakBindingEnergy
 import Stage1.Math.RationalKepler
 import Stage1.Math.RationalRefraction
 import Stage1.Math.LawAlgebra
-import Stage1.SubstrateMetricTensor55
-import Stage1.MultisetMetricTensor55
+import Stage1.SubstrateMetricTensor
+import Stage1.MultisetMetricTensor
 import Stage1.Math.GalacticRotationCurve
 import Stage1.Math.FlavorMixing
 import Stage1.Math.NeutrinoOscillation
@@ -769,14 +769,14 @@ auditLawAlgebraMonoidProofExport = Stage1.Math.LawAlgebra.auditLawAlgebraMonoidP
 
 -- Witness 170: 10D Symmetric Substrate Metric Tensor (55 Components)
 public export
-auditSubstrateMetricTensor55ProofExport : Bool
-auditSubstrateMetricTensor55ProofExport = Stage1.SubstrateMetricTensor55.auditSubstrateMetricTensor55Proof
+auditSubstrateMetricTensorProofExport : Bool
+auditSubstrateMetricTensorProofExport = Stage1.SubstrateMetricTensor.auditSubstrateMetricTensorProof
 
 
 -- Witness 171: Pure Multiset 10D Metric Tensor Formulation (55 Basis Pairs)
 public export
-auditMultisetMetricTensor55ProofExport : Bool
-auditMultisetMetricTensor55ProofExport = Stage1.MultisetMetricTensor55.auditMultisetMetricTensor55Proof
+auditMultisetMetricTensorProofExport : Bool
+auditMultisetMetricTensorProofExport = Stage1.MultisetMetricTensor.auditMultisetMetricTensorProof
 
 
 -- Witness 172: Dual Number Discrete Calculus & Automatic Differentiation
