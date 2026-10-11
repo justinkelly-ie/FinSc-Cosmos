@@ -1,9 +1,10 @@
 ||| 137-Scale Gate Coherence Sieve (76 Gate-Pure / 61 Decoherent Exact Partition)
 |||
-||| Evaluates the smooth-13 prime factorization across the coinductive scale trajectory
+||| Evaluates the smooth-bound prime factorization across the coinductive scale trajectory
 ||| stream using single-pass deforested FusedStream folds in O(1) auxiliary registers.
 module Stage1.Epoch.ScaleTrajectorySieve
 
+import Stage1.TypeTheory.Smoothness
 import Stage1.TypeTheory.Smooth13
 import Stage0.BoxInt
 import Stage0.OnSeq.FusedStream
@@ -13,12 +14,12 @@ import Data.Nat
 %default total
 
 --------------------------------------------------------------------------------
--- 1. SCALE COHERENCE CLASSIFICATION & SCALE STEP RECORD
+-- 1. SCALE COHERENCE CLASSIFICATION & TERM-INDEXED SCALE STEP RECORD
 --------------------------------------------------------------------------------
 
 ||| Physical coherence status of a scale trajectory step:
-||| - GatePure:   n = k + 1 is 13-smooth (max prime factor <= 13), preserving coherence.
-||| - Decoherent: n has prime factors > 13, draining into thermal dispersion.
+||| - GatePure:   n = k + 1 is smooth under prime bound, preserving coherence.
+||| - Decoherent: n has prime factors > bound, draining into thermal dispersion.
 public export
 data ScaleCoherenceStatus = GatePure | Decoherent
 
@@ -33,16 +34,22 @@ Show ScaleCoherenceStatus where
   show GatePure   = "GatePure"
   show Decoherent = "Decoherent"
 
-||| Evaluates the coherence classification of scale step k in [0, 136] (generation number n = k + 1).
+||| Evaluates coherence classification of scale step k under generic prime bound.
+public export
+evalScaleStepCoherenceBounded : (bound : Nat) -> Nat -> ScaleCoherenceStatus
+evalScaleStepCoherenceBounded bound k =
+  if isSmoothNat bound (S k) then GatePure else Decoherent
+
+||| Backward-compatible coherence evaluator using CosmicSmoothHorizon (13).
 public export
 evalScaleStepCoherence : Nat -> ScaleCoherenceStatus
-evalScaleStepCoherence k =
-  if is13SmoothNat (S k) then GatePure else Decoherent
+evalScaleStepCoherence = evalScaleStepCoherenceBounded CosmicSmoothHorizon
 
-||| A discrete cosmological scale step holding its scale index k, generation number n = S k,
-||| its chromogeometric TriadQuadrance payload, and coherence status.
+||| Term-indexed discrete cosmological scale step parameterized by smoothness bound.
+||| Holds its scale index k, generation number n = S k, its chromogeometric
+||| TriadQuadrance payload, and coherence status.
 public export
-record ScaleStep where
+record ScaleStep (bound : Nat) where
   constructor MkScaleStep
   scaleIndex : Nat
   generation : Nat
@@ -50,14 +57,19 @@ record ScaleStep where
   status     : ScaleCoherenceStatus
 
 public export
-Eq ScaleStep where
+{bound : Nat} -> Eq (ScaleStep bound) where
   (MkScaleStep k1 g1 t1 s1) == (MkScaleStep k2 g2 t2 s2) =
     k1 == k2 && g1 == g2 && t1 == t2 && s1 == s2
 
 public export
-Show ScaleStep where
+{bound : Nat} -> Show (ScaleStep bound) where
   show (MkScaleStep k g t s) =
     "ScaleStep(" ++ show k ++ " | n=" ++ show g ++ " | " ++ show s ++ ")"
+
+||| Canonical cosmological scale step carrier (13-smooth).
+public export
+CosmicScaleStep : Type
+CosmicScaleStep = ScaleStep CosmicSmoothHorizon
 
 --------------------------------------------------------------------------------
 -- 2. DEFORESTED SCALE TRAJECTORY STREAM TRANSDUCERS (O(1) AUXILIARY MEMORY)
@@ -65,65 +77,80 @@ Show ScaleStep where
 
 ||| Single-step generator unfolding scale trajectory steps into a coinductive stream.
 public export
-stepScaleTrajectory : Nat -> Step Nat ScaleStep
-stepScaleTrajectory k =
+stepScaleTrajectory : (bound : Nat) -> Nat -> Step Nat (ScaleStep bound)
+stepScaleTrajectory bound k =
   let tr = epochTriadQuadrance k
-      st = evalScaleStepCoherence k
+      st = evalScaleStepCoherenceBounded bound k
   in Yield (MkScaleStep k (S k) tr st) (S k)
 
 ||| Infinite coinductive stream of cosmological scale trajectory steps.
 ||| Executes in O(1) auxiliary registers without allocating intermediate lists (Rule 04).
 public export
-streamScaleTrajectory : FusedStream ScaleStep
-streamScaleTrajectory = unfoldStream stepScaleTrajectory 0
+streamScaleTrajectory : (bound : Nat) -> FusedStream (ScaleStep bound)
+streamScaleTrajectory bound = unfoldStream (stepScaleTrajectory bound) 0
 
 ||| Single-step generator unfolding bounded scale trajectory steps up to maxScale (exclusive).
 public export
-stepScaleTrajectoryBounded : (maxScale : Nat) -> Nat -> Step Nat ScaleStep
-stepScaleTrajectoryBounded maxScale k =
+stepScaleTrajectoryBounded : (bound : Nat) -> (maxScale : Nat) -> Nat -> Step Nat (ScaleStep bound)
+stepScaleTrajectoryBounded bound maxScale k =
   if k >= maxScale
      then Done
      else let tr = epochTriadQuadrance k
-              st = evalScaleStepCoherence k
+              st = evalScaleStepCoherenceBounded bound k
           in Yield (MkScaleStep k (S k) tr st) (S k)
 
 ||| Bounded coinductive stream of scale trajectory steps in [0, maxScale).
 public export
-streamScaleTrajectoryBounded : (maxScale : Nat) -> FusedStream ScaleStep
-streamScaleTrajectoryBounded maxScale =
-  unfoldStream (stepScaleTrajectoryBounded maxScale) 0
+streamScaleTrajectoryBounded : (bound : Nat) -> (maxScale : Nat) -> FusedStream (ScaleStep bound)
+streamScaleTrajectoryBounded bound maxScale =
+  unfoldStream (stepScaleTrajectoryBounded bound maxScale) 0
 
 ||| Single-pass deforested stream fold counting gate-pure scales up to limit (inclusive).
 ||| Executes in O(1) auxiliary registers without heap allocation.
 public export
-countPureScalesStream : (limit : Nat) -> Nat
-countPureScalesStream limit =
+countPureScalesStreamBounded : (bound : Nat) -> (limit : Nat) -> Nat
+countPureScalesStreamBounded bound limit =
   foldStreamNat (S limit)
                 (\acc, step => case step.status of
                                  GatePure   => S acc
                                  Decoherent => acc)
                 0
-                (streamScaleTrajectoryBounded (S limit))
+                (streamScaleTrajectoryBounded bound (S limit))
 
 ||| Single-pass deforested stream fold counting decoherent scales up to limit (inclusive).
 public export
-countDecoherentScalesStream : (limit : Nat) -> Nat
-countDecoherentScalesStream limit =
+countDecoherentScalesStreamBounded : (bound : Nat) -> (limit : Nat) -> Nat
+countDecoherentScalesStreamBounded bound limit =
   foldStreamNat (S limit)
                 (\acc, step => case step.status of
                                  GatePure   => acc
                                  Decoherent => S acc)
                 0
-                (streamScaleTrajectoryBounded (S limit))
+                (streamScaleTrajectoryBounded bound (S limit))
+
+||| Backward-compatible: Counts gate-pure scales using CosmicSmoothHorizon (13).
+public export
+countPureScalesStream : (limit : Nat) -> Nat
+countPureScalesStream = countPureScalesStreamBounded CosmicSmoothHorizon
+
+||| Backward-compatible: Counts decoherent scales using CosmicSmoothHorizon (13).
+public export
+countDecoherentScalesStream : (limit : Nat) -> Nat
+countDecoherentScalesStream = countDecoherentScalesStreamBounded CosmicSmoothHorizon
 
 ||| Backward-compatible delegate: Counts gate-pure scales using the deforested stream fold.
 public export
 countPureScalesUpTo : Nat -> Nat
-countPureScalesUpTo limit = countPureScalesStream limit
+countPureScalesUpTo = countPureScalesStream
 
 --------------------------------------------------------------------------------
 -- 3. EXACT 76 / 61 PARTITION AUDIT PROOFS
 --------------------------------------------------------------------------------
+
+||| Fundamental cosmological grid wall (137th epoch step).
+public export
+CosmicGridWall : Nat
+CosmicGridWall = 137
 
 ||| Total count of gate-pure scales across the entire 137-step cosmic trajectory (k = 0 to 136).
 ||| Evaluated by single-pass coinductive stream fold.
@@ -196,9 +223,14 @@ auditEpochDecelerationSpreadIdentity k =
 
 ||| Invariant audit verifying the Spread Diagonal Identity across the deforested trajectory stream.
 public export
-auditScaleTrajectorySpreadStream : (limit : Nat) -> Bool
-auditScaleTrajectorySpreadStream limit =
+auditScaleTrajectorySpreadStreamBounded : (bound : Nat) -> (limit : Nat) -> Bool
+auditScaleTrajectorySpreadStreamBounded bound limit =
   foldStreamNat (S limit)
                 (\acc, step => acc && auditEpochDecelerationSpreadIdentity step.scaleIndex)
                 True
-                (streamScaleTrajectoryBounded (S limit))
+                (streamScaleTrajectoryBounded bound (S limit))
+
+||| Backward-compatible audit of Spread Diagonal Identity across the 13-smooth cosmic stream.
+public export
+auditScaleTrajectorySpreadStream : (limit : Nat) -> Bool
+auditScaleTrajectorySpreadStream = auditScaleTrajectorySpreadStreamBounded CosmicSmoothHorizon
