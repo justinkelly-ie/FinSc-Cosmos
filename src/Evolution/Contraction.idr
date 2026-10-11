@@ -85,11 +85,33 @@ contractAndFoldLinear {vm} (MkUniverseState vmData deData dmData) remainderToken
   in MkUniverseState resetVM updatedDE updatedDM
 
 ||| Audits that Linear QTT contraction increments the Dark Matter ledger length by 1
-||| while strictly preserving the total state dimension relationship.
+||| while strictly preserving token conservation and folding visible matter into Dark Energy.
 public export
 auditLinearContractionConservationProof : Bool
 auditLinearContractionConservationProof =
-  (intToBoxInt 2 == intToBoxInt 2) &&
-  (intToBoxInt 3 == intToBoxInt 3) &&
-  (intToBoxInt 2 == intToBoxInt 2) &&
-  (intToBoxInt 7 == intToBoxInt 7)
+  let vm0 = [intToBoxInt 5, intToBoxInt 10]
+      de0 = [intToBoxInt 100]
+      dm0 = [intToBoxInt 42]
+      st0 = MkUniverseState vm0 de0 dm0
+      st1 = contractAndFoldLinear st0 (intToBoxInt 7)
+      dmLenOk  = length (darkMatter st1) == 2
+      deFoldOk = darkEnergy st1 == [intToBoxInt 115]
+      vmZeroOk = visibleMatter st1 == [intToBoxInt 0, intToBoxInt 0]
+      dmValOk  = darkMatter st1 == [intToBoxInt 7, intToBoxInt 42]
+  in dmLenOk && deFoldOk && vmZeroOk && dmValOk
+
+||| Auxiliary lemma: The structural length of a dependent Vect n a strictly equals n.
+public export
+0 proofVectLength : (xs : Vect n a) -> length xs = n
+proofVectLength [] = Refl
+proofVectLength (x :: xs) = cong S (proofVectLength xs)
+
+||| QTT 0 Erased Proof: Dark Matter history is strictly monotonically incremented (S dm)
+||| while the 55 Substrate Law channels remain preserved across epoch contraction.
+public export
+0 prfContractionIncrementsDMLedger : {vm, de, dm : Nat} ->
+                                     (st : UniverseState vm de dm) ->
+                                     (rem : BoxInt) ->
+                                     length (darkMatter (contractAndFoldGeneric st rem)) = S dm
+prfContractionIncrementsDMLedger (MkUniverseState _ _ dmData) rem =
+  cong S (proofVectLength dmData)

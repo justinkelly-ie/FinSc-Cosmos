@@ -3,7 +3,7 @@ version = 0.3.1
 authors = "Justin Kelly"
 brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
 
-depends = FinSc-Geometry, FinSc-Nuclear-Matter, FinSc-Thermodynamics, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Phase-Unfolding, FinSc-Action-Dynamics, FinSc-Cosmic-Horizon, base, linear
+depends = FinSc-Geometry, FinSc-Nuclear-Matter, FinSc-Thermodynamics, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Phase-Unfolding, FinSc-Action-Dynamics, FinSc-Cosmic-Horizon, FinSc-Chemistry, FinSc-Biology, base, linear
 sourcedir = "src"
 
 modules = Cosmos,
@@ -62,6 +62,7 @@ modules = Cosmos,
           Observation.Algebraic,
           Observation.Dataset,
           Observation.EmpiricalMeasurement,
+          Observation.FundamentalSubstrateLaws,
           Observation.HolographicStream,
           Observation.Scientific,
           Observation.Triad,

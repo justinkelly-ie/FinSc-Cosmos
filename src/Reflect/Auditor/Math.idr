@@ -12,8 +12,28 @@ import Data.Vect
 import Data.List
 import Language.Reflection
 
-
 import Stage0.Multiset
+import Stage1.Math.RotatingSpacetime
+import Stage1.Math.Magnetohydrodynamics
+import Stage1.Math.DegeneracyMassLimit
+import Stage1.Math.BlackHolePhaseTransition
+import Stage1.Math.PhaseInvarianceMeasure
+import Stage1.Math.StringTension
+import Stage0.Biology.BiophysicalAggregation
+import Stage1.Math.MacromolecularChirality
+import Stage1.Chemistry.HydrogenBonding
+import Stage1.Math.PlasmaRecombination
+import Stage1.Math.TripleAlphaNucleosynthesis
+import Stage1.Math.PeakBindingEnergy
+import Stage1.Math.RationalKepler
+import Stage1.Math.RationalRefraction
+import Stage1.Math.LawAlgebra
+import Stage1.SubstrateMetricTensor55
+import Stage1.MultisetMetricTensor55
+import Stage1.Math.GalacticRotationCurve
+import Stage1.Math.FlavorMixing
+import Stage1.Math.NeutrinoOscillation
+import Stage1.Hadron.MuonG2Anomaly
 
 %default total
 
@@ -660,103 +680,103 @@ auditRibosomalTranslationProofExport = True
 -- Witness 155: Law 41 (Discrete Kerr Spacetime & Penrose Process)
 public export
 auditRotatingSpacetimeProofExport : Bool
-auditRotatingSpacetimeProofExport = True
+auditRotatingSpacetimeProofExport = Stage1.Math.RotatingSpacetime.auditRotatingSpacetimeProof
 
 
 -- Witness 156: Law 42 (Discrete Alfvén MHD & Flux Freezing)
 public export
 auditMagnetohydrodynamicsProofExport : Bool
-auditMagnetohydrodynamicsProofExport = True
+auditMagnetohydrodynamicsProofExport = Stage1.Math.Magnetohydrodynamics.auditMagnetohydrodynamicsProof
 
 
 -- Witness 157: Law 43 (Discrete Chandrasekhar Degeneracy Limit)
 public export
 auditDegeneracyMassLimitProofExport : Bool
-auditDegeneracyMassLimitProofExport = True
+auditDegeneracyMassLimitProofExport = Stage1.Math.DegeneracyMassLimit.auditDegeneracyMassLimitProof
 
 
 -- Witness 158: Law 44 (Discrete Hawking-Page Phase Transition)
 public export
 auditBlackHolePhaseTransitionProofExport : Bool
-auditBlackHolePhaseTransitionProofExport = True
+auditBlackHolePhaseTransitionProofExport = Stage1.Math.BlackHolePhaseTransition.auditBlackHolePhaseTransitionProof
 
 
 -- Witness 159: Law 46 (Discrete Jarlskog CP-Violation Invariant)
 public export
 auditJarlskogCPViolationProofExport : Bool
-auditJarlskogCPViolationProofExport = True
+auditJarlskogCPViolationProofExport = Stage1.Math.PhaseInvarianceMeasure.auditJarlskogCPViolationProof
 
 
 -- Witness 160: Law 47 (Discrete QCD String Tension & Regge Trajectories)
 public export
 auditQCDStringTensionProofExport : Bool
-auditQCDStringTensionProofExport = True
+auditQCDStringTensionProofExport = Stage1.Math.StringTension.auditQCDStringTensionProof
 
 
 -- Witness 161: Law 48 (Watson-Crick Base Pair Complementarity & Polyphosphates)
 public export
 auditLaw48WatsonCrickProofExport : Bool
-auditLaw48WatsonCrickProofExport = True
+auditLaw48WatsonCrickProofExport = Stage0.Biology.BiophysicalAggregation.auditBiophysicalAggregationProof
 
 
 -- Witness 162: Law 49 (Macromolecular Homochirality & Peptide Condensation)
 public export
 auditLaw49MacromolecularChiralityProofExport : Bool
-auditLaw49MacromolecularChiralityProofExport = True
+auditLaw49MacromolecularChiralityProofExport = Stage1.Math.MacromolecularChirality.auditLaw49MacromolecularChiralityProof
 
 
 -- Witness 163: Law 50 (Hydrogen Bond Network & Quadrea Geometry)
 public export
 auditLaw50HydrogenBondingProofExport : Bool
-auditLaw50HydrogenBondingProofExport = True
+auditLaw50HydrogenBondingProofExport = Stage1.Chemistry.HydrogenBonding.auditLaw50HydrogenBondingProof
 
 
 -- Witness 164: Law 51 (Plasma Recombination & Cosmic Microwave Decoupling)
 public export
 auditLaw51PlasmaRecombinationProofExport : Bool
-auditLaw51PlasmaRecombinationProofExport = True
+auditLaw51PlasmaRecombinationProofExport = Stage1.Math.PlasmaRecombination.auditLaw51PlasmaRecombinationProof
 
 
 -- Witness 165: Law 52 (Triple-Alpha Carbon & Phosphorus Nucleosynthesis)
 public export
 auditLaw52TripleAlphaProofExport : Bool
-auditLaw52TripleAlphaProofExport = True
+auditLaw52TripleAlphaProofExport = Stage1.Math.TripleAlphaNucleosynthesis.auditLaw52TripleAlphaProof
 
 
 -- Witness 166: Law 53 (Stellar Nucleosynthesis & Iron-56 Peak Binding)
 public export
 auditLaw53Iron56PeakBindingProofExport : Bool
-auditLaw53Iron56PeakBindingProofExport = True
+auditLaw53Iron56PeakBindingProofExport = Stage1.Math.PeakBindingEnergy.auditLaw53Iron56PeakBindingProof
 
 
 -- Witness 167: Law 54 (Rational Kepler Laws & Toroidal Orbits)
 public export
 auditLaw54RationalKeplerProofExport : Bool
-auditLaw54RationalKeplerProofExport = True
+auditLaw54RationalKeplerProofExport = Stage1.Math.RationalKepler.auditRationalKeplerProof
 
 
 -- Witness 168: Law 55 (Rational Snell's Law & Triple Spread Law)
 public export
 auditLaw55RationalSnellProofExport : Bool
-auditLaw55RationalSnellProofExport = True
+auditLaw55RationalSnellProofExport = Stage1.Math.RationalRefraction.auditRationalSnellProof
 
 
 -- Witness 169: Law Algebra Monoid Composition
 public export
 auditLawAlgebraMonoidProofExport : Bool
-auditLawAlgebraMonoidProofExport = True
+auditLawAlgebraMonoidProofExport = Stage1.Math.LawAlgebra.auditLawAlgebraMonoidProof
 
 
 -- Witness 170: 10D Symmetric Substrate Metric Tensor (55 Components)
 public export
 auditSubstrateMetricTensor55ProofExport : Bool
-auditSubstrateMetricTensor55ProofExport = True
+auditSubstrateMetricTensor55ProofExport = Stage1.SubstrateMetricTensor55.auditSubstrateMetricTensor55Proof
 
 
 -- Witness 171: Pure Multiset 10D Metric Tensor Formulation (55 Basis Pairs)
 public export
 auditMultisetMetricTensor55ProofExport : Bool
-auditMultisetMetricTensor55ProofExport = True
+auditMultisetMetricTensor55ProofExport = Stage1.MultisetMetricTensor55.auditMultisetMetricTensor55Proof
 
 
 -- Witness 172: Dual Number Discrete Calculus & Automatic Differentiation
@@ -804,7 +824,7 @@ auditDensityMatrixBornRule = auditWitness auditDensityMatrixBornRuleProofExport
 -- Witness 175: 1,000-Step Galactic Rotation Curve & Dark Matter Halo Time-Series Simulation
 public export
 auditGalacticRotationTimeSeriesProofExport : Bool
-auditGalacticRotationTimeSeriesProofExport = True
+auditGalacticRotationTimeSeriesProofExport = Stage1.Math.GalacticRotationCurve.auditGalacticRotationTimeSeriesProof
 
 public export
 %macro
@@ -814,7 +834,7 @@ auditGalacticRotationTimeSeries = auditWitness auditGalacticRotationTimeSeriesPr
 -- Witness 176: Constructive Anti-Matter Multiset Pair Annihilation & CKM/PMNS CP-Violation Unitarity
 public export
 auditAntiMatterAnnihilationProofExport : Bool
-auditAntiMatterAnnihilationProofExport = True
+auditAntiMatterAnnihilationProofExport = Stage1.Math.FlavorMixing.auditFlavorMixingProof
 
 public export
 %macro
@@ -824,7 +844,7 @@ auditAntiMatterAnnihilation = auditWitness auditAntiMatterAnnihilationProofExpor
 -- Witness 181: 3-Flavor Neutrino Oscillation Time-Series & PMNS Unitary Conservation
 public export
 auditNeutrinoOscillationProofExport : Bool
-auditNeutrinoOscillationProofExport = True
+auditNeutrinoOscillationProofExport = Stage1.Math.NeutrinoOscillation.auditNeutrinoOscillationProof
 
 public export
 %macro
@@ -834,7 +854,7 @@ auditNeutrinoOscillation = auditWitness auditNeutrinoOscillationProofExport
 -- Witness 183: Parallelized O(log N) Transform Multiset Tree Pushforward Evaluation
 public export
 auditParallelPushforwardProofExport : Bool
-auditParallelPushforwardProofExport = True
+auditParallelPushforwardProofExport = Stage1.MaxelTransform.auditParallelPushforwardProof
 
 public export
 %macro
@@ -845,7 +865,7 @@ auditParallelPushforward = auditWitness auditParallelPushforwardProofExport
 -- Witness 182: Muon g-2 Anomaly & Discrete Loop Correction Engine
 public export
 auditMuonG2AnomalyProofExport : Bool
-auditMuonG2AnomalyProofExport = True
+auditMuonG2AnomalyProofExport = Stage1.Hadron.MuonG2Anomaly.auditMuonG2AnomalyProof
 
 public export
 %macro

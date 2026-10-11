@@ -10,6 +10,7 @@ import public Observation.Dataset
 import public Observation.Scientific
 import public Observation.Triad
 import public Observation.HolographicStream
+import public Observation.FundamentalSubstrateLaws
 
 %default total
 
@@ -51,6 +52,16 @@ public export
 auditHolographicStream : Elab (Reflect.Auditor.Observation.auditHolographicStreamProofExport = True)
 auditHolographicStream = auditWitness auditHolographicStreamProofExport
 
+-- Witness 177: Fundamental Substrate Laws Bijection (T_10 = 55 Dark Matter Channels)
+public export
+auditFundamentalSubstrateLawsProofExport : Bool
+auditFundamentalSubstrateLawsProofExport = Observation.FundamentalSubstrateLaws.auditFundamentalSubstrateLawsProof
+
+public export
+%macro
+auditFundamentalSubstrateLaws : Elab (Reflect.Auditor.Observation.auditFundamentalSubstrateLawsProofExport = True)
+auditFundamentalSubstrateLaws = auditWitness auditFundamentalSubstrateLawsProofExport
+
 ------------------------------------------------------------------------
 -- BATCH CATALOG WITNESS REFLECTION AUDITOR
 ------------------------------------------------------------------------
@@ -63,6 +74,7 @@ observationCatalogWitnesses =
   , auditAlgebraicObservationCatalogProofExport
   , auditCosmologicalTriadProofExport
   , auditHolographicStreamProofExport
+  , auditFundamentalSubstrateLawsProofExport
   ]
 
 public export
