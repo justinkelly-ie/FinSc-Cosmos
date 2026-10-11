@@ -5,7 +5,6 @@
 module Stage1.Epoch.ScaleTrajectorySieve
 
 import Stage1.TypeTheory.Smoothness
-import Stage1.TypeTheory.Smooth13
 import Stage0.BoxInt
 import Stage0.OnSeq.FusedStream
 import Stage1.Multiset.PrimordialUnfolding
