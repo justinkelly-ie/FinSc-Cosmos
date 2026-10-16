@@ -16,59 +16,63 @@ import Data.Nat
 -- 1. SCALE COHERENCE CLASSIFICATION & TERM-INDEXED SCALE STEP RECORD
 --------------------------------------------------------------------------------
 
-||| Physical coherence status of a scale trajectory step:
-||| - GatePure:   n = k + 1 is smooth under prime bound, preserving coherence.
-||| - Decoherent: n has prime factors > bound, draining into thermal dispersion.
-public export
-data ScaleCoherenceStatus = GatePure | Decoherent
-
-public export
-Eq ScaleCoherenceStatus where
-  GatePure   == GatePure   = True
-  Decoherent == Decoherent = True
-  _          == _          = False
-
-public export
-Show ScaleCoherenceStatus where
-  show GatePure   = "GatePure"
-  show Decoherent = "Decoherent"
-
 ||| Evaluates coherence classification of scale step k under generic prime bound.
 public export
-evalScaleStepCoherenceBounded : (bound : Nat) -> Nat -> ScaleCoherenceStatus
-evalScaleStepCoherenceBounded bound k =
-  if isSmoothNat bound (S k) then GatePure else Decoherent
+evalScaleStepCoherenceBounded : (bound : Nat) -> (k : Nat) -> CoherenceStatus bound (S k)
+evalScaleStepCoherenceBounded bound k = decideCoherence bound (S k)
 
-||| Backward-compatible coherence evaluator using CosmicSmoothHorizon (13).
+||| Coherence evaluator using CosmicSmoothHorizon (13).
 public export
-evalScaleStepCoherence : Nat -> ScaleCoherenceStatus
+evalScaleStepCoherence : (k : Nat) -> CoherenceStatus CosmicSmoothHorizon (S k)
 evalScaleStepCoherence = evalScaleStepCoherenceBounded CosmicSmoothHorizon
 
 ||| Term-indexed discrete cosmological scale step parameterized by smoothness bound.
-||| Holds its scale index k, generation number n = S k, its chromogeometric
-||| TriadQuadrance payload, and coherence status.
+||| Bundles its scale index k, generation number n = S k, its chromogeometric
+||| TriadQuadrance payload, and dependent coherence status witness (Rule 03).
 public export
 record ScaleStep (bound : Nat) where
   constructor MkScaleStep
   scaleIndex : Nat
-  generation : Nat
   triad      : TriadQuadrance
-  status     : ScaleCoherenceStatus
+  status     : CoherenceStatus bound (S scaleIndex)
+
+||| Projects the generation index n = S k from a ScaleStep.
+public export
+generation : ScaleStep bound -> Nat
+generation (MkScaleStep k _ _) = S k
+
+||| Extracts the certified Dimension from a ScaleStep if gate-pure.
+public export
+scaleDimension : ScaleStep bound -> Maybe (Dimension bound)
+scaleDimension (MkScaleStep _ _ (GatePure prf)) = Just (_ ** prf)
+scaleDimension (MkScaleStep _ _ (Decoherent _)) = Nothing
 
 public export
 {bound : Nat} -> Eq (ScaleStep bound) where
-  (MkScaleStep k1 g1 t1 s1) == (MkScaleStep k2 g2 t2 s2) =
-    k1 == k2 && g1 == g2 && t1 == t2 && s1 == s2
+  (MkScaleStep k1 t1 s1) == (MkScaleStep k2 t2 s2) =
+    k1 == k2 && t1 == t2 && isStatusGatePure s1 == isStatusGatePure s2
 
 public export
 {bound : Nat} -> Show (ScaleStep bound) where
-  show (MkScaleStep k g t s) =
-    "ScaleStep(" ++ show k ++ " | n=" ++ show g ++ " | " ++ show s ++ ")"
+  show (MkScaleStep k t s) =
+    "ScaleStep(" ++ show k ++ " | n=" ++ show (S k) ++ " | " ++ show s ++ ")"
 
 ||| Canonical cosmological scale step carrier (13-smooth).
 public export
 CosmicScaleStep : Type
 CosmicScaleStep = ScaleStep CosmicSmoothHorizon
+
+||| Canonical compile-time verified Observer scale step (k = 38, n = 39).
+public export
+observerScaleStep : CosmicScaleStep
+observerScaleStep =
+  MkScaleStep 38 (epochTriadQuadrance 38) (GatePure prfSmooth39)
+
+||| Canonical compile-time verified Grid Wall scale step (k = 136, n = 137).
+public export
+gridWallScaleStep : CosmicScaleStep
+gridWallScaleStep =
+  MkScaleStep 136 (epochTriadQuadrance 136) (Decoherent contraSmooth137)
 
 --------------------------------------------------------------------------------
 -- 2. DEFORESTED SCALE TRAJECTORY STREAM TRANSDUCERS (O(1) AUXILIARY MEMORY)
@@ -80,7 +84,7 @@ stepScaleTrajectory : (bound : Nat) -> Nat -> Step Nat (ScaleStep bound)
 stepScaleTrajectory bound k =
   let tr = epochTriadQuadrance k
       st = evalScaleStepCoherenceBounded bound k
-  in Yield (MkScaleStep k (S k) tr st) (S k)
+  in Yield (MkScaleStep k tr st) (S k)
 
 ||| Infinite coinductive stream of cosmological scale trajectory steps.
 ||| Executes in O(1) auxiliary registers without allocating intermediate lists (Rule 04).
@@ -96,7 +100,7 @@ stepScaleTrajectoryBounded bound maxScale k =
      then Done
      else let tr = epochTriadQuadrance k
               st = evalScaleStepCoherenceBounded bound k
-          in Yield (MkScaleStep k (S k) tr st) (S k)
+          in Yield (MkScaleStep k tr st) (S k)
 
 ||| Bounded coinductive stream of scale trajectory steps in [0, maxScale).
 public export
@@ -111,8 +115,8 @@ countPureScalesStreamBounded : (bound : Nat) -> (limit : Nat) -> Nat
 countPureScalesStreamBounded bound limit =
   foldStreamNat (S limit)
                 (\acc, step => case step.status of
-                                 GatePure   => S acc
-                                 Decoherent => acc)
+                                 GatePure _   => S acc
+                                 Decoherent _ => acc)
                 0
                 (streamScaleTrajectoryBounded bound (S limit))
 
@@ -122,8 +126,8 @@ countDecoherentScalesStreamBounded : (bound : Nat) -> (limit : Nat) -> Nat
 countDecoherentScalesStreamBounded bound limit =
   foldStreamNat (S limit)
                 (\acc, step => case step.status of
-                                 GatePure   => acc
-                                 Decoherent => S acc)
+                                 GatePure _   => acc
+                                 Decoherent _ => S acc)
                 0
                 (streamScaleTrajectoryBounded bound (S limit))
 
@@ -178,16 +182,16 @@ public export
 auditObserverEpochCoherenceProof : Bool
 auditObserverEpochCoherenceProof =
   case evalScaleStepCoherence 38 of
-    GatePure   => True
-    Decoherent => False
+    GatePure _   => True
+    Decoherent _ => False
 
 ||| Audit proof verifying that the cosmological grid wall k = 136 (n = 137 prime) is decoherent.
 public export
 auditGridWallDecoherenceProof : Bool
 auditGridWallDecoherenceProof =
   case evalScaleStepCoherence 136 of
-    Decoherent => True
-    GatePure   => False
+    Decoherent _ => True
+    GatePure _   => False
 
 --------------------------------------------------------------------------------
 -- 4. DYNAMIC FLRW SCALE FACTOR & COSMOLOGICAL DECELERATION

@@ -38,7 +38,7 @@ stepThreeMetricUniverse : {vm, de, dm, k : Nat} ->
                           (1 st : UniverseState vm de dm) ->
                           (newMatter : Vect k BoxInt) ->
                           UniverseState (vm + k) de (S dm)
-stepThreeMetricUniverse st newMatter = stepUniverseLinear st newMatter
+stepThreeMetricUniverse st newMatter = Evolution.LinearPipeline.stepUniverseLinear st newMatter
 
 ------------------------------------------------------------------------
 -- 2. FORMAL INVARIANT AUDIT PROOF

@@ -8,28 +8,10 @@ import Stage1.VexelMaxel
 import Stage1.MultisetTree
 import Stage1.Math.PrefixCodeOptimality
 import Data.Vect
+import public Stage0.UniverseState
+import public Stage1.UniverseState
 
 %default total
-
-||| The completely un-hardcoded cosmic partition state.
-||| Dimensions are tracked relationally through dependent parameters.
-||| All data slots store exact BoxInt discrete particle/quadrance tokens.
-public export
-record UniverseState (vmSize : Nat) (deSize : Nat) (dmSize : Nat) where
-  constructor MkUniverseState
-  visibleMatter : Vect vmSize Stage0.BoxInt.BoxInt -- Active spatial field lattice
-  darkEnergy    : Vect deSize Stage0.BoxInt.BoxInt -- Background ROM capacity
-  darkMatter    : Vect dmSize Stage0.BoxInt.BoxInt -- Historical error/residue ledger
-
-||| Extracts the Dark Matter log as a read-only reference.
-public export
-dmLog : UniverseState vm de dm -> Vect dm Stage0.BoxInt.BoxInt
-dmLog (MkUniverseState _ _ dmData) = dmData
-
-||| Calculates total active state energy across all memory pools.
-public export
-totalStateCapacity : {vm, de, dm : Nat} -> UniverseState vm de dm -> Nat
-totalStateCapacity {vm} {de} {dm} _ = vm + de + dm
 
 ------------------------------------------------------------------------
 -- UNIFIED COSMIC DIRECT-SUM MULTISET
@@ -85,12 +67,6 @@ linearVectSplit (S k) (x :: xs) =
   let (l, r) = linearVectSplit k xs
   in (x :: l, r)
 
-||| Linear combination of two sub-vectors into a single active vector:
-||| Merges two linear resources without duplicating or dropping tokens.
-public export
-linearVectCombine : Vect n a -> Vect m a -> Vect (n + m) a
-linearVectCombine [] r = r
-linearVectCombine (x :: xs) r = x :: linearVectCombine xs r
 
 ||| Linear token relocation (Landauer's Principle):
 ||| Consumes an erased active spatial token and relocates it into the Dark Matter history ledger.
