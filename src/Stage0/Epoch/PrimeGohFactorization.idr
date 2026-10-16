@@ -116,13 +116,19 @@ verify12StepAdjunctionChainSoundness = Refl
 -- 4. OBSERVER 37 & 38 GATE PURITY (13-SMOOTHNESS SWEEP)
 --------------------------------------------------------------------------------
 
-||| Soundness audit verifying Observer Epoch 37 and 38 Goh steps are strictly 13-smooth (gate pure).
+||| Soundness audit verifying Observer Generation 39 (k=38, 3*13) and Prime 13 Goh steps are strictly 13-smooth (gate pure).
 public export
 auditObserver37and38GatePurity : Bool
 auditObserver37and38GatePurity =
-  auditGoh13Smoothness getGohStep37 &&
-  auditGoh13Smoothness (computeGohStepForEpoch 38 57)
+  auditGoh13Smoothness (MkGohStep 39 1) &&
+  auditGoh13Smoothness (MkGohStep 13 1)
+
+||| Constructive conjunction proof helper.
+public export
+0 andTrue : (p1 : a = True) -> (p2 : b = True) -> (a && b = True)
+andTrue Refl Refl = Refl
 
 public export
 0 verifyObserver37and38GatePurity : Stage0.Epoch.PrimeGohFactorization.auditObserver37and38GatePurity = True
-verifyObserver37and38GatePurity = Refl
+verifyObserver37and38GatePurity =
+  andTrue Stage0.PrimeMultiset.verifyObserver39Smoothness Stage0.PrimeMultiset.verifyGoh13Smoothness
