@@ -9,6 +9,7 @@ import public Stage1.Epoch.ExpansionCollapse
 import public Stage1.Epoch.Trajectory
 
 import public Stage1.MetricSignature
+import public Stage1.Goh.Factor
 
 %default total
 
@@ -25,79 +26,57 @@ verifyEpochGoh13Smoothness = Stage0.PrimeMultiset.verifyGoh13Smoothness
 -- 2. GOH PRIME TO CHROMOGEOMETRIC METRIC LAW ISOMORPHISM
 --------------------------------------------------------------------------------
 
-||| Formal Constructive Isomorphism mapping 13-smooth primes to Chromogeometric metric signatures.
+||| Maps a dependently typed Goh prime to its corresponding Chromogeometric metric law signature.
 public export
-data PrimeMetricSignature : Nat -> Type where
-  Prime2Dyadic     : PrimeMetricSignature 2   -- p = 2: Dyadic DE Canvas (2^7 = 128)
-  Prime3Elliptic   : PrimeMetricSignature 3   -- p = 3: 3D Spatial Metric VM (3^3 = 27, EllipticRed)
-  Prime5Parabolic  : PrimeMetricSignature 5   -- p = 5: Parabolic Blue Rational Spread
-  Prime7Substrate  : PrimeMetricSignature 7   -- p = 7: Substrate Torsion / 7-bit Dyadic Horizon
-  Prime11Hyperbolic: PrimeMetricSignature 11  -- p = 11: Hyperbolic Green EM Gauge Relativistic Signature
-  Prime13GohFuel   : PrimeMetricSignature 13  -- p = 13: Gate Purity Fuel Limit (13-smooth boundary)
+gohPrimeToMetricLaw : {p : Nat} -> GohPrime p -> ChromogeometryLaw
+gohPrimeToMetricLaw Prime2  = SubstrateTorsion
+gohPrimeToMetricLaw Prime3  = EllipticRed
+gohPrimeToMetricLaw Prime5  = ParabolicBlue
+gohPrimeToMetricLaw Prime7  = SubstrateTorsion
+gohPrimeToMetricLaw Prime11 = HyperbolicGreen
+gohPrimeToMetricLaw Prime13 = EllipticRed
 
-||| Maps a prime factor Nat to its corresponding Chromogeometric metric law signature (if smooth).
+||| Maps a dependently typed Goh prime directly to its canonical discrete multiset MetricSignature over {-1, 0, 1}.
 public export
-gohPrimeToMetricLaw : Nat -> Maybe ChromogeometryLaw
-gohPrimeToMetricLaw 2  = Just SubstrateTorsion
-gohPrimeToMetricLaw 3  = Just EllipticRed
-gohPrimeToMetricLaw 5  = Just ParabolicBlue
-gohPrimeToMetricLaw 7  = Just SubstrateTorsion
-gohPrimeToMetricLaw 11 = Just HyperbolicGreen
-gohPrimeToMetricLaw 13 = Just EllipticRed
-gohPrimeToMetricLaw _  = Nothing
+gohPrimeToMetricSignature : {p : Nat} -> GohPrime p -> Stage1.MetricSignature.MetricSignature
+gohPrimeToMetricSignature Prime2  = substrateSignature2D
+gohPrimeToMetricSignature Prime3  = ellipticSignature2D
+gohPrimeToMetricSignature Prime5  = parabolicSignature2D
+gohPrimeToMetricSignature Prime7  = substrateSignature2D
+gohPrimeToMetricSignature Prime11 = hyperbolicSignature2D
+gohPrimeToMetricSignature Prime13 = ellipticSignature2D
 
-||| Maps a 13-smooth prime factor directly to its canonical discrete multiset MetricSignature over {-1, 0, 1}.
+||| Evaluates the exact quadrance of a coordinate displacement (dx, dy) under a dependently typed Goh prime metric.
 public export
-gohPrimeToMetricSignature : Nat -> Maybe Stage1.MetricSignature.MetricSignature
-gohPrimeToMetricSignature 2  = Just substrateSignature2D
-
-gohPrimeToMetricSignature 3  = Just ellipticSignature2D
-gohPrimeToMetricSignature 5  = Just parabolicSignature2D
-gohPrimeToMetricSignature 7  = Just substrateSignature2D
-gohPrimeToMetricSignature 11 = Just hyperbolicSignature2D
-gohPrimeToMetricSignature 13 = Just ellipticSignature2D
-gohPrimeToMetricSignature _  = Nothing
-
-||| Evaluates the exact quadrance of a coordinate displacement (dx, dy) under a 13-smooth prime metric.
-public export
-gohPrimeQuadrance : Nat -> (BoxInt, BoxInt) -> Maybe BoxInt
-gohPrimeQuadrance p (x, y) =
-  case gohPrimeToMetricSignature p of
-    Just sig => Just (signatureQuadrance2D sig x y)
-    Nothing  => Nothing
-
+gohPrimeQuadrance : {p : Nat} -> GohPrime p -> (BoxInt, BoxInt) -> BoxInt
+gohPrimeQuadrance gp (x, y) =
+  signatureQuadrance2D (gohPrimeToMetricSignature gp) x y
 
 ||| QTT 0 erased proof witness verifying exact prime 3 elliptic quadrance of (4, 3) is 25.
 public export
-0 prfPrime3Quadrance25 : gohPrimeQuadrance 3 (MkBoxInt 4, MkBoxInt 3) = Just (MkBoxInt 25)
+0 prfPrime3Quadrance25 : gohPrimeQuadrance Prime3 (MkBoxInt 4, MkBoxInt 3) = MkBoxInt 25
 prfPrime3Quadrance25 = Refl
 
 ||| QTT 0 erased proof witness verifying exact prime 11 hyperbolic quadrance of (5, 4) is 9.
 public export
-0 prfPrime11Quadrance9 : gohPrimeQuadrance 11 (MkBoxInt 5, MkBoxInt 4) = Just (MkBoxInt 9)
+0 prfPrime11Quadrance9 : gohPrimeQuadrance Prime11 (MkBoxInt 5, MkBoxInt 4) = MkBoxInt 9
 prfPrime11Quadrance9 = Refl
 
 ||| QTT 0 erased proof witness verifying exact prime 5 parabolic quadrance of (3, 7) is 9.
 public export
-0 prfPrime5Quadrance9 : gohPrimeQuadrance 5 (MkBoxInt 3, MkBoxInt 7) = Just (MkBoxInt 9)
+0 prfPrime5Quadrance9 : gohPrimeQuadrance Prime5 (MkBoxInt 3, MkBoxInt 7) = MkBoxInt 9
 prfPrime5Quadrance9 = Refl
 
-||| Helper to check if a prime metric law mapping exists.
-public export
-isJustLaw : Maybe ChromogeometryLaw -> Bool
-isJustLaw (Just _) = True
-isJustLaw Nothing  = False
-
-||| Soundness audit verifying that all 13-smooth primes {2, 3, 5, 7, 11, 13} have valid Chromogeometric signatures.
+||| Soundness audit verifying that all 13-smooth primes {2, 3, 5, 7, 11, 13} map definitionally to valid Chromogeometric laws.
 public export
 auditPrimeMetricIsomorphismSoundness : Bool
 auditPrimeMetricIsomorphismSoundness =
-  isJustLaw (gohPrimeToMetricLaw 2) &&
-  isJustLaw (gohPrimeToMetricLaw 3) &&
-  isJustLaw (gohPrimeToMetricLaw 5) &&
-  isJustLaw (gohPrimeToMetricLaw 7) &&
-  isJustLaw (gohPrimeToMetricLaw 11) &&
-  isJustLaw (gohPrimeToMetricLaw 13)
+  (gohPrimeToMetricLaw Prime2 == SubstrateTorsion) &&
+  (gohPrimeToMetricLaw Prime3 == EllipticRed) &&
+  (gohPrimeToMetricLaw Prime5 == ParabolicBlue) &&
+  (gohPrimeToMetricLaw Prime7 == SubstrateTorsion) &&
+  (gohPrimeToMetricLaw Prime11 == HyperbolicGreen) &&
+  (gohPrimeToMetricLaw Prime13 == EllipticRed)
 
 public export
 0 verifyPrimeMetricIsomorphismSoundness : Stage0.Epoch.PrimeGohFactorization.auditPrimeMetricIsomorphismSoundness = True
