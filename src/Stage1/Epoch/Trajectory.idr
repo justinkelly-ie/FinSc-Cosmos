@@ -20,6 +20,16 @@ import Stage1.TypeTheory.Staging
 -- 1. 37-EPOCH COSMIC TRAJECTORY SIMULATION
 --------------------------------------------------------------------------------
 
+||| Pre-observer cosmic trajectory epoch bound: Epoch 37 ground state saturation point.
+%inline public export
+preObserverEpochLimit : Nat
+preObserverEpochLimit = 37
+
+||| Number of transition steps required to advance from Genesis Epoch 1 to Epoch 37.
+%inline public export
+preObserverEpochSteps : Nat
+preObserverEpochSteps = 36
+
 ||| Helper to recursively simulate N epoch steps.
 public export
 simulateEpochSteps : Nat -> EpochState -> List EpochState
@@ -31,7 +41,7 @@ simulateEpochSteps (S k) st = st :: simulateEpochSteps k (advanceEpochState st)
 ||| to the gate-pure observer epoch milestone at k = 38 (n = 39 = 3 * 13).
 public export
 simulate37Epochs : EpochState -> List EpochState
-simulate37Epochs initSt = simulateEpochSteps 36 initSt
+simulate37Epochs initSt = simulateEpochSteps preObserverEpochSteps initSt
 
 ||| Canonical alias for the pre-observer cosmic trajectory across the initial 37 epochs.
 public export
@@ -52,17 +62,27 @@ advanceN (S k) st = advanceN k (advanceEpochState st)
 ||| Evaluates the final Epoch 37 state from Genesis bootstrap.
 public export
 getEpoch37State : EpochState
-getEpoch37State = advanceN 36 initGenesisEpoch
+getEpoch37State = advanceN preObserverEpochSteps initGenesisEpoch
 
 ||| Zero-allocation coinductive infinite stream of cosmic epochs.
 public export
 streamCosmicEpochs : EpochState -> FusedStream EpochState
 streamCosmicEpochs initSt = unfoldStream (\st => Yield st (advanceEpochState st)) initSt
 
+--------------------------------------------------------------------------------
+-- 1B. DEPENDENT SCALE STEPS & CERTIFIED EPOCH TRAJECTORY (RULE 03)
+--------------------------------------------------------------------------------
+
+
+||| Evaluates the certified ground state epoch directly from Genesis bootstrap.
+public export
+getCertifiedEpoch37State : PrimorialEpochState
+getCertifiedEpoch37State = groundStateEpoch preObserverEpochLimit
+
 ||| Coinductive deforested stream representing the 37-epoch pre-observer cosmic trajectory.
 public export
 stream37Epochs : EpochState -> FusedStream EpochState
-stream37Epochs initSt = fusedTake 37 (streamCosmicEpochs initSt)
+stream37Epochs initSt = fusedTake preObserverEpochLimit (streamCosmicEpochs initSt)
 
 ||| Canonical alias for the pre-observer cosmic stream trajectory across the initial 37 epochs.
 public export
@@ -73,7 +93,7 @@ streamPreObserverTrajectory = stream37Epochs
 public export
 getEpoch37StateStream : EpochState
 getEpoch37StateStream =
-  case runFueledStreamNat 2 (fusedTake 1 (fusedDrop 36 (streamCosmicEpochs initGenesisEpoch))) of
+  case runFueledStreamNat 2 (fusedTake 1 (fusedDrop preObserverEpochSteps (streamCosmicEpochs initGenesisEpoch))) of
     [st] => st
     _ => getEpoch37State
 
@@ -136,7 +156,7 @@ auditPrimorial210BudgetProof =
       vm = st37.visibleBaryons
       de = st37.darkEnergy
       dm = countTotalDarkLaws st37.darkMatterLedger
-  in (vm + de + dm) == 210
+  in (vm + de + dm) == primorial210Budget
 
 ||| Audits Primorial 210 closure directly from the coinductive epoch stream in O(1) stack space.
 public export
@@ -146,11 +166,11 @@ auditPrimorial210BudgetStreamProof =
       vm = st37.visibleBaryons
       de = st37.darkEnergy
       dm = countTotalDarkLaws st37.darkMatterLedger
-  in (vm + de + dm) == 210
+  in (vm + de + dm) == primorial210Budget
 
 ||| Compile-time proof witness auditing Primorial 210 QuadStream budget closure (27 + 55 + 128 = 210).
 public export
-0 verifyQuadStreamBudgetClosure : (27 + 55 + 128) = 210
+0 verifyQuadStreamBudgetClosure : (Stage1.FourGeometries.ellipticLatticeCapacity + Stage1.FourGeometries.darkMatterTriangularResidue + Stage1.FourGeometries.hyperbolicRomCapacity) = Stage1.FourGeometries.primorial210Budget
 verifyQuadStreamBudgetClosure = Refl
 
 --------------------------------------------------------------------------------
@@ -203,7 +223,7 @@ fusedTakeCyclicEpochs winSize totalSteps initSt =
 public export
 auditCyclicBudgetClosureNat : Nat -> EpochState -> Bool
 auditCyclicBudgetClosureNat n initSt =
-  all (\st => (st.visibleBaryons + st.darkEnergy + countTotalDarkLaws st.darkMatterLedger) <= 210)
+  all (\st => (st.visibleBaryons + st.darkEnergy + countTotalDarkLaws st.darkMatterLedger) <= primorial210Budget)
       (simulateCyclicEpochs n initSt)
 
 ||| Audits Primorial 210 budget conservation across infinite cyclic rebounds.
@@ -215,7 +235,7 @@ auditInfCyclicBudgetClosure n initSt =
        let vm = st.visibleBaryons
            de = st.darkEnergy
            dm = countTotalDarkLaws st.darkMatterLedger
-       in acc && ((vm + de + dm) <= 210)
+       in acc && ((vm + de + dm) <= primorial210Budget)
      ) True strm
 
 ||| Audit verifying cyclic rebound resets a saturated Epoch 37 state to Epoch 1.
@@ -226,3 +246,26 @@ auditCyclicReboundPeriodicity = (reboundCyclicEpoch getEpoch37State).epochNumber
 public export
 0 verifyCyclicReboundPeriodicity : Stage1.Epoch.Trajectory.auditCyclicReboundPeriodicity = True
 verifyCyclicReboundPeriodicity = Refl
+
+--------------------------------------------------------------------------------
+-- 4. LINEAR COSMIC TRAJECTORY STREAMING (QTT LINEARITY - RULE 04)
+--------------------------------------------------------------------------------
+
+||| Streams a cosmic epoch trajectory across N steps with strict QTT linearity (multiplicity 1).
+||| Guarantees at compile time that cosmic state cannot be leaked, duplicated, or dropped.
+public export
+streamEpochLinearTrajectory : (fuel : Nat) ->
+                             (1 st : EpochState) ->
+                             LinearStatePair EpochState (List CosmicEpochObservable)
+streamEpochLinearTrajectory Z st = MkLStatePair st []
+streamEpochLinearTrajectory (S k) st =
+  let (MkLStatePair nextSt obs) = advanceEpochLinear st
+      (MkLStatePair finalSt restObs) = streamEpochLinearTrajectory k nextSt
+  in MkLStatePair finalSt (obs :: restObs)
+
+||| Compile-time audit verifying that linear trajectory stepper produces N observations.
+public export
+auditLinearEpochTrajectoryProof : Bool
+auditLinearEpochTrajectoryProof =
+  let (MkLStatePair _ obsList) = streamEpochLinearTrajectory 5 initGenesisEpoch
+  in length obsList == 5

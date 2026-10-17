@@ -154,6 +154,11 @@ Show CosmosApexToken where
   show (PrimorialBudget b)       = "PrimorialBudget(" ++ show b ++ ")"
   show (HelmholtzGroundState f)  = "HelmholtzGroundState(" ++ show f ++ ")"
 
+||| Canonical Layer 7 Cosmos Master Token grounded in the Primorial 210 capacity budget (Rule 03).
+public export
+masterPrimorialToken : CosmosApexToken
+masterPrimorialToken = PrimorialBudget (natToBoxInt primorial210Budget)
+
 --------------------------------------------------------------------------------
 -- 2. CANONICAL PHYSICAL LAYER MORPHISMS (L0 -> L7)
 --------------------------------------------------------------------------------
@@ -306,7 +311,7 @@ morph6to7 =
     SubstrateGeom
     (\m =>
       let trans : ThermodynamicEpochToken -> CosmosApexToken
-          trans (GatePureScale _)   = PrimorialBudget (MkBoxInt 210)
+          trans (GatePureScale _)   = masterPrimorialToken
           trans (DecoherentScale _) = HelmholtzGroundState (MkBoxInt (-1320))
       in mapMultiset trans m
     )
@@ -484,7 +489,7 @@ streamMorph6to7 =
     (\strm =>
       mapStream (\(tok, c) =>
         case tok of
-          GatePureScale _   => (PrimorialBudget (MkBoxInt 210), c)
+          GatePureScale _   => (masterPrimorialToken, c)
           DecoherentScale _ => (HelmholtzGroundState (MkBoxInt (-1320)), c)
       ) strm)
     (\strm =>
@@ -533,7 +538,7 @@ fusedTriadToApexMorphism (tok, c) =
                if t <= 76 then GatePureScale (fromInteger (abs t))
                           else DecoherentScale (fromInteger (abs t))
       m7 = case m6 of
-             GatePureScale _   => PrimorialBudget (MkBoxInt 210)
+             GatePureScale _   => masterPrimorialToken
              DecoherentScale _ => HelmholtzGroundState (MkBoxInt (-1320))
   in (m7, c)
 
@@ -626,7 +631,7 @@ linearMorph5to6 (AddM (ToricStabilizer (MkBoxInt t)) c rest) =
 public export
 linearMorph6to7 : (1 m : Multiset BoxInt ThermodynamicEpochToken) -> Multiset BoxInt CosmosApexToken
 linearMorph6to7 ZeroM = ZeroM
-linearMorph6to7 (AddM (GatePureScale _) c rest)   = AddM (PrimorialBudget (MkBoxInt 210)) c (linearMorph6to7 rest)
+linearMorph6to7 (AddM (GatePureScale _) c rest)   = AddM masterPrimorialToken c (linearMorph6to7 rest)
 linearMorph6to7 (AddM (DecoherentScale _) c rest) = AddM (HelmholtzGroundState (MkBoxInt (-1320))) c (linearMorph6to7 rest)
 
 ||| T_total Linear: Master End-to-End Typed Multiset Stream Pipeline with strict QTT multiplicity 1.
@@ -736,7 +741,7 @@ auditCosmicGenesisStreamProof =
         foldStreamFuel substrateFuel
           (\(n, ok), (tok, c) =>
             ( n + 1
-            , ok && (tok == PrimorialBudget (MkBoxInt 210)) && (unwrapBox c == 1)
+            , ok && (tok == masterPrimorialToken) && (unwrapBox c == 1)
             ))
           (0, True)
           streamCosmicGenesisEvolution
@@ -775,7 +780,7 @@ auditUnrolledCosmicPipelineProof =
         foldStreamFuel substrateFuel
           (\(n, ok), (tok, c) =>
             ( n + 1
-            , ok && (tok == PrimorialBudget (MkBoxInt 210)) && (unwrapBox c == 1)
+            , ok && (tok == masterPrimorialToken) && (unwrapBox c == 1)
             ))
           (0, True)
           vacStrm
