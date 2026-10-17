@@ -8,6 +8,7 @@ import Stage1.VexelMaxel
 import Stage1.MultisetTree
 import Stage1.Math.PrefixCodeOptimality
 import Data.Vect
+import Stage1.FourGeometries
 import public Stage0.UniverseState
 import public Stage1.UniverseState
 
@@ -33,26 +34,51 @@ totalCosmicMultisetBudget : CosmicMultiset -> Nat
 totalCosmicMultisetBudget (MkCosmicMultiset (MkBoxel v) (MkMaxel de) (MkVexel dm)) =
   length v + length de + length dm
 
-||| Embeds a dependent UniverseState into the Unified Cosmic Multiset.
+vectToBoxelTerms : {n : Nat} -> Vect n BoxInt -> List (Voxel, BoxInt)
+vectToBoxelTerms xs = go 1 xs
+  where
+    go : Nat -> Vect k BoxInt -> List (Voxel, BoxInt)
+    go _ [] = []
+    go i (w :: ws) = (MkVoxel i 1 1, w) :: go (S i) ws
+
+vectToMaxelTerms : {n : Nat} -> Vect n BoxInt -> List (Pixel, BoxInt)
+vectToMaxelTerms xs = go 1 xs
+  where
+    go : Nat -> Vect k BoxInt -> List (Pixel, BoxInt)
+    go _ [] = []
+    go i (w :: ws) = (MkPixel i 1, w) :: go (S i) ws
+
+vectToVexelTerms : {n : Nat} -> Vect n BoxInt -> List (Unixel, BoxInt)
+vectToVexelTerms xs = go 1 xs
+  where
+    go : Nat -> Vect k BoxInt -> List (Unixel, BoxInt)
+    go _ [] = []
+    go i (w :: ws) = (MkUnixel i, w) :: go (S i) ws
+
+||| Embeds a dependent UniverseState into the Unified Cosmic Multiset via single-pass conversion.
 public export
 stateToCosmicMultiset : {vm, de, dm : Nat} -> UniverseState vm de dm -> CosmicMultiset
 stateToCosmicMultiset (MkUniverseState vmVect deVect dmVect) =
-  let vmTerms = toList (tabulate (\idx => (MkVoxel (finToNat idx + 1) 1 1, index idx vmVect)))
-      deTerms = toList (tabulate (\idx => (MkPixel (finToNat idx + 1) 1, index idx deVect)))
-      dmTerms = toList (tabulate (\idx => (MkUnixel (finToNat idx + 1), index idx dmVect)))
-  in MkCosmicMultiset (canonicalizeBoxel (MkBoxel vmTerms)) (canonicalizeMaxel (MkMaxel deTerms)) (canonicalizeVexel (MkVexel dmTerms))
+  MkCosmicMultiset
+    (canonicalizeBoxel (MkBoxel (vectToBoxelTerms vmVect)))
+    (canonicalizeMaxel (MkMaxel (vectToMaxelTerms deVect)))
+    (canonicalizeVexel (MkVexel (vectToVexelTerms dmVect)))
 
+||| Ground-state Observer Epoch 37 UniverseState grounded in FourGeometries basis capacities.
+public export
+observerUniverseGroundState : UniverseState Stage1.FourGeometries.ellipticLatticeCapacity Stage1.FourGeometries.hyperbolicRomCapacity Stage1.FourGeometries.darkMatterTriangularResidue
+observerUniverseGroundState =
+  MkUniverseState
+    (replicate Stage1.FourGeometries.ellipticLatticeCapacity (Stage0.BoxInt.intToBoxInt 1))
+    (replicate Stage1.FourGeometries.hyperbolicRomCapacity (Stage0.BoxInt.intToBoxInt 1))
+    (replicate Stage1.FourGeometries.darkMatterTriangularResidue (Stage0.BoxInt.intToBoxInt 1))
 
 ||| Audits that Epoch 37 CosmicMultiset has total budget 210 = 27 + 128 + 55.
 public export
 auditCosmicMultisetBudgetProof : Bool
 auditCosmicMultisetBudgetProof =
-  let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (Stage0.BoxInt.intToBoxInt 1))
-                    (replicate 128 (Stage0.BoxInt.intToBoxInt 1))
-                    (replicate 55 (Stage0.BoxInt.intToBoxInt 1))
-      cMultiset = stateToCosmicMultiset mockState
-  in totalCosmicMultisetBudget cMultiset == 210
+  let cMultiset = stateToCosmicMultiset observerUniverseGroundState
+  in totalCosmicMultisetBudget cMultiset == primorial210Budget
 
 ------------------------------------------------------------------------
 -- QUANTITATIVE TYPE THEORY (QTT) LINEAR VECTOR & STATE TRANSITIONS
@@ -102,11 +128,7 @@ serializeUniverseStateDyck s = contourWalk (universeStateToBoxSpec s)
 public export
 auditUniverseStateDyckSerializationProof : Bool
 auditUniverseStateDyckSerializationProof =
-  let mockState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
-                    (replicate 27 (Stage0.BoxInt.intToBoxInt 1))
-                    (replicate 128 (Stage0.BoxInt.intToBoxInt 1))
-                    (replicate 55 (Stage0.BoxInt.intToBoxInt 1))
-      dyckBits = serializeUniverseStateDyck mockState
+  let dyckBits = serializeUniverseStateDyck observerUniverseGroundState
       decoded = fromContourWalk dyckBits
   in isDyckPath dyckBits && isJust decoded
 

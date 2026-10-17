@@ -157,7 +157,12 @@ Show CosmosApexToken where
 ||| Canonical Layer 7 Cosmos Master Token grounded in the Primorial 210 capacity budget (Rule 03).
 public export
 masterPrimorialToken : CosmosApexToken
-masterPrimorialToken = PrimorialBudget (natToBoxInt primorial210Budget)
+masterPrimorialToken = PrimorialBudget (intToBoxInt 210)
+
+||| Canonical Layer 7 Cosmos Master Token for the unique discrete Helmholtz Free Energy ground state minimum (-1320).
+public export
+masterHelmholtzToken : CosmosApexToken
+masterHelmholtzToken = HelmholtzGroundState (intToBoxInt (-1320))
 
 --------------------------------------------------------------------------------
 -- 2. CANONICAL PHYSICAL LAYER MORPHISMS (L0 -> L7)
@@ -312,7 +317,7 @@ morph6to7 =
     (\m =>
       let trans : ThermodynamicEpochToken -> CosmosApexToken
           trans (GatePureScale _)   = masterPrimorialToken
-          trans (DecoherentScale _) = HelmholtzGroundState (MkBoxInt (-1320))
+          trans (DecoherentScale _) = masterHelmholtzToken
       in mapMultiset trans m
     )
     (\m =>
@@ -490,7 +495,7 @@ streamMorph6to7 =
       mapStream (\(tok, c) =>
         case tok of
           GatePureScale _   => (masterPrimorialToken, c)
-          DecoherentScale _ => (HelmholtzGroundState (MkBoxInt (-1320)), c)
+          DecoherentScale _ => (masterHelmholtzToken, c)
       ) strm)
     (\strm =>
       mapStream (\(tok, c) =>
@@ -539,7 +544,7 @@ fusedTriadToApexMorphism (tok, c) =
                           else DecoherentScale (fromInteger (abs t))
       m7 = case m6 of
              GatePureScale _   => masterPrimorialToken
-             DecoherentScale _ => HelmholtzGroundState (MkBoxInt (-1320))
+             DecoherentScale _ => masterHelmholtzToken
   in (m7, c)
 
 ||| Unrolled end-to-end substrate carrier pushforward.
@@ -632,7 +637,7 @@ public export
 linearMorph6to7 : (1 m : Multiset BoxInt ThermodynamicEpochToken) -> Multiset BoxInt CosmosApexToken
 linearMorph6to7 ZeroM = ZeroM
 linearMorph6to7 (AddM (GatePureScale _) c rest)   = AddM masterPrimorialToken c (linearMorph6to7 rest)
-linearMorph6to7 (AddM (DecoherentScale _) c rest) = AddM (HelmholtzGroundState (MkBoxInt (-1320))) c (linearMorph6to7 rest)
+linearMorph6to7 (AddM (DecoherentScale _) c rest) = AddM masterHelmholtzToken c (linearMorph6to7 rest)
 
 ||| T_total Linear: Master End-to-End Typed Multiset Stream Pipeline with strict QTT multiplicity 1.
 ||| Guarantees at compile time that multiset mass-energy streams cannot be cloned, dropped, or leaked.
@@ -789,7 +794,7 @@ auditUnrolledCosmicPipelineProof =
       decoStrm = unrolledCosmicStreamPipeline decoherentTick
       hasHelmholtz =
         foldStreamFuel substrateFuel
-          (\found, (tok, _) => found || (tok == HelmholtzGroundState (MkBoxInt (-1320))))
+          (\found, (tok, _) => found || (tok == masterHelmholtzToken))
           False
           decoStrm
       -- Test equivalence with fused pipeline on vacuum

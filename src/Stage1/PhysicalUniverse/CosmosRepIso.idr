@@ -98,12 +98,12 @@ cosmosMasterRepIso =
 public export
 0 prfCosmosMasterRepIsoBudget :
   (verifyRoundTrip Stage1.PhysicalUniverse.CosmosRepIso.cosmosMasterRepIso)
-  (PrimorialBudget (MkBoxInt 210)) = True
+  Stage1.PhysicalUniverse.Pipeline.masterPrimorialToken = True
 prfCosmosMasterRepIsoBudget = Refl
 
 ||| Compile-time verification that round-trip isomorphism holds for HelmholtzGroundState (-1320).
 public export
 0 prfCosmosMasterRepIsoHelmholtz :
   (verifyRoundTrip Stage1.PhysicalUniverse.CosmosRepIso.cosmosMasterRepIso)
-  (HelmholtzGroundState (MkBoxInt (-1320))) = True
+  Stage1.PhysicalUniverse.Pipeline.masterHelmholtzToken = True
 prfCosmosMasterRepIsoHelmholtz = Refl
