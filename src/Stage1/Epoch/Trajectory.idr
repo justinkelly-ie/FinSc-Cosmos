@@ -73,7 +73,7 @@ streamPreObserverTrajectory = stream37Epochs
 public export
 getEpoch37StateStream : EpochState
 getEpoch37StateStream =
-  case runFueledStream (limit 2) (fusedTake 1 (fusedDrop 36 (streamCosmicEpochs initGenesisEpoch))) of
+  case runFueledStreamNat 2 (fusedTake 1 (fusedDrop 36 (streamCosmicEpochs initGenesisEpoch))) of
     [st] => st
     _ => getEpoch37State
 
@@ -211,7 +211,7 @@ public export
 auditInfCyclicBudgetClosure : Nat -> EpochState -> Bool
 auditInfCyclicBudgetClosure n initSt =
   let strm = streamCyclicEpochs n initSt
-  in fueLedFoldStream (limit (n + 1)) (\acc, st =>
+  in foldStreamNat (n + 1) (\acc, st =>
        let vm = st.visibleBaryons
            de = st.darkEnergy
            dm = countTotalDarkLaws st.darkMatterLedger

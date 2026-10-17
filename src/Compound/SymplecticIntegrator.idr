@@ -158,7 +158,7 @@ auditStreamSymplecticOrbitProof =
       dt = intToBoxInt 3
       deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
       strm = streamSymplecticOrbitWithNoether zeroGrad dt deltaQ s0
-      chargesMatch = foldStreamFuel (limit 3)
+      chargesMatch = foldStreamNat 3
         (\acc, (_, qVal) => acc && (qVal == intToBoxInt 12))
         True
         strm
@@ -213,7 +213,7 @@ auditGeodesicOrbitProof =
       dt = intToBoxInt 3
       deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
       strm = streamVerifiedGeodesicOrbit zeroGrad dt deltaQ s0
-      allConserved = foldStreamFuel (limit 5)
+      allConserved = foldStreamNat 5
         (\acc, step => acc && isConserved step && (conservedQ step == intToBoxInt 12))
         True
         strm
@@ -272,7 +272,7 @@ auditDissipativeLangevinHorizonProof =
       dt = intToBoxInt 3
       deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
       strm = streamDissipativeGeodesicHorizon zeroGrad dt deltaQ (intToBoxInt 16) s0
-      tokens = runFueledStream (limit 4) strm
+      tokens = runFueledStreamNat 4 strm
       allValid = foldl (\acc, step => acc && secondLawHold step && isConserved (orbitStep step)) True tokens
   in length tokens == 4 && allValid
 
