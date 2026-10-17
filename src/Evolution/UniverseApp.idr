@@ -43,7 +43,7 @@ runUniverseAppFold : Has [Console] e =>
                     (1 ch : MultisetClockTransducer poly vm de dm) ->
                     (newTokens : Vect k BoxInt) ->
                     (remainder : BoxInt) ->
-                    App e (MultisetClockTransducer (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + k) de (S dm))
+                    App e (MultisetClockTransducer (snd (foldEpochPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) (vm + k) de (S dm))
 runUniverseAppFold (MkClockTransducer st) newTokens remainder = do
   putStrLn "  [Control.App] Executing Cyclotomic 137 Epoch Division & Folding..."
   pure (MkClockTransducer (runLinearCosmicCycle st newTokens remainder))
@@ -58,7 +58,7 @@ runUniverseAppPipeline : Has [Console] e =>
                          (1 ch : MultisetClockTransducer poly vm de dm) ->
                          (budgetTokens : Vect k BoxInt) ->
                          (remainder : BoxInt) ->
-                         App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) k)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + k) + k) de (S dm))
+                         App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) k)) (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) ((vm + k) + k) de (S dm))
 runUniverseAppPipeline (MkClockTransducer st) budgetTokens remainder = do
   putStrLn "========================================================"
   putStrLn "🚀 Booting Finite-Science Universe App (Option 3 Harness)"
@@ -128,7 +128,7 @@ autoScaleUniverseApp : Has [Console] e =>
                       (1 ch : MultisetClockTransducer poly vm de dm) ->
                       (gridTokens : Vect 4 BoxInt) ->
                       (remainder : BoxInt) ->
-                      App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
+                      App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) ((vm + 4) + 1) de (S dm))
 autoScaleUniverseApp (MkClockTransducer st) gridTokens remainder = do
   putStrLn "  [Galois-App] Executing Galois Pullback (f^*) Grid Expansion (1x1 -> 2x2)..."
   let stExpanded = expandUniverseStateLinear st gridTokens
@@ -145,7 +145,7 @@ runGaloisScaleJumpPipeline : Has [Console] e =>
                             (1 ch : MultisetClockTransducer poly vm de dm) ->
                             (gridTokens : Vect 4 BoxInt) ->
                             (remainder : BoxInt) ->
-                            App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) Stage1.Polynumber.cyclotomic137Polynumber)) ((vm + 4) + 1) de (S dm))
+                            App e (MultisetClockTransducer (snd (foldEpochPolynumber (addPolynumber poly (monomialPolynumber (intToBoxInt 1) 4)) (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) ((vm + 4) + 1) de (S dm))
 runGaloisScaleJumpPipeline (MkClockTransducer st) gridTokens remainder = do
   putStrLn "========================================================"
   putStrLn "🔄 Booting Automated Galois Scale-Jump Harness (f_* ⊣ f^*)"

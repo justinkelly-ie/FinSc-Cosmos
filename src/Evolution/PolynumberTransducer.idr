@@ -55,7 +55,7 @@ foldClockTransducer137 : {vm, de, dm, k : Nat} ->
                         (1 tr : MultisetClockTransducer poly vm de dm) ->
                         (newTokens : Vect k BoxInt) ->
                         (remainder : BoxInt) ->
-                        MultisetClockTransducer (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber))
+                        MultisetClockTransducer (snd (foldEpochPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly)))
                                                (vm + k) de (S dm)
 foldClockTransducer137 (MkClockTransducer st) newTokens remainder =
   MkClockTransducer (runLinearCosmicCycle st newTokens remainder)
@@ -108,7 +108,7 @@ autoScaleGaloisPushforwardTransducer : {vm, de, dm : Nat} ->
                                      {poly : Polynumber} ->
                                      (1 tr : MultisetClockTransducer poly vm de dm) ->
                                      (remainder : BoxInt) ->
-                                     MultisetClockTransducer (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + 1) de (S dm)
+                                     MultisetClockTransducer (snd (foldEpochPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) (vm + 1) de (S dm)
 autoScaleGaloisPushforwardTransducer (MkClockTransducer st) remainder =
   MkClockTransducer (runLinearCosmicCycle st [intToBoxInt 0] remainder)
 
@@ -120,11 +120,7 @@ autoScaleGaloisPushforwardTransducer (MkClockTransducer st) remainder =
 ||| \Phi_137(x) = 1 + x + x^2 + ... + x^136.
 public export
 cyclotomic137StreamPoly : StreamPolynumber
-cyclotomic137StreamPoly =
-  FS.unfoldStream step 0
-  where
-    step : Nat -> FS.Step Nat (Nat, BoxInt)
-    step k = if k <= 136 then FS.Yield (k, intToBoxInt 1) (S k) else FS.Done
+cyclotomic137StreamPoly = toStreamDepPoly Stage1.Polynumber.cyclotomic137DepPoly
 
 ||| Sparse generating polynomial for the 137-stage cycle boundary: x^137 - 1.
 ||| Only 2 non-zero terms in active support: Supp = {0, 137}.

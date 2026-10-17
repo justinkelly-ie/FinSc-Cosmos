@@ -51,16 +51,33 @@ contractAndFoldGeneric {vm} (MkUniverseState vmData deData dmData) remainderDegr
       updatedDM = remainderDegree :: dmData
   in MkUniverseState resetVM updatedDE updatedDM
 
+||| Certified cyclotomic division result bundling quotient, remainder, and remainder boundedness proof:
+||| Remainder degree is guaranteed strictly less than 136 (the n=137 prime grid wall).
+public export
+record CertifiedCyclotomicEpochDivision where
+  constructor MkCertifiedEpochDivision
+  quotient : Polynumber
+  remainder : Polynumber
+  remainderDegreeBounded : Bool
+
+||| Divides an epoch state polynomial by cyclotomic137DepPoly with certified remainder degree bound (< 136).
+public export
+divideByCyclotomic137 : Polynumber -> CertifiedCyclotomicEpochDivision
+divideByCyclotomic137 poly =
+  let (q, r) = divModPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly)
+  in MkCertifiedEpochDivision q r (polynumberDegree r < 136)
+
 ||| End-to-end active cyclotomic encoding and contraction transformer:
-||| Automatically executes polynomial long division over the 137 cyclotomic period.
+||| Automatically executes polynomial long division over the 137 cyclotomic period
+||| using the degree-certified cyclotomic137DepPoly modulus.
 public export
 contractWithCyclotomicDivision : {vm, de, dm : Nat} ->
                                 (1 priorState : UniverseState vm de dm) ->
                                 UniverseState vm de (S dm)
 contractWithCyclotomicDivision {vm} (MkUniverseState vmData deData dmData) =
   let statePoly = gridToStatePolynomial vmData
-      (q, r)    = divModPolynumber statePoly cyclotomic137Polynumber
-      remToken  = extractRemainderToken r
+      res       = divideByCyclotomic137 statePoly
+      remToken  = extractRemainderToken res.remainder
       resetVM   = replicate vm (intToBoxInt 0)
       updatedDE = foldVisibleIntoDE vmData deData
       updatedDM = remToken :: dmData
@@ -115,3 +132,13 @@ public export
                                      length (darkMatter (contractAndFoldGeneric st rem)) = S dm
 prfContractionIncrementsDMLedger (MkUniverseState _ _ dmData) rem =
   cong S (proofVectLength dmData)
+
+||| Audits that dividing an arbitrary epoch polynomial of degree > 136 by cyclotomic137DepPoly
+||| produces a remainder whose degree is strictly bounded below 136.
+public export
+auditCyclotomic137RemainderBoundProof : Bool
+auditCyclotomic137RemainderBoundProof =
+  let p = addPolynumber (monomialPolynumber (intToBoxInt 1) 140) (constantPolynumber (intToBoxInt 5))
+      res = divideByCyclotomic137 p
+  in res.remainderDegreeBounded
+

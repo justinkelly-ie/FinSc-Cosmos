@@ -47,7 +47,7 @@ foldPhysicsChannel137 : {vm, de, dm, k : Nat} ->
                        (1 ch : PhysicsChannel poly vm de dm) ->
                        (newTokens : Vect k BoxInt) ->
                        (remainder : BoxInt) ->
-                       PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber))
+                       PhysicsChannel (snd (foldEpochPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly)))
                                       (vm + k) de (S dm)
 foldPhysicsChannel137 = foldClockTransducer137
 
@@ -78,7 +78,7 @@ autoScaleGaloisPushforward : {vm, de, dm : Nat} ->
                              {poly : Polynumber} ->
                              (1 ch : PhysicsChannel poly vm de dm) ->
                              (remainder : BoxInt) ->
-                             PhysicsChannel (snd (foldEpochPolynumber poly Stage1.Polynumber.cyclotomic137Polynumber)) (vm + 1) de (S dm)
+                             PhysicsChannel (snd (foldEpochPolynumber poly (toPolynumber Stage1.Polynumber.cyclotomic137DepPoly))) (vm + 1) de (S dm)
 autoScaleGaloisPushforward = autoScaleGaloisPushforwardTransducer
 
 ||| Backward-compatible audit alias
