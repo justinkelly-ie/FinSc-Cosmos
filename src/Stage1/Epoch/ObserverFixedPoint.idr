@@ -102,6 +102,26 @@ public export
   S 38 = gohMulPrimeNat Prime3 Prime13
 verifyObserverFixedPoint38PrimeProduct = Refl
 
+||| Static compile-time witness: Observer Fixed Point k=38 embodies the certified GohPrimeProduct:
+public export
+0 verifyObserverFixedPoint38GohPrimeProduct :
+  GohPrimeProduct 3 13 39
+verifyObserverFixedPoint38GohPrimeProduct = gohPrimeProduct3_13
+
+||| Formal Dependent Observer Epoch Scale bundling the generation index n = 39,
+||| its certified GohPrimeProduct witness (3 x 13 = 39), and its 13-smoothness witness.
+public export
+record CertifiedObserverEpochScale where
+  constructor MkCertifiedObserverEpochScale
+  generationIndex    : Nat
+  0 productWitness   : GohPrimeProduct 3 13 generationIndex
+  0 smoothWitness    : SmoothWitness CosmicSmoothHorizon generationIndex
+
+public export
+certifiedObserverEpochScale38 : CertifiedObserverEpochScale
+certifiedObserverEpochScale38 =
+  MkCertifiedObserverEpochScale 39 gohPrimeProduct3_13 prfSmooth39
+
 ||| Boolean Audit: Observer Fixed Point k=38 is gate-pure (13-smooth at n=39).
 public export
 auditFixedPoint38GatePure : Bool
@@ -110,3 +130,4 @@ auditFixedPoint38GatePure = isStatusGatePure observerFixedPoint38.coherenceStatu
 public export
 0 verifyObserverFixedPoint38GatePure : Stage1.Epoch.ObserverFixedPoint.auditFixedPoint38GatePure = True
 verifyObserverFixedPoint38GatePure = Refl
+
