@@ -46,6 +46,20 @@ stepUniverseLinear : {vm, de, dm : Nat} ->
 stepUniverseLinear s newMatter =
   runLinearCosmicCycle s newMatter (intToBoxInt 0)
 
+||| Single epoch multi-scale transition pairing the consumed universe state with both expansion and contraction metrics:
+||| Consumes the state linearly (multiplicity 1) and pairs with (newCells, remToken) via LinearStatePair.
+public export
+stepEpochTransducerLinear : {vm, de, dm : Nat} ->
+                            {k : Nat} ->
+                            (1 s : UniverseState vm de dm) ->
+                            (newMatter : Vect k BoxInt) ->
+                            (remToken : BoxInt) ->
+                            LinearStatePair (UniverseState (vm + k) de (S dm)) (Nat, BoxInt)
+stepEpochTransducerLinear s newMatter rem =
+  let nextS = runLinearCosmicCycle s newMatter rem
+  in MkLStatePair nextS (k, rem)
+
+
 ------------------------------------------------------------------------
 -- 2. CATEGORICAL MORPHISM STATE TRANSITION
 ------------------------------------------------------------------------

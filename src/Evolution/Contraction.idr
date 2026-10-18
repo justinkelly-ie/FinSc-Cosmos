@@ -3,6 +3,7 @@ module Evolution.Contraction
 import Stage0.BoxInt
 import Stage1.Polynumber
 import Evolution.State
+import Stage0.OnSeq.FusedStream
 import Data.Vect
 
 %default total
@@ -82,6 +83,22 @@ contractWithCyclotomicDivision {vm} (MkUniverseState vmData deData dmData) =
       updatedDE = foldVisibleIntoDE vmData deData
       updatedDM = remToken :: dmData
   in MkUniverseState resetVM updatedDE updatedDM
+
+||| Linear contraction transducer pairing consumed next state with the irreducible cyclotomic remainder token.
+public export
+contractWithCyclotomicDivisionPair :
+  {vm, de, dm : Nat} ->
+  (1 priorState : UniverseState vm de dm) ->
+  LinearStatePair (UniverseState vm de (S dm)) BoxInt
+contractWithCyclotomicDivisionPair {vm} (MkUniverseState vmData deData dmData) =
+  let statePoly = gridToStatePolynomial vmData
+      res       = divideByCyclotomic137 statePoly
+      remToken  = extractRemainderToken res.remainder
+      resetVM   = replicate vm (intToBoxInt 0)
+      updatedDE = foldVisibleIntoDE vmData deData
+      updatedDM = remToken :: dmData
+      nextState = MkUniverseState resetVM updatedDE updatedDM
+  in MkLStatePair nextState remToken
 
 ------------------------------------------------------------------------
 -- LINEAR QTT CONTRACTION & LANDAUER CONSERVATION
