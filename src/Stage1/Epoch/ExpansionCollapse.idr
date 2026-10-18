@@ -263,12 +263,6 @@ auditQuadStreamEpochStateProof =
 -- 4. QUANTITATIVE TYPE THEORY (QTT) LINEAR COSMIC STEPPING (RULE 04)
 --------------------------------------------------------------------------------
 
-||| Linear state pair holding a strictly consumed linear state (multiplicity 1)
-||| and an unrestricted observable (multiplicity omega).
-public export
-data LinearStatePair : Type -> Type -> Type where
-  MkLStatePair : (1 state : s) -> (obs : b) -> LinearStatePair s b
-
 ||| Unrestricted observable record emitted during linear epoch transitions.
 public export
 record CosmicEpochObservable where

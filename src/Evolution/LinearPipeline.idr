@@ -7,6 +7,7 @@ import Evolution.Expansion
 import Evolution.Contraction
 import Stage1.ChromoCategory
 import Stage0.OnSeq.FusedStream
+import Stage1.TypeTheory.Staging
 import Data.Vect
 
 %default total
@@ -79,11 +80,6 @@ Eq CosmicObservable where
 public export
 data AnyLinearUniverseState : Type where
   MkAnyLinearUniverseState : {vm, de, dm : Nat} -> (1 s : UniverseState vm de dm) -> AnyLinearUniverseState
-
-||| Linear state pair holding a strictly linear state (multiplicity 1) and an unrestricted observable (multiplicity omega).
-public export
-data LinearStatePair : Type -> Type -> Type where
-  MkLStatePair : (1 state : s) -> (obs : b) -> LinearStatePair s b
 
 ||| Step transition for a single cycle consuming linear state and returning an observable via LinearStatePair.
 public export
