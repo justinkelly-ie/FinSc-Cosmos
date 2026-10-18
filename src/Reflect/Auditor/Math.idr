@@ -31,6 +31,7 @@ import Stage1.Math.LawAlgebra
 import Stage1.SubstrateMetricTensor
 import Stage1.MultisetMetricTensor
 import Stage1.Math.GalacticRotationCurve
+import Stage1.Math.Spacetime10DGalacticRotation
 import Stage1.Math.FlavorMixing
 import Stage1.Math.NeutrinoOscillation
 import Stage1.Hadron.MuonG2Anomaly
@@ -824,7 +825,8 @@ auditDensityMatrixBornRule = auditWitness auditDensityMatrixBornRuleProofExport
 -- Witness 175: 1,000-Step Galactic Rotation Curve & Dark Matter Halo Time-Series Simulation
 public export
 auditGalacticRotationTimeSeriesProofExport : Bool
-auditGalacticRotationTimeSeriesProofExport = Stage1.Math.GalacticRotationCurve.auditGalacticRotationTimeSeriesProof
+auditGalacticRotationTimeSeriesProofExport =
+  Stage1.Math.Spacetime10DGalacticRotation.audit10DGalacticRotationProof
 
 public export
 %macro
