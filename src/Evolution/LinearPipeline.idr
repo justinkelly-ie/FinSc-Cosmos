@@ -77,6 +77,36 @@ Eq CosmicObservable where
   (MkCosmicObservable s1 a1 m1) == (MkCosmicObservable s2 a2 m2) =
     s1 == s2 && a1 == a2 && m1 == m2
 
+||| Zero-allocation running statistical moments accumulated online during linear cosmic streaming.
+||| Replaces heap-allocated List CosmicObservable with O(1) auxiliary registers.
+public export
+record CosmicRunningMoments where
+  constructor MkCosmicMoments
+  epochCount         : Nat
+  totalActiveEnergy  : Nat
+  totalMatterInjected: Nat
+
+public export
+Eq CosmicRunningMoments where
+  (MkCosmicMoments c1 e1 m1) == (MkCosmicMoments c2 e2 m2) =
+    c1 == c2 && e1 == e2 && m1 == m2
+
+public export
+Show CosmicRunningMoments where
+  show (MkCosmicMoments c e m) =
+    "CosmicRunningMoments(epochs=" ++ show c ++ ", energy=" ++ show e ++ ", matter=" ++ show m ++ ")"
+
+||| Initial zero running moments.
+public export
+emptyCosmicMoments : CosmicRunningMoments
+emptyCosmicMoments = MkCosmicMoments 0 0 0
+
+||| Online moment update step: combines current running moments with a new observable in O(1).
+public export
+addCosmicMoment : CosmicRunningMoments -> CosmicObservable -> CosmicRunningMoments
+addCosmicMoment (MkCosmicMoments c e m) obs =
+  MkCosmicMoments (S c) (e + obs.activeEnergy) (m + obs.matterInjected)
+
 ||| Existential linear universe state wrapper enabling multi-epoch linear stream stepping.
 public export
 data AnyLinearUniverseState : Type where
@@ -124,6 +154,15 @@ streamCosmicTrajectoryLinearStream :
   (1 s : AnyLinearUniverseState) ->
   LinearStatePair AnyLinearUniverseState (List CosmicObservable)
 streamCosmicTrajectoryLinearStream fuel s = runLinearStreamFuel fuel (cosmicTrajectoryLinearStream s)
+
+||| Evaluates cosmic trajectory evolution accumulating online statistical moments in O(1) memory.
+public export
+streamCosmicMomentsLinearStream :
+  (steps : Nat) ->
+  (1 s : AnyLinearUniverseState) ->
+  LinearStatePair AnyLinearUniverseState CosmicRunningMoments
+streamCosmicMomentsLinearStream steps s =
+  foldLinearStream steps addCosmicMoment emptyCosmicMoments (cosmicTrajectoryLinearStream s)
 
 
 ------------------------------------------------------------------------
@@ -228,6 +267,19 @@ sampleTier2MultiverseLinearStream {u} {e} steps (MkHyperCycle (MkCycleState _ _ 
       nextCycleState = mkCycleState u (e + steps) sFinal
   in MkLStatePair (MkHyperCycle nextCycleState) obs
 
+||| Tier 2 (Level 2): Deforested Stream Transducer accumulating online thermodynamic moments
+||| across `steps` epochs from a Tier 3 Multiverse State with zero intermediate list allocations (O(1) memory).
+public export
+sampleTier2MultiverseMoments :
+  {u, e : Nat} ->
+  (steps : Nat) ->
+  (1 mvs : Tier3MultiverseState u e) ->
+  LinearStatePair (Tier3MultiverseState u (e + steps)) CosmicRunningMoments
+sampleTier2MultiverseMoments {u} {e} steps (MkHyperCycle (MkCycleState _ _ s)) =
+  let MkLStatePair sFinal moments = streamCosmicMomentsLinearStream steps s
+      nextCycleState = mkCycleState u (e + steps) sFinal
+  in MkLStatePair (MkHyperCycle nextCycleState) moments
+
 ||| Audits 3-Tier Stratified Multiverse Cosmological Evolution.
 public export
 auditTier3MultiverseEvolutionProof : Bool
@@ -241,12 +293,18 @@ auditTier3MultiverseEvolutionProof =
       MkLStatePair (MkHyperCycle finalState) obs = sampleTier2MultiverseStream {u=1} {e=0} 3 tier3_0
       tier3_1 = initTier3Multiverse 1 0 (MkAnyLinearUniverseState s0)
       MkLStatePair (MkHyperCycle finalStateLin) obsLin = sampleTier2MultiverseLinearStream {u=1} {e=0} 3 tier3_1
+      tier3_2 = initTier3Multiverse 1 0 (MkAnyLinearUniverseState s0)
+      MkLStatePair (MkHyperCycle finalStateMom) moments = sampleTier2MultiverseMoments {u=1} {e=0} 3 tier3_2
   in (finalState.universeCycleIndex == 1) &&
      (finalState.epochStep == 3) &&
      (length obs == 3) &&
      (finalStateLin.universeCycleIndex == 1) &&
      (finalStateLin.epochStep == 3) &&
-     (length obsLin == 3)
+     (length obsLin == 3) &&
+     (finalStateMom.universeCycleIndex == 1) &&
+     (finalStateMom.epochStep == 3) &&
+     (moments.epochCount == 3) &&
+     (moments.totalActiveEnergy > 0)
 
 
 
