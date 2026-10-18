@@ -58,21 +58,40 @@ canonicalHelmholtzGroundState =
 ||| - Uncompactified Moduli: 45 moduli driving dark matter rotation curves.
 ||| - Gauge Symmetry: 8 discrete Gell-Mann matrices of SU(3) subset G_2.
 ||| - Matter & Dynamics: PhaseState (q, p) symplectic carrier.
+||| - Curvature Back-Reaction: active G_00 defect perturbing spacetime.
+||| - Rational Trig: 2x2 companion spread matrix M(s)^k in O(log k).
+||| - Observer Branch: active inference & biomolecules at k=38 (Observer Epoch).
 ||| - Thermodynamics: canonical 137-scale sieve & Helmholtz free energy.
 public export
 record UniverseSimulationState where
   constructor MkUniverseSimulationState
-  epochIndex      : Nat                                    -- Trajectory scale step k (0 to 136)
-  substrateTicks  : Nat                                    -- Action count Delta S = total ticks elapsed
-  capacityBudget  : DiscreteCapacityBudget 27 128 55       -- 210 Master partition
-  metricTensor    : SymmetricMetricTensor 10               -- 10D Spacetime bulk metric (55 DoF)
-  projectedLeaf   : BoxSquareMaxel 4                       -- 4D Spacetime projected leaf (10 DoF)
-  moduliDOF       : Nat                                    -- 45 uncompactified Dark Matter moduli
-  gellMannGluons  : Vect 8 (BoxSquareMaxel 3)              -- SU(3) subset G_2 gauge fields
-  galacticProfile : GalacticProfile                        -- Active baryonic core & disk slope
-  phaseState      : PhaseState                             -- Symplectic (q, p) phase space
-  coherenceStatus : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
-  freeEnergyState : DiscreteHelmholtzState 27 128 55 2     -- Discrete F = U - TS
+  epochIndex          : Nat                                    -- Trajectory scale step k (0 to 136)
+  substrateTicks      : Nat                                    -- Action count Delta S = total ticks elapsed
+  capacityBudget      : DiscreteCapacityBudget 27 128 55       -- 210 Master partition
+  metricTensor        : SymmetricMetricTensor 10               -- 10D Spacetime bulk metric (55 DoF)
+  projectedLeaf       : BoxSquareMaxel 4                       -- 4D Spacetime projected leaf (10 DoF)
+  moduliDOF           : Nat                                    -- 45 uncompactified Dark Matter moduli
+  gellMannGluons      : Vect 8 (BoxSquareMaxel 3)              -- SU(3) subset G_2 gauge fields
+  galacticProfile     : GalacticProfile                        -- Active baryonic core & disk slope
+  phaseState          : PhaseState                             -- Symplectic (q, p) phase space
+  curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
+  spreadMatrix        : BoxSquareMaxel 2                       -- Companion spread transfer matrix M(s)^k
+  observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
+  coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
+  freeEnergyState     : DiscreteHelmholtzState 27 128 55 2     -- Discrete F = U - TS
+
+||| Canonical 2x2 companion spread transfer matrix for multiple spread recurrence:
+||| M(s) = [[2 - 4s, -1], [1, 0]]. For s = 0, [[2, -1], [1, 0]].
+public export
+pythagoreanCompanionMaxel : BoxSquareMaxel 2
+pythagoreanCompanionMaxel =
+  let c11 = intToBoxInt 2
+      c12 = intToBoxInt (-1)
+      c21 = intToBoxInt 1
+      t0 = setBoxTree (MkPixel 0 0) c11 BoxLeaf
+      t1 = setBoxTree (MkPixel 0 1) c12 t0
+      t2 = setBoxTree (MkPixel 1 0) c21 t1
+  in MkBoxSquareMaxel t2
 
 ||| Genesis / Vacuum Initial Universe Simulation State (Epoch k = 0, Delta S = 0).
 public export
@@ -98,5 +117,8 @@ initUniverseSimulation =
        gluons
        gal
        phase0
+       (intToBoxInt 0)
+       (identityBoxSquareMaxel 2)
+       False
        status0
        canonicalHelmholtzGroundState

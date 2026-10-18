@@ -3,6 +3,7 @@ module Evolution.SimulationStepper
 import Evolution.SimulationState
 import Stage0.BoxInt
 import Stage1.VexelMaxel
+import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Fields.OctonionGaugeUnification
 import Stage1.Math.GalacticRotationCurve
@@ -18,27 +19,41 @@ import Data.Vect
 
 ||| Advances the entire universal state by exactly one quantum of physical action (Delta S = 1).
 ||| Time is strictly the count of processed steps: substrateTicks |-> S (substrateTicks).
+||| Coupled Einstein-Hamiltonian loop: phase-space stress-energy perturbs metric tensor,
+||| which in turn modulates geodesic acceleration.
+||| Evaluates companion spread matrix in O(log k) and branches observer epoch at k=38.
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluons gal phase status fe) =
+stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluons gal phase defect spread isObs status fe) =
   let nextK = if k >= 136 then 0 else S k
       nextTicks = S ticks
-      -- 1. Symplectic leapfrog kick (Hamiltonian action increment Delta S = 1)
-      gradV = harmonicOscillatorGrad (intToBoxInt 1)
-      dt = intToBoxInt 1
-      nextPhase = symplecticLeapfrogStep gradV dt phase
-      -- 2. 10D Bulk to 4D Leaf Spacetime Metric Projection & Moduli Update
-      nextG10 = g10
+      -- 1. Energy-Momentum Curvature Back-Reaction:
+      -- Phase energy computes Ricci curvature defect on timelike component g_00
+      energy = harmonicEnergy (intToBoxInt 1) phase
+      nextDefect = intToBoxInt (cast {to = Integer} ((unwrapBox energy) `mod` 137))
+      -- 2. 10D Bulk Spacetime Metric Update & 4D Leaf Projection
+      nextG10 = perturbMetric00 g10 nextDefect
       nextG4  = project10Dto4D nextG10.metricMaxel
       nextModuli = moduliDegreesOfFreedom 10 4
-      -- 3. SU(3) Gluon updates (Gell-Mann algebra preserved)
+      -- 3. Metric-Coupled Symplectic Leapfrog Kick:
+      -- Geodesic acceleration gradient is modulated by active leaf g_00
+      g00Val = lookupBoxTree (MkPixel 0 0) nextG4.entries
+      metricScalar = if unwrapBox g00Val == 0 then intToBoxInt 1 else g00Val
+      gradV = metricCoupledGrad metricScalar
+      dt = intToBoxInt 1
+      nextPhase = symplecticLeapfrogStep gradV dt phase
+      -- 4. Logarithmic 2x2 Companion Spread Matrix Exponentiation: M(s)^k in O(log k)
+      nextSpread = fastBoxSquareMaxelPower (S nextK) nextK pythagoreanCompanionMaxel
+      -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
+      nextIsObs = nextK == 38
+      -- 6. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
-      -- 4. Baryonic Matter Profile Update
+      -- 7. Baryonic Matter Profile Update
       nextGal = gal
-      -- 5. 13-Smoothness Coherence Status for generation n = S nextK
+      -- 8. 13-Smoothness Coherence Status for generation n = S nextK
       nextStatus = evalScaleStepCoherence nextK
-      -- 6. Free energy remains at ground state minimum
+      -- 9. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
       nextFE = fe
   in MkUniverseSimulationState
        nextK
@@ -50,6 +65,9 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
        nextGluons
        nextGal
        nextPhase
+       nextDefect
+       nextSpread
+       nextIsObs
        nextStatus
        nextFE
 
@@ -83,3 +101,12 @@ auditSimulationFullTrajectory =
       v20 = rotationVelocity10D st137.galacticProfile (intToBoxInt 20)
   in st137.substrateTicks == 137 &&
      unwrapBox v10 == 11000 && unwrapBox v20 == 10500
+
+||| Audit: Dual-Branch observer epoch activates specifically at k = 38 (Observer Epoch).
+public export
+auditSimulationDynamicsAndObserver : Bool
+auditSimulationDynamicsAndObserver =
+  let st0 = initUniverseSimulation
+      st38 = runSimulationSteps 38 st0
+  in st38.epochIndex == 38 &&
+     st38.observerEpochActive == True

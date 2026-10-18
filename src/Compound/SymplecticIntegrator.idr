@@ -58,6 +58,11 @@ harmonicOscillatorGrad : BoxInt -> Vexel -> Vexel
 harmonicOscillatorGrad k q =
   scaleVexel k q
 
+||| Metric-coupled potential gradient \nabla V(q, g) = g * q.
+public export
+metricCoupledGrad : (metricScalar : BoxInt) -> Vexel -> Vexel
+metricCoupledGrad g q = scaleVexel g q
+
 ||| Computes discrete total Hamiltonian energy E = p^2 / 2 + k q^2 / 2.
 public export
 harmonicEnergy : BoxInt -> PhaseState -> BoxInt

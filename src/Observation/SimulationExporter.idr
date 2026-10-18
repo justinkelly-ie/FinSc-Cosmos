@@ -2,12 +2,14 @@ module Observation.SimulationExporter
 
 import Stage0.BoxInt
 import Stage1.VexelMaxel
+import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Math.GalacticRotationCurve
 import Stage1.Epoch.ScaleTrajectorySieve
 import Evolution.SimulationState
 import Evolution.SimulationStepper
 import Compound.SymplecticIntegrator
+import Stage0.OnSeq.FusedStream
 import Data.List
 import Data.String
 
@@ -30,7 +32,7 @@ vexelMagnitudeSquared (MkVexel ts) =
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
 exportStateCsvHeader : String
-exportStateCsvHeader = "tick,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag"
+exportStateCsvHeader = "tick,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,observer_active"
 
 ||| Formats a single UniverseSimulationState as a CSV data row.
 public export
@@ -44,6 +46,9 @@ exportStateCsvRow st =
       fe  = unwrapBox st.freeEnergyState.freeEnergy
       posMag = unwrapBox (vexelMagnitudeSquared st.phaseState.position)
       momMag = unwrapBox (vexelMagnitudeSquared st.phaseState.momentum)
+      defect = unwrapBox st.curvatureDefect
+      c11 = unwrapBox (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries)
+      obsStr = if st.observerEpochActive then "True" else "False"
   in show st.substrateTicks ++ "," ++
      show st.epochIndex ++ "," ++
      cohStr ++ "," ++
@@ -52,7 +57,10 @@ exportStateCsvRow st =
      show v20 ++ "," ++
      show fe ++ "," ++
      show posMag ++ "," ++
-     show momMag
+     show momMag ++ "," ++
+     show defect ++ "," ++
+     show c11 ++ "," ++
+     obsStr
 
 ------------------------------------------------------------------------
 -- 3. JSON EXPORT FORMATTERS
@@ -70,6 +78,9 @@ exportStateJson st =
       fe  = unwrapBox st.freeEnergyState.freeEnergy
       posMag = unwrapBox (vexelMagnitudeSquared st.phaseState.position)
       momMag = unwrapBox (vexelMagnitudeSquared st.phaseState.momentum)
+      defect = unwrapBox st.curvatureDefect
+      c11 = unwrapBox (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries)
+      obsStr = if st.observerEpochActive then "true" else "false"
   in "{\"tick\":" ++ show st.substrateTicks ++
      ",\"epoch\":" ++ show st.epochIndex ++
      ",\"coherence\":\"" ++ cohStr ++ "\"" ++
@@ -78,7 +89,10 @@ exportStateJson st =
      ",\"v20\":" ++ show v20 ++
      ",\"free_energy\":" ++ show fe ++
      ",\"pos_mag\":" ++ show posMag ++
-     ",\"mom_mag\":" ++ show momMag ++ "}"
+     ",\"mom_mag\":" ++ show momMag ++
+     ",\"curvature_defect\":" ++ show defect ++
+     ",\"spread_c11\":" ++ show c11 ++
+     ",\"observer_active\":" ++ obsStr ++ "}"
 
 ------------------------------------------------------------------------
 -- 4. LINEAR TRAJECTORY GENERATORS
@@ -103,7 +117,18 @@ generateSimulationJsonRows (S k) st =
   in row :: generateSimulationJsonRows k st'
 
 ------------------------------------------------------------------------
--- 5. COMPILE-TIME AUDIT FOR SIMULATION EXPORTER
+-- 5. DEFORESTED COINDUCTIVE UNIVERSE STREAMING
+------------------------------------------------------------------------
+
+||| Generates a deforested stream of universal evolution states
+||| executing in O(1) auxiliary registers without intermediate heap allocation.
+public export
+streamUniverseSimulation : UniverseSimulationState -> FusedStream UniverseSimulationState
+streamUniverseSimulation initSt =
+  unfoldStream (\st => Yield st (stepUniverseSimulation st)) initSt
+
+------------------------------------------------------------------------
+-- 6. COMPILE-TIME AUDIT FOR SIMULATION EXPORTER
 ------------------------------------------------------------------------
 
 ||| Verifies that the CSV exporter produces the expected header and genesis row.

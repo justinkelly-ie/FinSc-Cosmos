@@ -4,6 +4,7 @@ import Control.App
 import Control.App.Console
 import Stage0.BoxInt
 import Stage1.VexelMaxel
+import Stage1.MultisetTree
 import Stage1.Polynumber
 import Stage1.SymmetricMetricTensor
 import Stage1.Math.GalacticRotationCurve
@@ -196,8 +197,10 @@ printSimStatus st = do
   let v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
   let v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
   putStrLn $ "  Galactic Rotation v^2(r=10)  : " ++ show (unwrapBox v10)
-  putStrLn $ "  Galactic Rotation v^2(r=20)  : " ++ show (unwrapBox v20)
   putStrLn $ "  Hamiltonian Phase State      : " ++ show st.phaseState
+  putStrLn $ "  Curvature Defect (G_00)      : " ++ show (unwrapBox st.curvatureDefect)
+  putStrLn $ "  Companion Spread M(s)^k c_11 : " ++ show (unwrapBox (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries))
+  putStrLn $ "  Observer Branch (k=38)       : " ++ (if st.observerEpochActive then "ACTIVE (Living Matter & Active Inference)" else "Inactive (Cosmological Trunk)")
   putStrLn $ "  Helmholtz Free Energy (F)    : " ++ show (unwrapBox st.freeEnergyState.freeEnergy) ++ " (Minimum: F = -1320)"
   putStrLn "========================================================"
 
