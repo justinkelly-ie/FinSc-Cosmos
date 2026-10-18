@@ -5,9 +5,15 @@ import Control.App.Console
 import Stage0.BoxInt
 import Stage1.VexelMaxel
 import Stage1.Polynumber
+import Stage1.SymmetricMetricTensor
+import Stage1.Math.GalacticRotationCurve
+import Stage1.Epoch.ScaleTrajectorySieve
 import Evolution.State
 import Evolution.PolynumberTransducer
 import Evolution.UniverseApp
+import Evolution.SimulationState
+import Evolution.SimulationStepper
+import Compound.SymplecticIntegrator
 import Geometry.GaloisCurvature
 import Data.List
 import Data.String
@@ -24,9 +30,11 @@ public export
 data ReplCommand =
     StepCmd
   | FoldCmd
+  | SimCmd Nat
   | GaloisCmd
   | LawsCmd
   | StatusCmd
+  | SimStatusCmd
   | SmCatalogCmd
   | CollideCmd String String
   | DecayCmd String
@@ -35,31 +43,65 @@ data ReplCommand =
   | QuitCmd
   | UnknownCmd String
 
+public export
+Eq ReplCommand where
+  StepCmd == StepCmd = True
+  FoldCmd == FoldCmd = True
+  (SimCmd n1) == (SimCmd n2) = n1 == n2
+  GaloisCmd == GaloisCmd = True
+  LawsCmd == LawsCmd = True
+  StatusCmd == StatusCmd = True
+  SimStatusCmd == SimStatusCmd = True
+  SmCatalogCmd == SmCatalogCmd = True
+  (CollideCmd a1 b1) == (CollideCmd a2 b2) = a1 == a2 && b1 == b2
+  (DecayCmd a1) == (DecayCmd a2) = a1 == a2
+  (OscillateCmd a1) == (OscillateCmd a2) = a1 == a2
+  HelpCmd == HelpCmd = True
+  QuitCmd == QuitCmd = True
+  (UnknownCmd s1) == (UnknownCmd s2) = s1 == s2
+  _ == _ = False
+
+||| Helper to parse a natural number string.
+public export
+parseNatStr : String -> Maybe Nat
+parseNatStr s =
+  case parsePositive {a = Nat} s of
+    Just k  => Just k
+    Nothing => if trim s == "0" then Just 0 else Nothing
+
 ||| Parses user input string into a structured REPL command.
 public export
 parseCommand : String -> ReplCommand
 parseCommand rawInput =
   case words (trim (toLower rawInput)) of
-    ["step"]         => StepCmd
-    ["s"]            => StepCmd
-    ["fold"]         => FoldCmd
-    ["f"]            => FoldCmd
-    ["galois"]       => GaloisCmd
-    ["g"]            => GaloisCmd
-    ["laws"]         => LawsCmd
-    ["l"]            => LawsCmd
-    ["status"]       => StatusCmd
-    ["st"]           => StatusCmd
-    ["sm"]           => SmCatalogCmd
+    ["step"]            => StepCmd
+    ["s"]               => StepCmd
+    ["fold"]            => FoldCmd
+    ["f"]               => FoldCmd
+    ["sim", n]          => case parseNatStr n of
+                             Just k  => SimCmd k
+                             Nothing => UnknownCmd rawInput
+    ["run", n]          => case parseNatStr n of
+                             Just k  => SimCmd k
+                             Nothing => UnknownCmd rawInput
+    ["galois"]          => GaloisCmd
+    ["g"]               => GaloisCmd
+    ["laws"]            => LawsCmd
+    ["l"]               => LawsCmd
+    ["status"]          => StatusCmd
+    ["st"]              => StatusCmd
+    ["simstatus"]       => SimStatusCmd
+    ["sst"]             => SimStatusCmd
+    ["sm"]              => SmCatalogCmd
     ["collide", p1, p2] => CollideCmd p1 p2
-    ["decay", p]     => DecayCmd p
-    ["oscillate", nu] => OscillateCmd nu
-    ["help"]         => HelpCmd
-    ["h"]            => HelpCmd
-    ["quit"]         => QuitCmd
-    ["q"]            => QuitCmd
-    ["exit"]         => QuitCmd
-    _                => UnknownCmd rawInput
+    ["decay", p]        => DecayCmd p
+    ["oscillate", nu]   => OscillateCmd nu
+    ["help"]            => HelpCmd
+    ["h"]               => HelpCmd
+    ["quit"]            => QuitCmd
+    ["q"]               => QuitCmd
+    ["exit"]            => QuitCmd
+    _                   => UnknownCmd rawInput
 
 ------------------------------------------------------------------------
 -- 2. REPL MONADIC HELPERS & PRINTERS (CONTROL.APP)
@@ -71,8 +113,9 @@ printHelp : Has [Console] e => App e ()
 printHelp = do
   putStrLn "========================================================"
   putStrLn "🎛️ FiniteScienceREPL Interactive Command Menu"
-  putStrLn "  step / s         - Advance 1 clock tick tick"
-  putStrLn "  fold / f         - Execute 137-stage cyclotomic epoch fold"
+  putStrLn "  step / s         - Advance 1 clock tick (x^k -> x^(k+1))"
+  putStrLn "  sim <n> / run <n>- Advance n clock ticks in UniverseSimulationState"
+  putStrLn "  fold / f         - Execute 137-stage cyclotomic epoch division \\Phi_137(x)"
   putStrLn "  galois / g       - Evaluate Galois Einstein Tensor G_00"
   putStrLn "  sm               - Print 37-State Standard Model Catalog"
   putStrLn "  collide <p1> <p2>- Run 2-to-2 particle scattering event"
@@ -80,17 +123,9 @@ printHelp = do
   putStrLn "  oscillate <nu>   - Run 3-flavor neutrino PMNS oscillation"
   putStrLn "  laws / l         - List 55 Constructivist Physical Laws"
   putStrLn "  status / st      - View current UniverseState dimensions"
+  putStrLn "  simstatus / sst  - View UniverseSimulationState metrics"
   putStrLn "  help / h         - Show this interactive command menu"
   putStrLn "  quit / q         - Exit FiniteScienceREPL"
-  putStrLn "========================================================"
-  putStrLn "========================================================"
-  putStrLn "  step   | s   : Advance natural clock tick (x^k -> x^(k+1))"
-  putStrLn "  fold   | f   : Execute 137-stage cyclotomic epoch division \\Phi_137(x)"
-  putStrLn "  galois | g   : Trigger automated Galois scale jump (1x1 <-> 2x2)"
-  putStrLn "  laws   | l   : Display 55 formal emergent laws of physics"
-  putStrLn "  status | st  : Show current cosmological state metrics"
-  putStrLn "  help   | h   : Show this help menu"
-  putStrLn "  quit   | q   : Exit FiniteScienceREPL"
   putStrLn "========================================================"
 
 ||| Prints the 55 formal emergent physical laws summary.
@@ -141,6 +176,36 @@ printStatus {vm, de, dm} st = do
   putStrLn $ "  Einstein Defect (G_00)   : " ++ show (unwrapBox (galoisEinsteinTensor st))
   putStrLn "========================================================"
 
+||| Prints detailed constructivist simulation status for UniverseSimulationState.
+public export
+printSimStatus : Has [Console] e => UniverseSimulationState -> App e ()
+printSimStatus st = do
+  putStrLn "========================================================"
+  putStrLn "🌌 Constructivist Universe Simulation State (FinSc-Cosmos)"
+  putStrLn "========================================================"
+  putStrLn $ "  Substrate Clock Ticks (ΔS=1) : " ++ show st.substrateTicks
+  putStrLn $ "  Cyclotomic Epoch Index (k)   : " ++ show st.epochIndex
+  putStrLn $ "  Master Capacity Budget (210) : 210 (27 VM + 128 DE + 55 DM)"
+  putStrLn $ "  Scale Coherence Status (13)  : " ++ case st.coherenceStatus of
+                                                     GatePure _   => "GatePure (13-smooth coherent matter)"
+                                                     Decoherent _ => "Decoherent (thermal dissipation prime wall)"
+  putStrLn "  Bulk 10D Spacetime Metric DoF: 55 components (dim 10)"
+  putStrLn $ "  Leaf 4D Projected Metric DoF : 10 components"
+  putStrLn $ "  Uncompactified Moduli DoF    : " ++ show st.moduliDOF
+  putStrLn $ "  SU(3) Gauge Gluons Count     : " ++ show (length st.gellMannGluons)
+  let v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
+  let v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+  putStrLn $ "  Galactic Rotation v^2(r=10)  : " ++ show (unwrapBox v10)
+  putStrLn $ "  Galactic Rotation v^2(r=20)  : " ++ show (unwrapBox v20)
+  putStrLn $ "  Hamiltonian Phase State      : " ++ show st.phaseState
+  putStrLn $ "  Helmholtz Free Energy (F)    : " ++ show (unwrapBox st.freeEnergyState.freeEnergy) ++ " (Minimum: F = -1320)"
+  putStrLn "========================================================"
+
+||| Runs N simulation steps from an existing UniverseSimulationState.
+public export
+runSimulationReplStep : (steps : Nat) -> (1 st : UniverseSimulationState) -> UniverseSimulationState
+runSimulationReplStep steps st = runSimulationSteps steps st
+
 ------------------------------------------------------------------------
 -- 3. CONSTRUCTIVE FORMAL AUDIT PROOFS FOR REPL ENGINE
 ------------------------------------------------------------------------
@@ -150,4 +215,7 @@ printStatus {vm, de, dm} st = do
 ||| 2. Monadic REPL state transitions preserve linear QTT state safety.
 public export
 auditReplEngineProof : Bool
-auditReplEngineProof = True
+auditReplEngineProof =
+  case parseCommand "sim 137" of
+    SimCmd 137 => True
+    _          => False

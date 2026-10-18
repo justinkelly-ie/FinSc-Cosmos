@@ -43,13 +43,13 @@ symplecticLeapfrogStep gradV dt (MkPhaseState q p) =
   let -- Half kick
       halfDt = dt `div` intToBoxInt 2
       kick1 = scaleVexel halfDt (gradV q)
-      pHalf = subVexel p kick1
+      pHalf = canonicalizeVexel (subVexel p kick1)
       -- Full drift
       drift = scaleVexel dt pHalf
-      qNext = addVexel q drift
+      qNext = canonicalizeVexel (addVexel q drift)
       -- Second half kick
       kick2 = scaleVexel halfDt (gradV qNext)
-      pNext = subVexel pHalf kick2
+      pNext = canonicalizeVexel (subVexel pHalf kick2)
   in MkPhaseState qNext pNext
 
 ||| Linear harmonic oscillator potential gradient: \nabla V(q) = k * q.

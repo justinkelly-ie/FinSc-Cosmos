@@ -22,6 +22,8 @@ import public Evolution.Init
 import public Evolution.LinearPipeline
 import public Evolution.PolynumberTransducer
 import public Evolution.ReplEngine
+import public Evolution.SimulationState
+import public Evolution.SimulationStepper
 import public Evolution.State
 import public Evolution.StructuralAccounting
 import public Evolution.Thermodynamics
@@ -38,6 +40,7 @@ import public Observation.Dataset
 import public Observation.EmpiricalMeasurement
 import public Observation.HolographicStream
 import public Observation.Scientific
+import public Observation.SimulationExporter
 import public Observation.Triad
 import public Reflect.Auditor.Compound
 import public Reflect.Auditor.Core
