@@ -105,6 +105,27 @@ streamCosmicTrajectoryLinearNat (S f) s =
       MkLStatePair sFinal obsRest = streamCosmicTrajectoryLinearNat f s1
   in MkLStatePair sFinal (obs1 :: obsRest)
 
+||| Linear cosmic transition step function preserving QTT 1 state consumption.
+public export
+cosmicCycleLinearStep : (1 s : AnyLinearUniverseState) -> StepLinear AnyLinearUniverseState CosmicObservable
+cosmicCycleLinearStep s =
+  let MkLStatePair sNext obs = stepAnyLinearCycle s (intToBoxInt 0)
+  in YieldL obs sNext
+
+||| Constructs a first-class declarative LinearStream pipeline over cosmic state.
+public export
+cosmicTrajectoryLinearStream : (1 s : AnyLinearUniverseState) -> LinearStream AnyLinearUniverseState CosmicObservable
+cosmicTrajectoryLinearStream s = MkLinearStream cosmicCycleLinearStep s
+
+||| Evaluates cosmic trajectory evolution directly via the LinearStream pipeline.
+public export
+streamCosmicTrajectoryLinearStream :
+  (fuel : Nat) ->
+  (1 s : AnyLinearUniverseState) ->
+  LinearStatePair AnyLinearUniverseState (List CosmicObservable)
+streamCosmicTrajectoryLinearStream fuel s = runLinearStreamFuel fuel (cosmicTrajectoryLinearStream s)
+
+
 ------------------------------------------------------------------------
 -- 4. CONSTRUCTIVE FORMAL AUDIT PROOFS
 --    (End-to-End Linear QTT Universe Pipeline)
