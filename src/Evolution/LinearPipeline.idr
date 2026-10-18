@@ -215,6 +215,19 @@ sampleTier2MultiverseStream {u} {e} steps (MkHyperCycle (MkCycleState _ _ s)) =
       nextCycleState = mkCycleState u (e + steps) sFinal
   in MkLStatePair (MkHyperCycle nextCycleState) obs
 
+||| Tier 2 (Level 2): Deforested Stream Transducer sampling thermodynamic observables
+||| across `steps` epochs from a Tier 3 Multiverse State using QTT LinearStream.
+public export
+sampleTier2MultiverseLinearStream :
+  {u, e : Nat} ->
+  (steps : Nat) ->
+  (1 mvs : Tier3MultiverseState u e) ->
+  LinearStatePair (Tier3MultiverseState u (e + steps)) (List CosmicObservable)
+sampleTier2MultiverseLinearStream {u} {e} steps (MkHyperCycle (MkCycleState _ _ s)) =
+  let MkLStatePair sFinal obs = streamCosmicTrajectoryLinearStream steps s
+      nextCycleState = mkCycleState u (e + steps) sFinal
+  in MkLStatePair (MkHyperCycle nextCycleState) obs
+
 ||| Audits 3-Tier Stratified Multiverse Cosmological Evolution.
 public export
 auditTier3MultiverseEvolutionProof : Bool
@@ -226,9 +239,14 @@ auditTier3MultiverseEvolutionProof =
       any0 = MkAnyLinearUniverseState s0
       tier3_0 = initTier3Multiverse 1 0 any0
       MkLStatePair (MkHyperCycle finalState) obs = sampleTier2MultiverseStream {u=1} {e=0} 3 tier3_0
+      tier3_1 = initTier3Multiverse 1 0 (MkAnyLinearUniverseState s0)
+      MkLStatePair (MkHyperCycle finalStateLin) obsLin = sampleTier2MultiverseLinearStream {u=1} {e=0} 3 tier3_1
   in (finalState.universeCycleIndex == 1) &&
      (finalState.epochStep == 3) &&
-     (length obs == 3)
+     (length obs == 3) &&
+     (finalStateLin.universeCycleIndex == 1) &&
+     (finalStateLin.epochStep == 3) &&
+     (length obsLin == 3)
 
 
 
