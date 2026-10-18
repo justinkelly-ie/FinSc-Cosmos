@@ -31,10 +31,9 @@ import Stage1.Math.LawAlgebra
 import Stage1.SubstrateMetricTensor
 import Stage1.MultisetMetricTensor
 import Stage1.Math.GalacticRotationCurve
-import Stage1.Math.Spacetime10DGalacticRotation
 import Stage1.Math.FlavorMixing
 import Stage1.Math.NeutrinoOscillation
-import Stage1.Hadron.MuonG2Anomaly
+import Stage1.Hadron.MuonMagneticAnomaly
 
 %default total
 
@@ -826,7 +825,7 @@ auditDensityMatrixBornRule = auditWitness auditDensityMatrixBornRuleProofExport
 public export
 auditGalacticRotationTimeSeriesProofExport : Bool
 auditGalacticRotationTimeSeriesProofExport =
-  Stage1.Math.Spacetime10DGalacticRotation.audit10DGalacticRotationProof
+  Stage1.Math.GalacticRotationCurve.audit10DGalacticRotationProof
 
 public export
 %macro
@@ -867,7 +866,8 @@ auditParallelPushforward = auditWitness auditParallelPushforwardProofExport
 -- Witness 182: Muon g-2 Anomaly & Discrete Loop Correction Engine
 public export
 auditMuonG2AnomalyProofExport : Bool
-auditMuonG2AnomalyProofExport = Stage1.Hadron.MuonG2Anomaly.auditMuonG2AnomalyProof
+auditMuonG2AnomalyProofExport =
+  Stage1.Hadron.MuonMagneticAnomaly.auditMuonMagneticAnomalyProof
 
 public export
 %macro
