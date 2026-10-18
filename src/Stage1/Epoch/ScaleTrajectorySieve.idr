@@ -147,8 +147,25 @@ countPureScalesUpTo : Nat -> Nat
 countPureScalesUpTo = countPureScalesStream
 
 --------------------------------------------------------------------------------
--- 3. EXACT 76 / 61 PARTITION AUDIT PROOFS
+-- 3. EXACT DEPENDENT TRAJECTORY SIEVE (Rule 03 §7: Primacy of Dependent Types)
 --------------------------------------------------------------------------------
+
+||| Dependently typed cosmological trajectory sieve:
+||| Bundles total trajectory step count, prime smoothness bound, pure and decoherent counts,
+||| with an exact compile-time proof witness that pure + decoherent = steps.
+public export
+record TrajectorySieve (steps : Nat) (bound : Nat) where
+  constructor MkTrajectorySieve
+  pureCount       : Nat
+  decoherentCount : Nat
+  0 partitionPrf  : pureCount + decoherentCount = steps
+
+||| Canonical 137-Scale Cosmological Sieve (steps = 137, bound = 13):
+||| Exactly 76 gate-pure scales (hosting coherent nuclear/atomic matter) and
+||| 61 decoherent scales (hosting thermal dissipation), with proof 76 + 61 = 137.
+public export
+cosmic137Sieve : TrajectorySieve 137 13
+cosmic137Sieve = MkTrajectorySieve 76 61 Refl
 
 ||| Fundamental cosmological grid wall (137th epoch step).
 public export
@@ -170,12 +187,12 @@ totalDecoherentScales137 = countDecoherentScalesStream 136
 ||| Audit proof verifying that exactly 76 of 137 scales are gate-pure.
 public export
 auditExact76PureScalesProof : Bool
-auditExact76PureScalesProof = totalPureScales137 == 76
+auditExact76PureScalesProof = totalPureScales137 == cosmic137Sieve.pureCount
 
 ||| Audit proof verifying that exactly 61 of 137 scales are decoherent.
 public export
 auditExact61DecoherentScalesProof : Bool
-auditExact61DecoherentScalesProof = totalDecoherentScales137 == 61
+auditExact61DecoherentScalesProof = totalDecoherentScales137 == cosmic137Sieve.decoherentCount
 
 ||| Audit proof verifying that the observer epoch k = 38 (n = 39 = 3 * 13) is gate-pure.
 public export
