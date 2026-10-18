@@ -49,11 +49,11 @@ landauerTokenErasure : {vm, de, dm : Nat} ->
                        (active : Vexel) ->
                        (UniverseState (S vm) de dm) ->
                        (Vexel, UniverseState vm de (S dm))
-landauerTokenErasure target (MkVexel terms) (MkUniverseState (_ :: vmRest) deVect dmVect) =
-  let erasedWeight = lookupUnixel target (MkVexel terms)
+landauerTokenErasure target active (MkUniverseState (_ :: vmRest) deVect dmVect) =
+  let erasedWeight = lookupUnixel target active
       tokenToRelocate = if erasedWeight == intToBoxInt 0 then intToBoxInt 1 else erasedWeight
-      remainingTerms = filter (\(s, _) => s /= target) terms
-      remainingVexel = MkVexel remainingTerms
+      remainingTerms = filter (\(s, _) => s /= target) (vexelTerms active)
+      remainingVexel = mkVexel remainingTerms
       newState = MkUniverseState vmRest deVect (tokenToRelocate :: dmVect)
   in (remainingVexel, newState)
 

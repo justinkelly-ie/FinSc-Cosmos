@@ -31,7 +31,7 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
       -- 1. Energy-Momentum Curvature Back-Reaction:
       -- Phase energy computes Ricci curvature defect on timelike component g_00
       energy = harmonicEnergy (intToBoxInt 1) phase
-      nextDefect = intToBoxInt (cast {to = Integer} ((unwrapBox energy) `mod` 137))
+      nextDefect = modBox energy (intToBoxInt 137)
       -- 2. 10D Bulk Spacetime Metric Update & 4D Leaf Projection
       nextG10 = perturbMetric00 g10 nextDefect
       nextG4  = project10Dto4D nextG10.metricMaxel
@@ -39,7 +39,7 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
       -- 3. Metric-Coupled Symplectic Leapfrog Kick:
       -- Geodesic acceleration gradient is modulated by active leaf g_00
       g00Val = lookupBoxTree (MkPixel 0 0) nextG4.entries
-      metricScalar = if unwrapBox g00Val == 0 then intToBoxInt 1 else g00Val
+      metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
       gradV = metricCoupledGrad metricScalar
       dt = intToBoxInt 1
       nextPhase = symplecticLeapfrogStep gradV dt phase

@@ -214,10 +214,10 @@ epochStateToQuadStream (MkEpochState _ vm de ledger) =
 public export
 quadStreamToEpochState : (ep : Nat) -> QuadStreamMultiset BoxInt -> EpochState
 quadStreamToEpochState ep (MkQuadStream e h p s) =
-  let vm = cast (unwrapBox (multisetSum e))
-      de = cast (unwrapBox (multisetSum h))
-      dmCount = cast (unwrapBox (multisetSum s))
-      ledger = AddM EllipticRed (intToBoxInt dmCount) ZeroM
+  let vm = boxToNat (multisetSum e)
+      de = boxToNat (multisetSum h)
+      dmCount = boxToNat (multisetSum s)
+      ledger = AddM EllipticRed (natToBoxInt dmCount) ZeroM
   in MkEpochState ep vm de ledger
 
 ||| Evaluates discrete Helmholtz Free Energy (F = U - T * S) over QuadStream epoch state.
@@ -257,7 +257,7 @@ auditQuadStreamEpochStateProof =
   let st37 = primorialToEpochState groundStateEpoch37
       qs37 = epochStateToQuadStream st37
       mass = quadStreamTotalMass qs37
-  in unwrapBox mass == cast primorial210Budget
+  in mass == natToBoxInt primorial210Budget
 
 --------------------------------------------------------------------------------
 -- 4. QUANTITATIVE TYPE THEORY (QTT) LINEAR COSMIC STEPPING (RULE 04)

@@ -250,7 +250,7 @@ streamDissipativeGeodesicHorizon : (gradV : Vexel -> Vexel) -> (dt : BoxInt) ->
 streamDissipativeGeodesicHorizon gradV dt symGen a0 p0 =
   let initialQ = evaluateNoetherCharge p0 symGen
   in unfoldStream (\(idx, p, area, entr) =>
-       if unwrapBox area <= 0
+       if area <= intToBoxInt 0
          then Done
          else
            let (pNext, qNext) = stepSymplecticWithNoether gradV dt symGen p
@@ -261,7 +261,7 @@ streamDissipativeGeodesicHorizon gradV dt symGen a0 p0 =
                nextEntr = if area > halfArea
                             then addBox entr (intToBoxInt 1)
                             else subBox entr (intToBoxInt 1)
-               secondLaw = unwrapBox nextEntr >= 0
+               secondLaw = nextEntr >= intToBoxInt 0
                langStep = MkLangevinStep geoStep nextEntr secondLaw
            in Yield langStep (idx + 1, pNext, nextArea, nextEntr)
      ) (0, p0, a0, intToBoxInt 0)

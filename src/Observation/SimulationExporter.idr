@@ -22,8 +22,7 @@ import Data.String
 ||| Computes sum of squared weights in a Vexel: \sum w_i^2.
 public export
 vexelMagnitudeSquared : Vexel -> BoxInt
-vexelMagnitudeSquared (MkVexel ts) =
-  foldl (\acc, (_, w) => acc + (w * w)) (intToBoxInt 0) ts
+vexelMagnitudeSquared v = dotVexel v v
 
 ------------------------------------------------------------------------
 -- 2. CSV EXPORT FORMATTERS

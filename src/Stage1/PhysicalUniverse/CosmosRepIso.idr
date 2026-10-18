@@ -67,8 +67,8 @@ prfThermoEpochRepIsoDecoherent = Refl
 ||| Monomorphic equality for CosmosApexToken.
 public export
 cosmosApexEqMono : CosmosApexToken -> CosmosApexToken -> Bool
-cosmosApexEqMono (PrimorialBudget a) (PrimorialBudget b) = unwrapBox a == unwrapBox b
-cosmosApexEqMono (HelmholtzGroundState a) (HelmholtzGroundState b) = unwrapBox a == unwrapBox b
+cosmosApexEqMono (PrimorialBudget a) (PrimorialBudget b) = boxEq a b
+cosmosApexEqMono (HelmholtzGroundState a) (HelmholtzGroundState b) = boxEq a b
 cosmosApexEqMono _ _ = False
 
 ||| Canonical zero token for Layer 7.

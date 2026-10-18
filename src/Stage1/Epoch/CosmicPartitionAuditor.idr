@@ -38,11 +38,8 @@ monomorphicHelmholtzFreeEnergy vm de dm =
 public export
 auditBudgetConservation : CosmicPartition -> Bool
 auditBudgetConservation p =
-  let vm = unwrapBox p.ellipticVM
-      de = unwrapBox p.hyperbolicDE
-      dm = unwrapBox p.parabolicDM
-      sub = unwrapBox p.substrateMaster
-  in (vm + de + dm == 210) && (sub == 210)
+  let tot = p.ellipticVM + p.hyperbolicDE + p.parabolicDM
+  in (tot == intToBoxInt 210) && (p.substrateMaster == intToBoxInt 210)
 
 ||| Audits that a CosmicPartition achieves the exact ground-state Helmholtz free energy:
 ||| F = U - 2S == -1320.

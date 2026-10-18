@@ -26,9 +26,9 @@ lensVelocityAcrossScale : {vm, de, dm : Nat} ->
 lensVelocityAcrossScale (MkUniverseState vm de dm) metric vel =
   let drag = sumStructural dm
       scaleFactor = intToBoxInt 1 + drag
-      (MkVexel unscaledTerms) = actMaxelVexel metric vel
-      scaledTerms = map (\(s, w) => (s, w `div` scaleFactor)) unscaledTerms
-  in MkVexel scaledTerms
+      unscaled = actMaxelVexel metric vel
+      scaledTerms = map (\(s, w) => (s, w `div` scaleFactor)) (vexelTerms unscaled)
+  in mkVexel scaledTerms
 
 ------------------------------------------------------------------------
 -- 2. RELATIVISTIC DEFLECTION & VELOCITY ABERRATION ON T^3

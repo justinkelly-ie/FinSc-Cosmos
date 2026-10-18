@@ -31,8 +31,8 @@ record CosmicMultiset where
 ||| Calculates total active state energy across the cosmic multiset.
 public export
 totalCosmicMultisetBudget : CosmicMultiset -> Nat
-totalCosmicMultisetBudget (MkCosmicMultiset (MkBoxel v) (MkMaxel de) (MkVexel dm)) =
-  length v + length de + length dm
+totalCosmicMultisetBudget (MkCosmicMultiset (MkBoxel v) de dm) =
+  length v + length (maxelPixels de) + length (vexelTerms dm)
 
 vectToBoxelTerms : {n : Nat} -> Vect n BoxInt -> List (Voxel, BoxInt)
 vectToBoxelTerms xs = go 1 xs

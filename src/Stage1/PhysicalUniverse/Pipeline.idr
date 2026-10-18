@@ -746,7 +746,7 @@ auditCosmicGenesisStreamProof =
         foldStreamFuel substrateFuel
           (\(n, ok), (tok, c) =>
             ( n + 1
-            , ok && (tok == masterPrimorialToken) && (unwrapBox c == 1)
+            , ok && (tok == masterPrimorialToken) && (c == intToBoxInt 1)
             ))
           (0, True)
           streamCosmicGenesisEvolution
@@ -785,7 +785,7 @@ auditUnrolledCosmicPipelineProof =
         foldStreamFuel substrateFuel
           (\(n, ok), (tok, c) =>
             ( n + 1
-            , ok && (tok == masterPrimorialToken) && (unwrapBox c == 1)
+            , ok && (tok == masterPrimorialToken) && (c == intToBoxInt 1)
             ))
           (0, True)
           vacStrm
@@ -801,7 +801,7 @@ auditUnrolledCosmicPipelineProof =
       fusedVac = fusedCosmicStreamPipeline primordialSubstrateVacuumStream
       sumUnrolled = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) vacStrm
       sumFused    = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) fusedVac
-  in vacCount == 3 && vacOk && hasHelmholtz && (unwrapBox sumUnrolled == unwrapBox sumFused)
+  in vacCount == 3 && vacOk && hasHelmholtz && (sumUnrolled == sumFused)
 
 
 
