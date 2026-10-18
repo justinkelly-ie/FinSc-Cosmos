@@ -8,6 +8,7 @@ import Evolution.Contraction
 import Stage1.ChromoCategory
 import Stage0.OnSeq.FusedStream
 import Stage1.TypeTheory.Staging
+import Stage2.ThreeLevel
 import Data.Vect
 
 %default total
@@ -132,4 +133,37 @@ auditLinearCosmicStreamProof =
       any0 = MkAnyLinearUniverseState s0
       MkLStatePair (MkAnyLinearUniverseState sFinal) obsList = streamCosmicTrajectoryLinearNat 3 any0
   in length obsList == 3
+
+------------------------------------------------------------------------
+-- 5. 3LTT HYPERCYCLE INTER-UNIVERSE COSMIC STREAMING
+------------------------------------------------------------------------
+
+||| Wraps an existential linear universe state in Level 3 HyperCycleLevel
+||| for cross-generational cosmological evolution.
+public export
+wrapHyperCycleState : AnyLinearUniverseState -> HyperCycleLevel AnyLinearUniverseState
+wrapHyperCycleState s = MkHyperCycle s
+
+||| Advances a Level 3 HyperCycle across N epochs with strict QTT linearity.
+public export
+stepHyperCycleEpochs : (epochs : Nat) ->
+                       (1 hc : HyperCycleLevel AnyLinearUniverseState) ->
+                       LinearStatePair (HyperCycleLevel AnyLinearUniverseState) (List CosmicObservable)
+stepHyperCycleEpochs epochs (MkHyperCycle s) =
+  let MkLStatePair sFinal obs = streamCosmicTrajectoryLinearNat epochs s
+  in MkLStatePair (MkHyperCycle sFinal) obs
+
+||| Audits 3LTT Level 3 HyperCycle streaming over 3 cosmic epochs.
+public export
+auditHyperCycleCosmicStreamProof : Bool
+auditHyperCycleCosmicStreamProof =
+  let s0 = MkUniverseState {vmSize=2} {deSize=1} {dmSize=1}
+             [intToBoxInt 10, intToBoxInt 20]
+             [intToBoxInt 100]
+             [intToBoxInt 5]
+      any0 = MkAnyLinearUniverseState s0
+      hc0 = wrapHyperCycleState any0
+      MkLStatePair (MkHyperCycle (MkAnyLinearUniverseState sFinal)) obsList = stepHyperCycleEpochs 3 hc0
+  in length obsList == 3
+
 
