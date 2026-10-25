@@ -234,8 +234,7 @@ morph2to3 =
       let pullback : MetricalChromoToken -> DiscreteRadixToken
           pullback (CliffordSpinor s)  = RadixBit True s
           pullback (ChromoQuadrance q) =
-            let v = unwrapBox q
-            in RadixTrit (if v < 0 then -1 else 1) (absBox q)
+            RadixTrit (if q < intToBoxInt 0 then -1 else 1) (absBox q)
       in mapMultiset pullback m
     )
 
@@ -418,8 +417,7 @@ streamMorph2to3 =
         case tok of
           CliffordSpinor s  => (RadixBit True s, c)
           ChromoQuadrance q =>
-            let v = unwrapBox q
-            in (RadixTrit (if v < 0 then -1 else 1) (absBox q), c)
+            (RadixTrit (if q < intToBoxInt 0 then -1 else 1) (absBox q), c)
       ) strm)
 
 public export

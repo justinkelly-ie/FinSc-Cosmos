@@ -1,7 +1,6 @@
 module Observation.HolographicStream
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
 import Evolution.State
 import Observation.Dataset
 import Data.Vect
@@ -54,7 +53,7 @@ readHolographicStream {dm} (MkUniverseState vmVect deVect dmVect) =
 public export
 verifyDyckStreamEntropy : HolographicStream n -> Bool
 verifyDyckStreamEntropy (MkHolographicStream area bits) =
-  (unwrapBox area >= 0) && (length bits == length bits)
+  (area >= intToBoxInt 0) && (length bits == length bits)
 
 ||| Audits Holographic Boundary Transmission & Page Curve Unitary Evaporation (Law 21):
 ||| 1. Boundary Area 54 M bounds maximum transmission capacity (4 * 54 = 216 >= 210).

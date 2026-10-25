@@ -1,7 +1,6 @@
 module Evolution.SimulationState
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
 import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Fields.OctonionGaugeUnification

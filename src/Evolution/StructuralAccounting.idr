@@ -1,7 +1,8 @@
 module Evolution.StructuralAccounting
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Vexel
+import Stage1.Basis.Coordinate
 import Evolution.State
 import Stage1.Math.InformationErasureCost
 import Data.Vect

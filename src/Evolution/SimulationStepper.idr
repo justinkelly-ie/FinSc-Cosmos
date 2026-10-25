@@ -2,7 +2,7 @@ module Evolution.SimulationStepper
 
 import Evolution.SimulationState
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Maxel
 import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Fields.OctonionGaugeUnification
@@ -100,7 +100,7 @@ auditSimulationFullTrajectory =
       v10 = rotationVelocity10D st137.galacticProfile (intToBoxInt 10)
       v20 = rotationVelocity10D st137.galacticProfile (intToBoxInt 20)
   in st137.substrateTicks == 137 &&
-     unwrapBox v10 == 11000 && unwrapBox v20 == 10500
+     v10 == intToBoxInt 11000 && v20 == intToBoxInt 10500
 
 ||| Audit: Dual-Branch observer epoch activates specifically at k = 38 (Observer Epoch).
 public export

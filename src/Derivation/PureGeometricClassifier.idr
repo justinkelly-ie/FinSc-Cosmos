@@ -4,7 +4,7 @@ import Evolution.State
 import Stage1.LinAlgebra.MetricTensor
 import Stage1.RationalTrig
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Vexel
 import Stage1.UnixelFraction
 
 %default total

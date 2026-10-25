@@ -3,7 +3,6 @@ module Evolution.UniverseApp
 import Control.App
 import Control.App.Console
 import Stage0.BoxInt
-import Stage1.VexelMaxel
 import Stage1.Polynumber
 import Evolution.State
 import Evolution.LinearPipeline

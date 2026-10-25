@@ -204,5 +204,5 @@ auditStreamingUniverseProof =
       totEnergy = fusedComputeCosmicEnergyTrajectoryNat 13 genesisStrict
       clipEx = getEpochClip initGenesisEpoch 1 5
       totDarkLaws = fusedComputeHyperCycleDarkLawsAccumulationNat 13 1 1 initGenesisEpoch
-  in unwrapBox totEnergy > 0 && length (elements clipEx) == 5 && unwrapBox totDarkLaws >= 0
+  in totEnergy > intToBoxInt 0 && length (elements clipEx) == 5 && totDarkLaws >= intToBoxInt 0
 

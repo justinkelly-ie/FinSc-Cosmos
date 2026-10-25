@@ -1,7 +1,8 @@
 module Observation.SimulationExporter
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Vexel
+import Stage1.Carrier.Maxel
 import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Math.GalacticRotationCurve
@@ -40,13 +41,13 @@ exportStateCsvRow st =
   let cohStr = case st.coherenceStatus of
                  GatePure _   => "GatePure"
                  Decoherent _ => "Decoherent"
-      v10 = unwrapBox (rotationVelocity10D st.galacticProfile (intToBoxInt 10))
-      v20 = unwrapBox (rotationVelocity10D st.galacticProfile (intToBoxInt 20))
-      fe  = unwrapBox st.freeEnergyState.freeEnergy
-      posMag = unwrapBox (vexelMagnitudeSquared st.phaseState.position)
-      momMag = unwrapBox (vexelMagnitudeSquared st.phaseState.momentum)
-      defect = unwrapBox st.curvatureDefect
-      c11 = unwrapBox (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries)
+      v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
+      v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+      fe  = st.freeEnergyState.freeEnergy
+      posMag = vexelMagnitudeSquared st.phaseState.position
+      momMag = vexelMagnitudeSquared st.phaseState.momentum
+      defect = st.curvatureDefect
+      c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
       obsStr = if st.observerEpochActive then "True" else "False"
   in show st.substrateTicks ++ "," ++
      show st.epochIndex ++ "," ++
@@ -72,13 +73,13 @@ exportStateJson st =
   let cohStr = case st.coherenceStatus of
                  GatePure _   => "GatePure"
                  Decoherent _ => "Decoherent"
-      v10 = unwrapBox (rotationVelocity10D st.galacticProfile (intToBoxInt 10))
-      v20 = unwrapBox (rotationVelocity10D st.galacticProfile (intToBoxInt 20))
-      fe  = unwrapBox st.freeEnergyState.freeEnergy
-      posMag = unwrapBox (vexelMagnitudeSquared st.phaseState.position)
-      momMag = unwrapBox (vexelMagnitudeSquared st.phaseState.momentum)
-      defect = unwrapBox st.curvatureDefect
-      c11 = unwrapBox (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries)
+      v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
+      v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+      fe  = st.freeEnergyState.freeEnergy
+      posMag = vexelMagnitudeSquared st.phaseState.position
+      momMag = vexelMagnitudeSquared st.phaseState.momentum
+      defect = st.curvatureDefect
+      c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
       obsStr = if st.observerEpochActive then "true" else "false"
   in "{\"tick\":" ++ show st.substrateTicks ++
      ",\"epoch\":" ++ show st.epochIndex ++

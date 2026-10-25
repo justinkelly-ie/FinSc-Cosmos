@@ -1,7 +1,7 @@
 module Observation.Scientific
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Basis.Coordinate
 import Stage1.UnixelFraction
 
 %default total
@@ -34,9 +34,9 @@ public export
 Show ScientificObservation where
   show (MkScientificObservation q l t low up u c doi) =
     "ScientificObservation(" ++ q ++ " [Law " ++ show l ++ "]" ++
-    " | Theory: " ++ show (num t) ++ "/" ++ show (index (den t)) ++ " " ++ u ++
-    " | Measured: [" ++ show (num low) ++ "/" ++ show (index (den low)) ++
-    ", " ++ show (num up) ++ "/" ++ show (index (den up)) ++ "]" ++
+    " | Theory: " ++ show (num t) ++ "/" ++ show (denominatorNat t) ++ " " ++ u ++
+    " | Measured: [" ++ show (num low) ++ "/" ++ show (denominatorNat low) ++
+    ", " ++ show (num up) ++ "/" ++ show (denominatorNat up) ++ "]" ++
     " | Ref: " ++ c ++ ")"
 
 ------------------------------------------------------------------------

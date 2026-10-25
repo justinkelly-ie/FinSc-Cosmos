@@ -61,12 +61,12 @@ auditAdjunctionUnitProof =
              (insertBox BlueColor (intToBoxInt 1) emptyBox))
       macroCell = applyHierarchicalPipelineContraction sourceQuarks
       reconstructedQuarks = reconstructQuarksFromBiomodule macroCell
-      r1 = unwrapBox (lookupBox RedColor sourceQuarks)
-      r2 = unwrapBox (lookupBox RedColor reconstructedQuarks)
-      g1 = unwrapBox (lookupBox GreenColor sourceQuarks)
-      g2 = unwrapBox (lookupBox GreenColor reconstructedQuarks)
-      b1 = unwrapBox (lookupBox BlueColor sourceQuarks)
-      b2 = unwrapBox (lookupBox BlueColor reconstructedQuarks)
+      r1 = lookupBox RedColor sourceQuarks
+      r2 = lookupBox RedColor reconstructedQuarks
+      g1 = lookupBox GreenColor sourceQuarks
+      g2 = lookupBox GreenColor reconstructedQuarks
+      b1 = lookupBox BlueColor sourceQuarks
+      b2 = lookupBox BlueColor reconstructedQuarks
   in r1 <= r2 && g1 <= g2 && b1 <= b2
 
 ||| Audits Galois Adjunction Counit ε: f_*(f^* N) ≥ N on multiset token counts.
@@ -77,8 +77,8 @@ auditAdjunctionCounitProof =
         insertBox HydratedCellToken (intToBoxInt 1) emptyBox
       reconstructedQuarks = reconstructQuarksFromBiomodule macroCell
       rePushedCell = applyHierarchicalPipelineContraction reconstructedQuarks
-      w1 = unwrapBox (lookupBox HydratedCellToken macroCell)
-      w2 = unwrapBox (lookupBox HydratedCellToken rePushedCell)
+      w1 = lookupBox HydratedCellToken macroCell
+      w2 = lookupBox HydratedCellToken rePushedCell
   in w2 >= w1
 
 ||| Formal proof witness of zero-information-loss macro-to-micro reconstruction unit bound.

@@ -66,7 +66,7 @@ Eq (FundamentalSubstrateLaw cap) where
 public export
 Show (FundamentalSubstrateLaw cap) where
   show (MkSubstrateLaw idx ch sec title q geom) =
-    "SubstrateLaw[" ++ show (finToNat idx + 1) ++ " " ++ show ch ++ " | " ++ title ++ " | Q=" ++ show (unwrapBox q) ++ "]"
+    "SubstrateLaw[" ++ show (finToNat idx + 1) ++ " " ++ show ch ++ " | " ++ title ++ " | Q=" ++ show q ++ "]"
 
 ||| Canonical type alias for the 55 Dark Matter Substrate Laws.
 public export

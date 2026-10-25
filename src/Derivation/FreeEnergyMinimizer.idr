@@ -14,13 +14,13 @@ import Data.List
 public export
 computeInternalEnergy : Box a -> Nat
 computeInternalEnergy (MkBox items) =
-  foldl (\acc, (_, v) => acc + cast (unwrapBox v)) 0 items
+  foldl (\acc, (_, v) => acc + boxToNat (absBox v)) 0 items
 
 ||| Computes discrete multiset multiplicity entropy S.
 public export
 computeMultisetEntropy : Box a -> Nat
 computeMultisetEntropy (MkBox items) =
-  foldl (\acc, (_, v) => acc + cast (unwrapBox v * unwrapBox v)) 0 items
+  foldl (\acc, (_, v) => acc + boxToNat (v * v)) 0 items
 
 ||| Computes Discrete Helmholtz Free Energy F = U - TS at temperature T = 7.
 public export

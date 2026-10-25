@@ -2,6 +2,7 @@ module Derivation.MultisetAdvancedTensorEngine
 
 import Stage0.Multiset
 import Stage1.MaxelTransform
+import Stage1.Carrier.Maxel
 import Stage1.ChromoCategory
 import Data.List
 import Data.Vect
@@ -62,22 +63,22 @@ Eq CosmicLayer where
 ||| Represented directly as native Maxel scale transition matrices.
 public export
 Cosmic1CellMatrix : Type
-Cosmic1CellMatrix = Stage1.VexelMaxel.Maxel
+Cosmic1CellMatrix = Maxel
 
 ||| 2-Cells (2-Morphisms) of Cat_Cosmic representing Galois scale-jump adjunction natural transformations.
 ||| Represented directly as native Maxel natural transformation matrices.
 public export
 Cosmic2CellMatrix : Type
-Cosmic2CellMatrix = Stage1.VexelMaxel.Maxel
+Cosmic2CellMatrix = Maxel
 
 ||| Evaluates vertical composition of 2-cells (Natural Transformations) in Cat_Cosmic
 public export
-verticalCompose2Cell : Stage1.VexelMaxel.Maxel -> Stage1.VexelMaxel.Maxel -> Stage1.VexelMaxel.Maxel
+verticalCompose2Cell : Maxel -> Maxel -> Maxel
 verticalCompose2Cell n2 n1 = mulMaxel n2 n1
 
 ||| Galois Adjunction (f_* -| f^*) scale-jump natural transformation 2-cell witness
 public export
-galoisAdjunction2Cell : Stage1.VexelMaxel.Maxel -> Stage1.VexelMaxel.Maxel -> Stage1.VexelMaxel.Maxel
+galoisAdjunction2Cell : Maxel -> Maxel -> Maxel
 galoisAdjunction2Cell f1 f2 = idChromo
 
 

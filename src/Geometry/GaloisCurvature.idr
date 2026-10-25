@@ -1,7 +1,6 @@
 module Geometry.GaloisCurvature
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
 import Stage1.Math.LawAlgebra
 import Evolution.State
 import Data.Vect

@@ -1,7 +1,9 @@
 module Evolution.Expansion
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Maxel
+import Stage1.Carrier.Boxel
+import Stage1.Carrier.BalanceArray
 import Evolution.State
 import Evolution.StructuralAccounting
 import Stage0.OnSeq.FusedStream
@@ -71,7 +73,7 @@ expandAndUnfoldGeneric : {currentVM, de, dm : Nat} ->
                          (1 priorState : UniverseState currentVM de dm) ->
                          (chiralKet : Vect nextScale Int) ->
                          (chiralBra : Vect nextScale Int) ->
-                         Stage1.VexelMaxel.Maxel
+                         Maxel
 expandAndUnfoldGeneric {currentVM} {de} {dm} {nextScale} (MkUniverseState vmState deState dmLog) chiralKet chiralBra =
   let -- 1. Structural Accounting of historical background mass
       historyMass = sumStructural dmLog
@@ -82,7 +84,7 @@ expandAndUnfoldGeneric {currentVM} {de} {dm} {nextScale} (MkUniverseState vmStat
       -- 3. Macro Maxel Unfold: anchor history at (nextScale, nextScale) and active field at (1, 1)
       ancestralAnchor = (MkPixel nextScale nextScale, historyMass)
       activeCell      = (MkPixel 1 1, intToBoxInt (cast gridWeight))
-  in Stage1.VexelMaxel.MkMaxel [ancestralAnchor, activeCell]
+  in MkMaxel [ancestralAnchor, activeCell]
 
 ||| A structural pipeline wrapper that guarantees dimensional inflation
 ||| satisfies full resource accounting across the 4x4 scale transition.
@@ -91,7 +93,7 @@ execute4x4Expansion : {vm, de, dm : Nat} ->
                       (1 state : UniverseState vm de dm) ->
                       (ket4 : Vect 4 Int) ->
                       (bra4 : Vect 4 Int) ->
-                      Stage1.VexelMaxel.Maxel
+                      Maxel
 execute4x4Expansion state ket4 bra4 = 
   expandAndUnfoldGeneric state ket4 bra4
 

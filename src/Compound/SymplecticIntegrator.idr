@@ -1,7 +1,7 @@
 module Compound.SymplecticIntegrator
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Vexel
 import Compound.LinearEpsilonRouting
 import Stage0.OnSeq.FusedStream
 import Data.Fuel

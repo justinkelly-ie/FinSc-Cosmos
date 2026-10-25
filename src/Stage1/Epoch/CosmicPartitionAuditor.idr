@@ -13,21 +13,22 @@ import Language.Reflection
 
 ||| Monomorphic internal energy: U = 10 * VM + 1 * DE.
 public export
-monomorphicInternalEnergy : Integer -> Integer -> Integer
-monomorphicInternalEnergy vm de = (10 * vm) + (1 * de)
+monomorphicInternalEnergy : BoxInt -> BoxInt -> BoxInt
+monomorphicInternalEnergy vm de = addBox (mulBox (intToBoxInt 10) vm) de
 
 ||| Monomorphic combinatorial entropy: S = 2 * VM + 5 * DE + 3 * DM.
 public export
-monomorphicEntropy : Integer -> Integer -> Integer -> Integer
-monomorphicEntropy vm de dm = (2 * vm) + (5 * de) + (3 * dm)
+monomorphicEntropy : BoxInt -> BoxInt -> BoxInt -> BoxInt
+monomorphicEntropy vm de dm =
+  addBox (mulBox (intToBoxInt 2) vm) (addBox (mulBox (intToBoxInt 5) de) (mulBox (intToBoxInt 3) dm))
 
 ||| Monomorphic Helmholtz Free Energy: F = U - 2 * S.
 public export
-monomorphicHelmholtzFreeEnergy : Integer -> Integer -> Integer -> Integer
+monomorphicHelmholtzFreeEnergy : BoxInt -> BoxInt -> BoxInt -> BoxInt
 monomorphicHelmholtzFreeEnergy vm de dm =
   let u = monomorphicInternalEnergy vm de
       s = monomorphicEntropy vm de dm
-  in u - (2 * s)
+  in subBox u (mulBox (intToBoxInt 2) s)
 
 --------------------------------------------------------------------------------
 -- 2. COSMIC PARTITION AUDIT SPECIFICATION
@@ -46,10 +47,7 @@ auditBudgetConservation p =
 public export
 auditHelmholtzMinimum : CosmicPartition -> Bool
 auditHelmholtzMinimum p =
-  let vm = unwrapBox p.ellipticVM
-      de = unwrapBox p.hyperbolicDE
-      dm = unwrapBox p.parabolicDM
-  in monomorphicHelmholtzFreeEnergy vm de dm == (-1320)
+  boxEq (monomorphicHelmholtzFreeEnergy p.ellipticVM p.hyperbolicDE p.parabolicDM) (intToBoxInt (-1320))
 
 ||| Audits that the 137-scale sieve partition preserves exactly 76 gate-pure and 61 decoherent scales:
 ||| 76 + 61 == 137.

@@ -6,7 +6,11 @@ import public Stage1.MultisetTree
 import public Stage1.OnSeq
 import public Stage1.Polynumber
 import public Stage1.UnixelFraction
-import public Stage1.VexelMaxel
+import public Stage1.Carrier.Vexel
+import public Stage1.Carrier.Maxel
+import public Stage1.Carrier.Boxel
+import public Stage1.Carrier.BalanceArray
+import public Stage1.Basis.Coordinate
 import Language.Reflection
 
 %default total
@@ -36,7 +40,7 @@ auditCatalogWitnesses targets = auditWitness (allTrue targets)
 -- Witness 3: Maxel Row Extraction
 public export
 auditRowExtractionProofExport : Bool
-auditRowExtractionProofExport = Stage1.VexelMaxel.auditRowExtractionProof
+auditRowExtractionProofExport = auditRowExtractionProof
 
 public export
 %macro
@@ -166,7 +170,7 @@ auditBoxOrderingAndContourWalk = auditWitness auditBoxOrderingAndContourWalkProo
 -- Witness 117: Balance Arrays & Subtraction-Free Natural Linear Independence
 public export
 auditVexelBalanceArrayProofExport : Bool
-auditVexelBalanceArrayProofExport = Stage1.VexelMaxel.auditVexelBalanceProof
+auditVexelBalanceArrayProofExport = auditVexelBalanceProof
 
 public export
 %macro
@@ -176,7 +180,7 @@ auditVexelBalanceArray = auditWitness auditVexelBalanceArrayProofExport
 -- Witness 118: Magic Maxels & Doubly Stochastic Token Mass Conservation
 public export
 auditMagicMaxelConservationProofExport : Bool
-auditMagicMaxelConservationProofExport = Stage1.VexelMaxel.auditMagicMaxel3x3Proof
+auditMagicMaxelConservationProofExport = auditMagicMaxel3x3Proof
 
 public export
 %macro

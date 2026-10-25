@@ -1,7 +1,8 @@
 module Evolution.LinearPipeline
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Carrier.Vexel
+import Stage1.Carrier.Maxel
 import Evolution.State
 import Evolution.Expansion
 import Evolution.Contraction
@@ -69,7 +70,7 @@ public export
 executeChromoCategoryTransition : {dIn, dOut : Nat} -> {cIn, cOut : MetricColor} ->
                                    (0 src : VexelSpace dIn cIn) ->
                                    (0 tgt : VexelSpace dOut cOut) ->
-                                   (morphism : Stage1.VexelMaxel.Maxel) ->
+                                   (morphism : Maxel) ->
                                    (state : Vexel) ->
                                    Vexel
 executeChromoCategoryTransition src tgt morphism state = actMaxelVexel morphism state

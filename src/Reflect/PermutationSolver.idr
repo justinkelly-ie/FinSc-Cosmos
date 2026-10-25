@@ -1,7 +1,6 @@
 module Reflect.PermutationSolver
 
 import Stage0.BoxInt
-import Stage1.VexelMaxel
 import Data.Vect
 import Data.List
 import Language.Reflection

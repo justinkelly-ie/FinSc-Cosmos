@@ -27,8 +27,8 @@ public export
 jarzynskiEquality : BoxInt -> BoxInt -> UnixelFraction
 jarzynskiEquality work freeEnergy =
   let diff = work - freeEnergy
-      denInt = 1 + unwrapBox diff
-  in mkUnixelFraction (intToBoxInt 1) (if denInt <= 0 then 1 else fromInteger denInt)
+      denNat = 1 + boxToNat diff
+  in mkUnixelFraction (intToBoxInt 1) (if diff < intToBoxInt 0 then 1 else denNat)
 
 ||| Formalizes the Crooks Fluctuation Theorem (Law 25):
 ||| P(+W) / P(-W) = exp((\Delta W - \Delta F) / T)

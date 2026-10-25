@@ -17,7 +17,7 @@ public export
 boxToTree : Ord a => Box a -> MultisetTree a
 boxToTree (MkBox items) =
   foldl (\acc, (k, v) =>
-           let cnt = cast (unwrapBox v)
+           let cnt = boxToNat v
            in insertTokenTree k cnt acc) Leaf items
 
 ||| Converts an O(log N) balanced search MultisetTree back into a linear Box.
@@ -38,7 +38,7 @@ applyPushforwardTreeContraction : Ord a => Ord b => MaxelTransform a b -> Multis
 applyPushforwardTreeContraction (MkMaxelTransform _ _ (MkBox tPairs)) tree =
   foldl (\acc, ((a, b), wT) =>
            let wM = lookupTokenTree a tree
-               wMult = wM * cast (unwrapBox wT)
+               wMult = wM * boxToNat wT
            in if wMult > 0 then insertTokenTree b wMult acc else acc) Leaf tPairs
 
 ||| Applies pullback expansion (f^*) over an O(log N) MultisetTree.
@@ -47,7 +47,7 @@ applyPullbackTreeExpansion : Ord a => Ord b => MaxelTransform a b -> MultisetTre
 applyPullbackTreeExpansion (MkMaxelTransform _ _ (MkBox tPairs)) targetTree =
   foldl (\acc, ((a, b), wT) =>
            let wN = lookupTokenTree b targetTree
-               wMult = wN * cast (unwrapBox wT)
+               wMult = wN * boxToNat wT
            in if wMult > 0 then insertTokenTree a wMult acc else acc) Leaf tPairs
 
 ||| Fuses two sequential MaxelTransforms T1: a -> b and T2: b -> c into a single composite transform T21: a -> c.

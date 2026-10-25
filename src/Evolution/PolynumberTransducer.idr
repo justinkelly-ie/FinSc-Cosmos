@@ -3,7 +3,6 @@ module Evolution.PolynumberTransducer
 import Stage0.BoxInt
 import Stage0.StreamPolynumber
 import Stage0.OnSeq.FusedStream as FS
-import Stage1.VexelMaxel
 import Stage1.Polynumber
 import Stage1.UnixelFraction
 import Stage1.MaxelTransform
