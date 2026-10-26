@@ -87,9 +87,9 @@ pythagoreanCompanionMaxel =
   let c11 = intToBoxInt 2
       c12 = intToBoxInt (-1)
       c21 = intToBoxInt 1
-      t0 = setBoxTree (MkPixel 0 0) c11 BoxLeaf
-      t1 = setBoxTree (MkPixel 0 1) c12 t0
-      t2 = setBoxTree (MkPixel 1 0) c21 t1
+      t0 = singletonCell (mkCell2 0 0) c11
+      t1 = setBoxTree (mkCell2 0 1) c12 t0
+      t2 = setBoxTree (mkCell2 1 0) c21 t1
   in MkBoxSquareMaxel t2
 
 ||| Genesis / Vacuum Initial Universe Simulation State (Epoch k = 0, Delta S = 0).
@@ -102,8 +102,8 @@ initUniverseSimulation =
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
       gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
-      q0 = MkVexel [ (MkUnixel 1, intToBoxInt 1) ]
-      p0 = MkVexel [ (MkUnixel 1, intToBoxInt 0) ]
+      q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
+      p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
       phase0 = MkPhaseState q0 p0
       status0 = evalScaleStepCoherence Z
   in MkUniverseSimulationState
