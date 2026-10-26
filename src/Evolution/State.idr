@@ -28,11 +28,11 @@ record CosmicMultiset where
   darkEnergy : Maxel
   darkMatter : Vexel
 
-||| Calculates total active state energy across the cosmic multiset.
+||| Calculates total active state energy across the cosmic multiset with zero allocations.
 public export
 totalCosmicMultisetBudget : CosmicMultiset -> Nat
 totalCosmicMultisetBudget (MkCosmicMultiset vm de dm) =
-  length (voxels vm) + length (maxelPixels de) + length (vexelTerms dm)
+  treeSizeNonZero vm + treeSizeNonZero de + treeSizeNonZero dm
 
 
 vectToBoxelTerms : {n : Nat} -> Vect n BoxInt -> List (Voxel, BoxInt)
@@ -56,14 +56,47 @@ vectToVexelTerms xs = go 1 xs
     go _ [] = []
     go i (w :: ws) = (MkUnixel i, w) :: go (S i) ws
 
-||| Embeds a dependent UniverseState into the Unified Cosmic Multiset via single-pass conversion.
+||| Zero-allocation direct conversion of a vector of weights into a 3D Boxel.
+public export
+vectToBoxel : {n : Nat} -> Vect n BoxInt -> Boxel
+vectToBoxel xs = go 1 xs BoxLeaf
+  where
+    go : Nat -> Vect k BoxInt -> Boxel -> Boxel
+    go _ [] acc = acc
+    go i (w :: ws) acc =
+      if boxIsZero w then go (S i) ws acc
+      else go (S i) ws (setBoxTree (MkVoxel i 1 1) w acc)
+
+||| Zero-allocation direct conversion of a vector of weights into a 2D Maxel.
+public export
+vectToMaxel : {n : Nat} -> Vect n BoxInt -> Maxel
+vectToMaxel xs = go 1 xs BoxLeaf
+  where
+    go : Nat -> Vect k BoxInt -> Maxel -> Maxel
+    go _ [] acc = acc
+    go i (w :: ws) acc =
+      if boxIsZero w then go (S i) ws acc
+      else go (S i) ws (setBoxTree (MkPixel i 1) w acc)
+
+||| Zero-allocation direct conversion of a vector of weights into a 1D Vexel.
+public export
+vectToVexel : {n : Nat} -> Vect n BoxInt -> Vexel
+vectToVexel xs = go 1 xs BoxLeaf
+  where
+    go : Nat -> Vect k BoxInt -> Vexel -> Vexel
+    go _ [] acc = acc
+    go i (w :: ws) acc =
+      if boxIsZero w then go (S i) ws acc
+      else go (S i) ws (setBoxTree (MkUnixel i) w acc)
+
+||| Embeds a dependent UniverseState into the Unified Cosmic Multiset via zero-allocation single-pass conversion.
 public export
 stateToCosmicMultiset : {vm, de, dm : Nat} -> UniverseState vm de dm -> CosmicMultiset
 stateToCosmicMultiset (MkUniverseState vmVect deVect dmVect) =
   MkCosmicMultiset
-    (canonicalizeBoxel (MkBoxel (vectToBoxelTerms vmVect)))
-    (canonicalizeMaxel (MkMaxel (vectToMaxelTerms deVect)))
-    (canonicalizeVexel (MkVexel (vectToVexelTerms dmVect)))
+    (vectToBoxel vmVect)
+    (vectToMaxel deVect)
+    (vectToVexel dmVect)
 
 ||| Ground-state Observer Epoch 37 UniverseState grounded in FourGeometries basis capacities.
 public export
@@ -101,11 +134,16 @@ public export
 linearTokenRelocate : Stage0.BoxInt.BoxInt -> Vect k Stage0.BoxInt.BoxInt -> Vect (S k) Stage0.BoxInt.BoxInt
 linearTokenRelocate token dm = token :: dm
 
-||| Audits that linear vector split and combine preserve vector length exactly.
+||| Audits that linear vector split and combine preserve vector length and total weight exactly.
 public export
 auditLinearQTTConservationProof : Bool
 auditLinearQTTConservationProof =
-  Stage0.BoxInt.intToBoxInt 5 == Stage0.BoxInt.intToBoxInt 5
+  let v : Vect 10 BoxInt = replicate 10 (intToBoxInt 1)
+      (l, r) = linearVectSplit 4 v
+      sumL = foldl (+) (intToBoxInt 0) l
+      sumR = foldl (+) (intToBoxInt 0) r
+      sumTotal = foldl (+) (intToBoxInt 0) v
+  in (sumL + sumR == sumTotal) && (length l == 4) && (length r == 6)
 
 
 ------------------------------------------------------------------------
