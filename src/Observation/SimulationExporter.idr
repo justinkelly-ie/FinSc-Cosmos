@@ -31,7 +31,7 @@ vexelMagnitudeSquared v = dotVexel v v
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
 exportStateCsvHeader : String
-exportStateCsvHeader = "tick,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,observer_active"
+exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,observer_active"
 
 ||| Formats a single UniverseSimulationState as a CSV data row.
 public export
@@ -49,6 +49,7 @@ exportStateCsvRow st =
       c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
       obsStr = if st.observerEpochActive then "True" else "False"
   in show st.substrateTicks ++ "," ++
+     show st.superEpoch ++ "," ++
      show st.epochIndex ++ "," ++
      cohStr ++ "," ++
      show st.moduliDOF ++ "," ++
@@ -81,6 +82,7 @@ exportStateJson st =
       c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
       obsStr = if st.observerEpochActive then "true" else "false"
   in "{\"tick\":" ++ show st.substrateTicks ++
+     ",\"superepoch\":" ++ show st.superEpoch ++
      ",\"epoch\":" ++ show st.epochIndex ++
      ",\"coherence\":\"" ++ cohStr ++ "\"" ++
      ",\"moduli\":" ++ show st.moduliDOF ++

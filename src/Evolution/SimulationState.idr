@@ -48,6 +48,56 @@ canonicalHelmholtzGroundState =
   MkDiscreteHelmholtzState (intToBoxInt 398) (intToBoxInt 859) (intToBoxInt (-1320)) Refl
 
 ------------------------------------------------------------------------
+-- 2B. OBSERVER LIVING-MATTER ACTIVE INFERENCE STATE (Rule 03 §5)
+------------------------------------------------------------------------
+
+||| Dissipative non-equilibrium living-matter state active specifically at Epoch k=38:
+||| - metabolicYieldATP   : 30 ATP -> 750Q metabolic energy quantum
+||| - variationalSurprise : Free Energy surprise Delta F_obs <= 0 on Markov blanket
+||| - activeNeurons       : active neural network size (n = 39 = 3x13)
+||| - markovBlanketPurity : True when Markov blanket preserves internal entropy
+public export
+record ObserverLivingState where
+  constructor MkObserverLivingState
+  metabolicYieldATP   : BoxInt
+  variationalSurprise : BoxInt
+  activeNeurons       : Nat
+  markovBlanketPurity : Bool
+
+public export
+Eq ObserverLivingState where
+  (MkObserverLivingState a1 s1 n1 p1) == (MkObserverLivingState a2 s2 n2 p2) =
+    a1 == a2 && s1 == s2 && n1 == n2 && p1 == p2
+
+public export
+Show ObserverLivingState where
+  show (MkObserverLivingState atp surp n bl) =
+    "LivingObserver(ATP=" ++ show (unwrapBox atp) ++ "Q, F_surp=" ++ show (unwrapBox surp) ++ ", Neurons=" ++ show n ++ ")"
+
+||| Observer branch lifecycle: dormant during cosmic trunk, living at k=38.
+public export
+data ObserverBranchState : Type where
+  DormantObserver : ObserverBranchState
+  LivingObserver  : ObserverLivingState -> ObserverBranchState
+
+public export
+Eq ObserverBranchState where
+  DormantObserver == DormantObserver = True
+  (LivingObserver l1) == (LivingObserver l2) = l1 == l2
+  _ == _ = False
+
+public export
+Show ObserverBranchState where
+  show DormantObserver = "DormantObserver"
+  show (LivingObserver liv) = show liv
+
+||| Canonical active inference state at Observer Epoch k=38 (n=39=3x13).
+public export
+canonicalObserverState38 : ObserverLivingState
+canonicalObserverState38 =
+  MkObserverLivingState (intToBoxInt 750) (intToBoxInt 0) 39 True
+
+------------------------------------------------------------------------
 -- 3. UNIFIED UNIVERSE SIMULATION STATE (Rule 03 §5)
 ------------------------------------------------------------------------
 
@@ -65,6 +115,7 @@ public export
 record UniverseSimulationState where
   constructor MkUniverseSimulationState
   epochIndex          : Nat                                    -- Trajectory scale step k (0 to 136)
+  superEpoch          : Nat                                    -- Macro cosmic cycle count (rebound at k=136)
   substrateTicks      : Nat                                    -- Action count Delta S = total ticks elapsed
   capacityBudget      : DiscreteCapacityBudget 27 128 55       -- 210 Master partition
   metricTensor        : SymmetricMetricTensor 10               -- 10D Spacetime bulk metric (55 DoF)
@@ -76,6 +127,7 @@ record UniverseSimulationState where
   curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
   spreadMatrix        : BoxSquareMaxel 2                       -- Companion spread transfer matrix M(s)^k
   observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
+  observerState       : ObserverBranchState                    -- Living matter active inference carrier
   coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
   freeEnergyState     : DiscreteHelmholtzState 27 128 55 2     -- Discrete F = U - TS
 
@@ -109,6 +161,7 @@ initUniverseSimulation =
   in MkUniverseSimulationState
        0
        0
+       0
        canonicalCapacityBudget
        g10
        g4
@@ -119,5 +172,6 @@ initUniverseSimulation =
        (intToBoxInt 0)
        (identityBoxSquareMaxel 2)
        False
+       DormantObserver
        status0
        canonicalHelmholtzGroundState

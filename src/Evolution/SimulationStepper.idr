@@ -26,8 +26,9 @@ import Data.Vect
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluons gal phase defect spread isObs status fe) =
-  let nextK : Nat = if k >= 136 then Z else S k
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread isObs obsState status fe) =
+  let (nextSuperEp, nextK) : (Nat, Nat) =
+        if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
       -- 1. Energy-Momentum Curvature Back-Reaction:
       -- Phase energy computes Ricci curvature defect on timelike component g_00
@@ -49,6 +50,9 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
                      S _ => stepPythagoreanCompanionSpread spread
       -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
       nextIsObs = nextK == 38
+      nextObsState = if nextK == 38
+                        then LivingObserver canonicalObserverState38
+                        else DormantObserver
       -- 6. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
       -- 7. Baryonic Matter Profile Update
@@ -59,6 +63,7 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
       nextFE = fe
   in MkUniverseSimulationState
        nextK
+       nextSuperEp
        nextTicks
        cap
        nextG10
@@ -70,6 +75,7 @@ stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluo
        nextDefect
        nextSpread
        nextIsObs
+       nextObsState
        nextStatus
        nextFE
 
