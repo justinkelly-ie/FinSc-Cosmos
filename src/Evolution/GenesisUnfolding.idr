@@ -22,6 +22,11 @@ import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Multiset.PrimordialUnfolding
 import Evolution.SimulationState
 import Evolution.SimulationStepper
+import Stage0.PrimeMultiset
+import Stage1.FourGeometries
+import Stage1.Goh
+import Stage1.Goh.Factor
+import Stage1.Goh.SpreadFactorization
 import Data.Vect
 
 %default total
@@ -57,22 +62,57 @@ Show GohPrimeGate where
   show Gate5ParabolicDM  = "Gate5(ParabolicDM,p=5,φ=4)"
   show Gate7SpectralROM  = "Gate7(SpectralROM,p=7,φ=6)"
 
-||| Classifies current token count N into its active Goh prime gate:
+||| Canonical association mapping each GohPrimeGate to its underlying AnyGohPrime:
+public export
+gohGatePrime : GohPrimeGate -> AnyGohPrime
+gohGatePrime Gate2DyadicBit    = anyPrime2
+gohGatePrime Gate3TriadSpace   = anyPrime3
+gohGatePrime Gate5ParabolicDM  = anyPrime5
+gohGatePrime Gate7SpectralROM  = anyPrime7
+
+||| Certified prime number p for the active gate:
+public export
+gohGatePrimeNat : GohPrimeGate -> Nat
+gohGatePrimeNat Gate2DyadicBit   = 2
+gohGatePrimeNat Gate3TriadSpace  = 3
+gohGatePrimeNat Gate5ParabolicDM = 5
+gohGatePrimeNat Gate7SpectralROM = 7
+
+||| Primorial prefix capacity associated with each Goh prime gate,
+||| derived from the canonical prime spectrum:
+public export
+gohGatePrimorialCapacity : GohPrimeGate -> Nat
+gohGatePrimorialCapacity Gate2DyadicBit   = gohPrimeNat anyPrime2
+gohGatePrimorialCapacity Gate3TriadSpace  = gohPrimeNat anyPrime2 * gohPrimeNat anyPrime3
+gohGatePrimorialCapacity Gate5ParabolicDM = (gohPrimeNat anyPrime2 * gohPrimeNat anyPrime3) * gohPrimeNat anyPrime5
+gohGatePrimorialCapacity Gate7SpectralROM = fst primorialBudgetDimension
+
+||| Classifies current token count N into its active Goh prime gate via primorial thresholds:
 public export
 activeGohGate : Nat -> GohPrimeGate
 activeGohGate n =
-  if n <= 2 then Gate2DyadicBit
-  else if n <= 6 then Gate3TriadSpace
-  else if n <= 30 then Gate5ParabolicDM
+  if n <= gohGatePrimorialCapacity Gate2DyadicBit then Gate2DyadicBit
+  else if n <= gohGatePrimorialCapacity Gate3TriadSpace then Gate3TriadSpace
+  else if n <= gohGatePrimorialCapacity Gate5ParabolicDM then Gate5ParabolicDM
   else Gate7SpectralROM
 
-||| Totient degree φ(p) associated with each primitive Goh prime gate:
+||| Canonical Cigler-Herbig irreducible spread polynomial factor for each Goh prime gate:
+public export
+gohGateFactor : (g : GohPrimeGate) -> GohAuxiliary (gohDegree (gohGatePrimeNat g))
+gohGateFactor Gate2DyadicBit   = Psi2
+gohGateFactor Gate3TriadSpace  = Psi3
+gohGateFactor Gate5ParabolicDM = Psi5
+gohGateFactor Gate7SpectralROM = Psi7
+
+||| Totient degree φ(p) derived from the irreducible Cigler-Herbig spread polynomial factor:
 public export
 gohGateTotient : GohPrimeGate -> Nat
-gohGateTotient Gate2DyadicBit    = 1
-gohGateTotient Gate3TriadSpace   = 2
-gohGateTotient Gate5ParabolicDM  = 4
-gohGateTotient Gate7SpectralROM  = 6
+gohGateTotient g = gohDegree (gohGatePrimeNat g)
+
+||| Slices the active Goh prime gate factor into its Stage 0 companion matrix operator:
+public export
+gohGateCompanionMaxel : (g : GohPrimeGate) -> SquareMaxel (gohGateTotient g)
+gohGateCompanionMaxel g = spliceFactorToCompanionMaxel (gohGateTotient g) (gohGateFactor g)
 
 ||| Structural fuel steps derived from totient degree: Fuel(p) = gohFuelNat(φ(p)):
 public export
@@ -144,14 +184,17 @@ initGenesisUnfolding =
   let t0 = epochTriadQuadrance 0
   in MkGenesisUnfoldingState 0 (intToBoxInt 0) Gate2DyadicBit t0 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) False
 
-||| Computes exact matter partition via the 4 Goh prime gates:
+||| Computes exact matter partition via the 4 Goh prime gates using model capacity dimensions:
 public export
 gohPrimePartition : (n : Nat) -> GohFuel 13 -> (BoxInt, BoxInt, BoxInt)
 gohPrimePartition n _ =
-  let nBounded = if n > the Nat 210 then the Nat 210 else n
+  let cap210 = fst primorialBudgetDimension
+      vmCap = fst ellipticDimension
+      deCap = fst hyperbolicDimension
+      nBounded = if n > cap210 then cap210 else n
       nInt = cast {to = Integer} nBounded
-      vm = (nInt * 27) `div` 210
-      de = (nInt * 128) `div` 210
+      vm = (nInt * cast {to = Integer} vmCap) `div` cast {to = Integer} cap210
+      de = (nInt * cast {to = Integer} deCap) `div` cast {to = Integer} cap210
       dm = nInt - vm - de
   in (intToBoxInt vm, intToBoxInt de, intToBoxInt dm)
 
@@ -182,7 +225,7 @@ stepGenesisInflux (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
       nextGate = activeGohGate nextN
       nextTriad = epochTriadQuadrance nextN
       (nextU, nextS, nextF) = energyAtN nextN
-      condensed = nextN >= 210
+      condensed = nextN >= fst primorialBudgetDimension
   in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed
 
 --------------------------------------------------------------------------------
@@ -194,7 +237,7 @@ stepGenesisInflux (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
 public export
 condenseGenesisToUniverse : GenesisUnfoldingState -> Maybe UniverseSimulationState
 condenseGenesisToUniverse st =
-  if st.substrateTokens < 210 then Nothing
+  if st.substrateTokens < fst primorialBudgetDimension then Nothing
   else
     let g10 = spacetime10DMetric
         g4  = project10Dto4D g10.metricMaxel
