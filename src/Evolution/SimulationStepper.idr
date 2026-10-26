@@ -4,6 +4,7 @@ import Evolution.SimulationState
 import Stage0.BoxInt
 import Stage1.Basis.Coordinate
 import Stage1.MultisetTree
+import Stage1.Carrier.SquareMaxel
 import Stage1.SymmetricMetricTensor
 import Stage1.Fields.OctonionGaugeUnification
 import Stage1.Math.GalacticRotationCurve
@@ -26,25 +27,26 @@ import Data.Vect
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
 stepUniverseSimulation (MkUniverseSimulationState k ticks cap g10 g4 moduli gluons gal phase defect spread isObs status fe) =
-  let nextK = if k >= 136 then 0 else S k
+  let nextK : Nat = if k >= 136 then Z else S k
       nextTicks = S ticks
       -- 1. Energy-Momentum Curvature Back-Reaction:
       -- Phase energy computes Ricci curvature defect on timelike component g_00
       energy = harmonicEnergy (intToBoxInt 1) phase
       nextDefect = modBox energy (intToBoxInt 137)
-      -- 2. 10D Bulk Spacetime Metric Update & 4D Leaf Projection
+      -- 2. 10D Bulk Spacetime Metric Update & 4D Leaf Projection in O(1)
       nextG10 = perturbMetric00 g10 nextDefect
-      nextG4  = project10Dto4D nextG10.metricMaxel
-      nextModuli = moduliDegreesOfFreedom 10 4
-      -- 3. Metric-Coupled Symplectic Leapfrog Kick:
+      nextG4  = perturbSquareMaxel00 g4 nextDefect
+      nextModuli : Nat = 45
+      -- 3. Metric-Coupled Symplectic Leapfrog Kick in O(1):
       -- Geodesic acceleration gradient is modulated by active leaf g_00
       g00Val = lookupBoxTree (MkPixel 0 0) nextG4.entries
       metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
-      gradV = metricCoupledGrad metricScalar
       dt = intToBoxInt 1
-      nextPhase = symplecticLeapfrogStep gradV dt phase
-      -- 4. Logarithmic 2x2 Companion Spread Matrix Exponentiation: M(s)^k in O(log k)
-      nextSpread = fastBoxSquareMaxelPower (S nextK) nextK pythagoreanCompanionMaxel
+      nextPhase = symplecticLeapfrogStep1D metricScalar dt phase
+      -- 4. O(1) Companion Spread Recurrence Stepping: M(s) * S (Rule 04 §4)
+      nextSpread = case nextK of
+                     Z => identityBoxSquareMaxel 2
+                     S _ => stepPythagoreanCompanionSpread spread
       -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
       nextIsObs = nextK == 38
       -- 6. SU(3) Gluon updates (Gell-Mann algebra preserved)

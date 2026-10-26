@@ -2,6 +2,10 @@ module Compound.SymplecticIntegrator
 
 import Stage0.BoxInt
 import Stage1.Basis.Coordinate
+import Stage1.Basis.CoordCell
+import Stage1.MultisetTree
+import Stage1.Carrier.CellMultiset
+import Stage1.Carrier.Vexel
 import Compound.LinearEpsilonRouting
 import Stage0.OnSeq.FusedStream
 import Data.Fuel
@@ -51,6 +55,20 @@ symplecticLeapfrogStep gradV dt (MkPhaseState q p) =
       kick2 = scaleVexel halfDt (gradV qNext)
       pNext = canonicalizeVexel (subVexel pHalf kick2)
   in MkPhaseState qNext pNext
+
+||| Fast 1D discrete symplectic leapfrog step directly on PhaseState (coordinate 1) in O(1):
+public export
+symplecticLeapfrogStep1D : (metricScalar : BoxInt) -> (dt : BoxInt) -> PhaseState -> PhaseState
+symplecticLeapfrogStep1D g dt (MkPhaseState q p) =
+  let halfDt = dt `div` intToBoxInt 2
+      q1 = lookupUnixel (MkUnixel 1) q
+      p1 = lookupUnixel (MkUnixel 1) p
+      pHalf1 = p1 - (halfDt * g * q1)
+      qNext1 = q1 + (dt * pHalf1)
+      pNext1 = pHalf1 - (halfDt * g * qNext1)
+      qTree = if boxIsZero qNext1 then emptyVexel else singletonCell (mkCell1 1) qNext1
+      pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
+  in MkPhaseState qTree pTree
 
 ||| Linear harmonic oscillator potential gradient: \nabla V(q) = k * q.
 public export
