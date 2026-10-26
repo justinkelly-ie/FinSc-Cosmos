@@ -90,7 +90,7 @@ pythagoreanCompanionMaxel =
       t0 = singletonCell (mkCell2 0 0) c11
       t1 = setBoxTree (mkCell2 0 1) c12 t0
       t2 = setBoxTree (mkCell2 1 0) c21 t1
-  in MkBoxSquareMaxel t2
+  in MkSquareMaxel t2
 
 ||| Genesis / Vacuum Initial Universe Simulation State (Epoch k = 0, Delta S = 0).
 public export
