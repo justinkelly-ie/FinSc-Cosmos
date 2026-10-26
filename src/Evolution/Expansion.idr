@@ -1,8 +1,7 @@
 module Evolution.Expansion
 
 import Stage0.BoxInt
-import Stage1.Carrier.Maxel
-import Stage1.Carrier.Boxel
+import Stage1.Basis.Coordinate
 import Stage1.Carrier.BalanceArray
 import Evolution.State
 import Evolution.StructuralAccounting

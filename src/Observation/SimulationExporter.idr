@@ -1,8 +1,7 @@
 module Observation.SimulationExporter
 
 import Stage0.BoxInt
-import Stage1.Carrier.Vexel
-import Stage1.Carrier.Maxel
+import Stage1.Basis.Coordinate
 import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Math.GalacticRotationCurve

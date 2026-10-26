@@ -1,7 +1,7 @@
 module Reflect.Auditor.Math
 
 import public Stage0.BoxInt
-import public Stage1.Carrier.Maxel
+import public Stage1.Basis.Coordinate
 import public Stage0.Multiset
 import public Stage1.MaxelTransform
 import public Stage1.TypeTheory.Staging

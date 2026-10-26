@@ -2,7 +2,7 @@ module Evolution.SimulationStepper
 
 import Evolution.SimulationState
 import Stage0.BoxInt
-import Stage1.Carrier.Maxel
+import Stage1.Basis.Coordinate
 import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Fields.OctonionGaugeUnification

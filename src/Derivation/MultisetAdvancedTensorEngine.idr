@@ -2,7 +2,7 @@ module Derivation.MultisetAdvancedTensorEngine
 
 import Stage0.Multiset
 import Stage1.MaxelTransform
-import Stage1.Carrier.Maxel
+import Stage1.Basis.Coordinate
 import Stage1.ChromoCategory
 import Data.List
 import Data.Vect

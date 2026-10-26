@@ -6,9 +6,6 @@ import public Stage1.MultisetTree
 import public Stage1.OnSeq
 import public Stage1.Polynumber
 import public Stage1.UnixelFraction
-import public Stage1.Carrier.Vexel
-import public Stage1.Carrier.Maxel
-import public Stage1.Carrier.Boxel
 import public Stage1.Carrier.BalanceArray
 import public Stage1.Basis.Coordinate
 import Language.Reflection

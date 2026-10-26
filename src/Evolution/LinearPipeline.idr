@@ -1,8 +1,7 @@
 module Evolution.LinearPipeline
 
 import Stage0.BoxInt
-import Stage1.Carrier.Vexel
-import Stage1.Carrier.Maxel
+import Stage1.Basis.Coordinate
 import Evolution.State
 import Evolution.Expansion
 import Evolution.Contraction

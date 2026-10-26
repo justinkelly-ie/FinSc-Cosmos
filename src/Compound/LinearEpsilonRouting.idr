@@ -1,8 +1,7 @@
 module Compound.LinearEpsilonRouting
 
 import Stage0.BoxInt
-import Stage1.Carrier.Vexel
-import Stage1.Carrier.Maxel
+import Stage1.Basis.Coordinate
 import Stage1.Carrier.BalanceArray
 import Stage1.LinAlgebra.MetricTensor
 import Stage1.Math.Infinitesimal
