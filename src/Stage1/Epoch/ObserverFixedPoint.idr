@@ -96,10 +96,16 @@ public export
 0 verifyFixedPoint37DarkLaws : Stage1.Epoch.ObserverFixedPoint.auditFixedPoint37DarkLaws = True
 verifyFixedPoint37DarkLaws = Refl
 
-||| Boolean Audit: Observer Fixed Point k=38 has dark law count = 57.
+||| Formal compile-time witness: Parabolic Dark Matter capacity at Observer Epoch 38 equals
+||| the 10th triangular residue plus the dual-mode expansion pair (+2): 55 + 2 = 57.
+public export
+0 prfObserverFixedPoint38DarkLaws : Stage1.FourGeometries.triangularSum 10 + 2 = 57
+prfObserverFixedPoint38DarkLaws = Refl
+
+||| Boolean Audit: Observer Fixed Point k=38 has dark law count = T_10 + 2 = 57.
 public export
 auditFixedPoint38DarkLaws : Bool
-auditFixedPoint38DarkLaws = observerFixedPoint38.darkLawCount == 57
+auditFixedPoint38DarkLaws = observerFixedPoint38.darkLawCount == Stage1.FourGeometries.triangularSum 10 + 2
 
 public export
 0 verifyFixedPoint38DarkLaws : Stage1.Epoch.ObserverFixedPoint.auditFixedPoint38DarkLaws = True
@@ -140,4 +146,37 @@ auditFixedPoint38GatePure = isStatusGatePure observerFixedPoint38.coherenceStatu
 public export
 0 verifyObserverFixedPoint38GatePure : Stage1.Epoch.ObserverFixedPoint.auditFixedPoint38GatePure = True
 verifyObserverFixedPoint38GatePure = Refl
+
+||| Certified Observer Fixed Point bundling the underlying ObserverFixedPoint 38,
+||| its certified scale certificate (3 x 13 = 39, 13-smooth),
+||| and its Primorial 210 capacity closure witness.
+public export
+record CertifiedObserverFixedPoint where
+  constructor MkCertifiedObserverFixedPoint
+  fixedPoint      : ObserverFixedPoint 38
+  scaleCert       : CertifiedObserverEpochScale
+  0 gatePurePrf   : isStatusGatePure fixedPoint.coherenceStatus = True
+  0 dmCapacityPrf : fixedPoint.darkLawCount = Stage1.FourGeometries.triangularSum 10 + 2
+
+||| Canonical term instantiation of CertifiedObserverFixedPoint for k=38.
+public export
+certifiedObserverFixedPoint38 : CertifiedObserverFixedPoint
+certifiedObserverFixedPoint38 =
+  MkCertifiedObserverFixedPoint
+    observerFixedPoint38
+    certifiedObserverEpochScale38
+    Refl
+    Refl
+
+||| Formal compile-time reflection proof: Certified Observer Fixed Point is verified GatePure at compile time.
+public export
+0 verifyCertifiedObserverFixedPointGatePure :
+  isStatusGatePure (coherenceStatus (fixedPoint Stage1.Epoch.ObserverFixedPoint.certifiedObserverFixedPoint38)) = True
+verifyCertifiedObserverFixedPointGatePure = gatePurePrf certifiedObserverFixedPoint38
+
+||| Formal compile-time reflection proof: Certified Observer Fixed Point dark matter capacity matches T_10 + 2.
+public export
+0 verifyCertifiedObserverFixedPointDMCapacity :
+  darkLawCount (fixedPoint Stage1.Epoch.ObserverFixedPoint.certifiedObserverFixedPoint38) = Stage1.FourGeometries.triangularSum 10 + 2
+verifyCertifiedObserverFixedPointDMCapacity = dmCapacityPrf certifiedObserverFixedPoint38
 

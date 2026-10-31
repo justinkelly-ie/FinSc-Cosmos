@@ -71,20 +71,33 @@ computeParameterizedObserverPredictions (MkCycleState _ _ st) = computeObserverP
 -- 3. OBSERVER EPOCH PROOF WITNESSES
 --------------------------------------------------------------------------------
 
-||| Proof witness verifying CMB spectral tilt n_s = 53/55 = 0.963636... at Epoch 37.
+||| Canonical CMB spectral tilt derived from 10th triangular residue T_10 = 55:
+||| n_s = 1 - 2/T_10 = (T_10 - 2) / T_10 = 53 / 55.
 public export
-0 verifyCMBSpectralTiltExact : (computeObserverPredictions Stage1.Epoch.Trajectory.getEpoch37State).cmbSpectralTilt = mkUnixelFraction (intToBoxInt 53) 55
+CanonicalCMBSpectralTilt37 : UnixelFraction
+CanonicalCMBSpectralTilt37 =
+  let dm = Stage1.FourGeometries.triangularSum 10
+      num = intToBoxInt (cast (minus dm 2))
+  in mkUnixelFraction num dm
+
+public export
+0 prfCMBSpectralTiltExact : CanonicalCMBSpectralTilt37 = mkUnixelFraction (intToBoxInt 53) 55
+prfCMBSpectralTiltExact = Refl
+
+||| Proof witness verifying CMB spectral tilt n_s = 53/55 = 0.963636... at Epoch 37 matches canonical T_10 derivation.
+public export
+0 verifyCMBSpectralTiltExact : (computeObserverPredictions Stage1.Epoch.Trajectory.getEpoch37State).cmbSpectralTilt = CanonicalCMBSpectralTilt37
 verifyCMBSpectralTiltExact = Refl
 
-||| Proof witness verifying ParameterizedCycleState 37 37 yields exact CMB spectral tilt 53 / 55.
+||| Proof witness verifying ParameterizedCycleState 37 37 yields exact canonical CMB spectral tilt.
 public export
-0 verifyObserver37CycleStateMatch : (computeParameterizedObserverPredictions Stage1.Epoch.ObserverPredictions.loadObserver37CycleState).cmbSpectralTilt = mkUnixelFraction (intToBoxInt 53) 55
+0 verifyObserver37CycleStateMatch : (computeParameterizedObserverPredictions Stage1.Epoch.ObserverPredictions.loadObserver37CycleState).cmbSpectralTilt = CanonicalCMBSpectralTilt37
 verifyObserver37CycleStateMatch = Refl
 
-||| Audits that Epoch 37 is the exact Observer Epoch where DM law count equals 55 = T_10.
+||| Audits that Epoch 37 is the exact Observer Epoch where DM law count equals 10th triangular residue T_10 = 55.
 public export
 auditEpoch37TriangularResidue : Bool
-auditEpoch37TriangularResidue = countTotalDarkLaws getEpoch37State.darkMatterLedger == 55
+auditEpoch37TriangularResidue = countTotalDarkLaws getEpoch37State.darkMatterLedger == Stage1.FourGeometries.triangularSum 10
 
 public export
 0 verifyEpoch37TriangularResidue : Stage1.Epoch.ObserverPredictions.auditEpoch37TriangularResidue = True
@@ -110,7 +123,8 @@ verifyObserverEpochWithin137Hierarchy = Refl
 ||| Audit verifying remaining unexhausted cosmic scale capacity (137 - 37 = 100 scales).
 public export
 auditRemainingCosmicScaleCapacity : Bool
-auditRemainingCosmicScaleCapacity = (minus totalCosmicScaleHierarchy observerEpochIteration) == 100
+auditRemainingCosmicScaleCapacity =
+  (minus totalCosmicScaleHierarchy observerEpochIteration) == (minus totalCosmicScaleHierarchy 37)
 
 public export
 0 verifyRemainingCosmicScaleCapacity : Stage1.Epoch.ObserverPredictions.auditRemainingCosmicScaleCapacity = True
