@@ -12,6 +12,8 @@ import public Stage1.TypeTheory.Smoothness
 import public Stage1.Epoch.ScaleTrajectorySieve
 import public Stage1.Goh.Factor
 import public Stage1.Goh.Combinator.Multiplicative
+import public Stage1.Math.OnSeq.SpreadStream
+import public Stage1.Multiset.PrimordialUnfolding
 
 %default total
 
@@ -149,14 +151,17 @@ verifyObserverFixedPoint38GatePure = Refl
 
 ||| Certified Observer Fixed Point bundling the underlying ObserverFixedPoint 38,
 ||| its certified scale certificate (3 x 13 = 39, 13-smooth),
+||| its certified cyclotomic spread decomposition (n = 39, totient capacity = 39),
 ||| and its Primorial 210 capacity closure witness.
 public export
 record CertifiedObserverFixedPoint where
   constructor MkCertifiedObserverFixedPoint
-  fixedPoint      : ObserverFixedPoint 38
-  scaleCert       : CertifiedObserverEpochScale
-  0 gatePurePrf   : isStatusGatePure fixedPoint.coherenceStatus = True
-  0 dmCapacityPrf : fixedPoint.darkLawCount = Stage1.FourGeometries.triangularSum 10 + 2
+  fixedPoint       : ObserverFixedPoint 38
+  scaleCert        : CertifiedObserverEpochScale
+  cyclotomicSpread : CertifiedCyclotomicSpread 39
+  0 gatePurePrf    : isStatusGatePure fixedPoint.coherenceStatus = True
+  0 dmCapacityPrf  : fixedPoint.darkLawCount = Stage1.FourGeometries.triangularSum 10 + 2
+  0 totientSumPrf  : cyclotomicSpread.totientCapacity = 39
 
 ||| Canonical term instantiation of CertifiedObserverFixedPoint for k=38.
 public export
@@ -165,6 +170,8 @@ certifiedObserverFixedPoint38 =
   MkCertifiedObserverFixedPoint
     observerFixedPoint38
     certifiedObserverEpochScale38
+    certifiedCyclotomicSpread39
+    Refl
     Refl
     Refl
 
@@ -179,4 +186,28 @@ public export
 0 verifyCertifiedObserverFixedPointDMCapacity :
   darkLawCount (fixedPoint Stage1.Epoch.ObserverFixedPoint.certifiedObserverFixedPoint38) = Stage1.FourGeometries.triangularSum 10 + 2
 verifyCertifiedObserverFixedPointDMCapacity = dmCapacityPrf certifiedObserverFixedPoint38
+
+||| Formal compile-time reflection proof: Certified Observer Fixed Point cyclotomic totient capacity matches n = 39.
+public export
+0 verifyCertifiedObserverFixedPointTotient :
+  totientCapacity (cyclotomicSpread Stage1.Epoch.ObserverFixedPoint.certifiedObserverFixedPoint38) = 39
+verifyCertifiedObserverFixedPointTotient = totientSumPrf certifiedObserverFixedPoint38
+
+||| Boolean audit: The Euler totient phi(39) matches the Green chromogeometric quadrance Q_Green = 24.
+public export
+auditObserverEpochGreenTotientIsomorphism : Bool
+auditObserverEpochGreenTotientIsomorphism =
+  Stage0.OnSeq.FusedStream.totientNat 39 == 24
+
+||| Static compile-time witness: Multiplicative totient formula for coprime product 3 x 13 = 39 yields 24.
+public export
+0 verifyCoprimeTotientProduct : (3 - 1) * (13 - 1) = 24
+verifyCoprimeTotientProduct = Refl
+
+||| Static compile-time witness: The canonical Green quadrance Q_Green of the (4, 3) Pythagorean fixed point equals 24.
+public export
+0 verifyCanonicalGreenQuadrance24 :
+  greenQ (pythagoreanFixedPoint (MkBoxInt 4) (MkBoxInt 3)) = MkBoxInt 24
+verifyCanonicalGreenQuadrance24 = Refl
+
 

@@ -72,6 +72,17 @@ public export
 evalObserver37ConjugateHylo : StrictEpoch -> StrictEpoch
 evalObserver37ConjugateHylo = eval2LTTEpochBounded 37
 
+||| Canonical 2LTT Conjugate Hylomorphism evaluation for the Eddington Gate-Pure Observer Epoch (k=38, n=39=3x13).
+||| Structurally total on Nat without Fuel (Rule 03 §5).
+public export
+evalObserver38ConjugateHylo : StrictEpoch -> StrictEpoch
+evalObserver38ConjugateHylo = eval2LTTEpochBounded 38
+
+||| Evaluates 2LTT Conjugate Hylomorphism bounded by an explicit ObserverFixedPoint scale index k.
+public export
+evalObserverFixedPointHylo : {k : Nat} -> StrictEpoch -> StrictEpoch
+evalObserverFixedPointHylo {k} = eval2LTTEpochBounded k
+
 ||| Evaluates deforested 2LTT Conjugate Hylomorphism epoch progression using total structural Nat fuel.
 public export
 eval2LTTEpochConjugateHyloNat : Nat -> StrictEpoch -> StrictEpoch
@@ -86,6 +97,12 @@ public export
 eval2LTTEpochConjugateHyloBoxNat : BoxNat -> StrictEpoch -> StrictEpoch
 eval2LTTEpochConjugateHyloBoxNat bfuel st =
   eval2LTTEpochConjugateHyloNat (boxNatToNat bfuel) st
+
+||| Evaluates 2LTT Conjugate Hylomorphism over model-derived Cyclotomic Goh fuel for Observer Epoch n = 39 (Rule 04 §4).
+public export
+evalObserverCyclotomicGohFuelHylo : StrictEpoch -> StrictEpoch
+evalObserverCyclotomicGohFuelHylo =
+  eval2LTTEpochConjugateHyloBoxNat (gohFuel 39)
 
 ||| Evaluates deforested 2LTT Conjugate Hylomorphism epoch progression over Prime 13 fuel.
 public export

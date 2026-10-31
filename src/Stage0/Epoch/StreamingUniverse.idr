@@ -36,6 +36,12 @@ public export
 getEpochClip : EpochState -> (idx : Nat) -> (len : Nat) -> Clip EpochState
 getEpochClip seed idx len = getClip (epochOnSeq seed) idx len
 
+||| Evaluates multi-step epoch progression via structural recurrence (Rule 04 §9).
+public export
+fastEpochJump : (steps : Nat) -> EpochState -> EpochState
+fastEpochJump Z st = st
+fastEpochJump (S k) st = fastEpochJump k (advanceEpochState st)
+
 ||| Constructive OnSeq mapping cycle index u to 3LTT HyperCycle genesis state.
 public export
 hyperCycleOnSeq : OnSeq (u : Nat ** ThreeLevelEpochState u 1)
