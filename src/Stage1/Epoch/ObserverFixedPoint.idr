@@ -61,7 +61,7 @@ observerFixedPoint38 =
       dm   = countTotalDarkLaws st38.darkMatterLedger
       ns   = computeCMBSpectralTiltFromLedger st38.darkMatterLedger
       goh  = computeGohStepForEpoch 38 dm
-  in MkObserverFixedPoint 38 dm ns goh (GatePure prfSmooth39)
+  in MkObserverFixedPoint 38 dm ns goh (GatePure Refl)
 
 ||| Constructs the Observer Fixed Point for k=137 (Fine Structure Horizon Grid Wall).
 public export
@@ -120,7 +120,7 @@ record CertifiedObserverEpochScale where
 public export
 certifiedObserverEpochScale38 : CertifiedObserverEpochScale
 certifiedObserverEpochScale38 =
-  MkCertifiedObserverEpochScale 39 gohPrimeProduct3_13 prfSmooth39
+  MkCertifiedObserverEpochScale 39 gohPrimeProduct3_13 Refl
 
 ||| Boolean Audit: Observer Fixed Point k=38 is gate-pure (13-smooth at n=39).
 public export

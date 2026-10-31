@@ -66,7 +66,7 @@ CosmicScaleStep = ScaleStep CosmicSmoothHorizon
 public export
 observerScaleStep : CosmicScaleStep
 observerScaleStep =
-  MkScaleStep 38 (epochTriadQuadrance 38) (GatePure prfSmooth39)
+  MkScaleStep 38 (epochTriadQuadrance 38) (GatePure Refl)
 
 ||| Canonical compile-time verified Grid Wall scale step (k = 136, n = 137).
 public export
