@@ -42,6 +42,11 @@ public export
 -- 2. FIXED POINT FACTORY FOR K=37, K=38, K=137
 --------------------------------------------------------------------------------
 
+||| Evaluates the cached Epoch 38 state directly from Epoch 37 to avoid duplicate recursion.
+public export
+epoch38State : EpochState
+epoch38State = advanceEpochState getEpoch37State
+
 ||| Constructs the Observer Fixed Point for k=37 (Observer Hypothesis).
 public export
 observerFixedPoint37 : ObserverFixedPoint 37
@@ -57,17 +62,22 @@ observerFixedPoint37 =
 public export
 observerFixedPoint38 : ObserverFixedPoint 38
 observerFixedPoint38 =
-  let st38 = advanceEpochState getEpoch37State
+  let st38 = epoch38State
       dm   = countTotalDarkLaws st38.darkMatterLedger
       ns   = computeCMBSpectralTiltFromLedger st38.darkMatterLedger
       goh  = computeGohStepForEpoch 38 dm
   in MkObserverFixedPoint 38 dm ns goh (GatePure Refl)
 
+||| Formal compile-time witness: Parabolic Dark Matter capacity at horizon equals 10th triangular residue T_10 = 55.
+public export
+0 prfDarkMatterTriangularResidue : Stage1.FourGeometries.triangularSum 10 = 55
+prfDarkMatterTriangularResidue = Refl
+
 ||| Constructs the Observer Fixed Point for k=137 (Fine Structure Horizon Grid Wall).
 public export
 observerFixedPoint137 : ObserverFixedPoint 137
 observerFixedPoint137 =
-  let dm   = 55
+  let dm   = Stage1.FourGeometries.triangularSum 10
       ns   = mkUnixelFraction (intToBoxInt (cast (minus totalCosmicScaleHierarchy 2))) totalCosmicScaleHierarchy
       goh  = computeGohStepForEpoch totalCosmicScaleHierarchy dm
       coh  = evalScaleStepCoherence totalCosmicScaleHierarchy
@@ -80,7 +90,7 @@ observerFixedPoint137 =
 ||| Boolean Audit: Observer Fixed Point k=37 has dark law count = 55 = T_10.
 public export
 auditFixedPoint37DarkLaws : Bool
-auditFixedPoint37DarkLaws = observerFixedPoint37.darkLawCount == 55
+auditFixedPoint37DarkLaws = observerFixedPoint37.darkLawCount == Stage1.FourGeometries.triangularSum 10
 
 public export
 0 verifyFixedPoint37DarkLaws : Stage1.Epoch.ObserverFixedPoint.auditFixedPoint37DarkLaws = True
