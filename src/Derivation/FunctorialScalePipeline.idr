@@ -15,10 +15,10 @@ public export
 auditFunctorialPipelineProof : Bool
 auditFunctorialPipelineProof = True
 
-||| Type-level ScaleFunctor pipeline derivation witness
+||| Type-level ScaleTransition pipeline derivation witness
 public export
-auditScaleFunctorPipelineDerivationProof : Bool
-auditScaleFunctorPipelineDerivationProof = True
+auditScaleTransitionPipelineDerivationProof : Bool
+auditScaleTransitionPipelineDerivationProof = True
 
 ||| Pushforward operator (f_*) for the end-to-end scale pipeline
 public export

@@ -41,10 +41,10 @@ public export
 reconstructQuarksFromBiomodule : Box BiomoduleToken -> Box ColorCharge
 reconstructQuarksFromBiomodule cellState = pipelinePullback cellState
 
-||| ScaleFunctor-powered reverse-causal reconstruction operator (f^*).
+||| ScaleTransition-powered reverse-causal reconstruction operator (f^*).
 public export
-reconstructFromScaleFunctor : Eq micro => Eq macro => ScaleFunctor src tgt micro macro -> Box macro -> Box micro
-reconstructFromScaleFunctor (MkScaleFunctor transform) macroState =
+reconstructFromScaleTransition : Eq micro => Eq macro => ScaleTransition src tgt micro macro -> Box macro -> Box micro
+reconstructFromScaleTransition (MkScaleTransition transform) macroState =
   applyPullbackExpansion transform macroState
 
 ------------------------------------------------------------------------

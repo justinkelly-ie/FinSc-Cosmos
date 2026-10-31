@@ -86,7 +86,7 @@ public export
 exportMasterAdjunctionProofLean4 : String -> String
 exportMasterAdjunctionProofLean4 name =
   renderLean (LeanTheorem (name ++ "_master_scale_adjunction_duality")
-                          "(L_total : ScaleFunctor Micro Macro) (R_total : ScaleFunctor Macro Micro) : CategoryTheory.Adjunction L_total R_total"
+                          "(L_total : ScaleTransition Micro Macro) (R_total : ScaleTransition Macro Micro) : CategoryTheory.Adjunction L_total R_total"
                           "by { fconstructor, { intro a b, exact homTensorIso }, { intro a, exact eta_unit a }, { intro b, exact eps_counit b } }")
 
 
