@@ -7,9 +7,6 @@ depends = FinSc-Geometry, FinSc-Nuclear-Matter, FinSc-Thermodynamics, FinSc-Mult
 sourcedir = "src"
 
 modules = Cosmos,
-          Epoch,
-          Epoch.Stage0,
-          Epoch.Stage1,
           Stage0.Epoch.GohStreamTransducer,
           Stage0.Epoch.PrimeGohFactorization,
           Stage0.Epoch.StateSpaceExhaustion,
@@ -19,7 +16,6 @@ modules = Cosmos,
           Stage1.Epoch.ChromogeometryLaw,
           Stage1.Epoch.ExpansionCollapse,
           Stage1.Epoch.ObserverPredictions,
-          Stage1.Epoch.Observer37Hypothesis,
           Stage1.Epoch.ObserverFixedPoint,
           Stage1.Epoch.Trajectory,
           Stage1.Epoch.ScaleTrajectorySieve,
