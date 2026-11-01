@@ -86,8 +86,9 @@ swapAt (S j) (x :: rest) = x :: swapAt j rest
 public export
 permutationToMaxel : List Nat -> Maxel
 permutationToMaxel perm =
-  let pairs = zipWith (\src, dst => (MkPixel src dst, intToBoxInt 1)) [1..(length perm)] perm
-  in canonicalizeMaxel (MkMaxel pairs)
+  foldl (\m, (src, dst) => m <+> singletonCell (mkPixel src dst) (intToBoxInt 1))
+        emptyMaxel
+        (zip [1..(length perm)] perm)
 
 ||| Creates an elementary adjacent transposition Maxel swapping index k and k+1 in an n-dimensional space.
 public export
@@ -126,14 +127,13 @@ public export
 auditPermutationMaxelActionProof : Bool
 auditPermutationMaxelActionProof =
   let perm = [2, 3, 1]
-      v = MkVexel [ (MkUnixel 1, intToBoxInt 10)
-                  , (MkUnixel 2, intToBoxInt 20)
-                  , (MkUnixel 3, intToBoxInt 30)
-                  ]
+      v = singletonCell (mkUnixel 1) (intToBoxInt 10) <+>
+          singletonCell (mkUnixel 2) (intToBoxInt 20) <+>
+          singletonCell (mkUnixel 3) (intToBoxInt 30)
       vPerm = permuteVexel perm v
-  in boxEq (lookupUnixel (MkUnixel 1) vPerm) (intToBoxInt 20) &&
-     boxEq (lookupUnixel (MkUnixel 2) vPerm) (intToBoxInt 30) &&
-     boxEq (lookupUnixel (MkUnixel 3) vPerm) (intToBoxInt 10)
+  in boxEq (lookupUnixel (mkUnixel 1) vPerm) (intToBoxInt 20) &&
+     boxEq (lookupUnixel (mkUnixel 2) vPerm) (intToBoxInt 30) &&
+     boxEq (lookupUnixel (mkUnixel 3) vPerm) (intToBoxInt 10)
 
 ||| Compile-time macro verifying permutation action on Vexels via permutation Maxels.
 export

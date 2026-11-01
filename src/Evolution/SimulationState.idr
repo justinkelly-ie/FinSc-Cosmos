@@ -119,13 +119,13 @@ record UniverseSimulationState where
   substrateTicks      : Nat                                    -- Action count Delta S = total ticks elapsed
   capacityBudget      : DiscreteCapacityBudget 27 128 55       -- 210 Master partition
   metricTensor        : SymmetricMetricTensor 10               -- 10D Spacetime bulk metric (55 DoF)
-  projectedLeaf       : BoxSquareMaxel 4                       -- 4D Spacetime projected leaf (10 DoF)
+  projectedLeaf       : SquareMaxel 4                          -- 4D Spacetime projected leaf (10 DoF)
   moduliDOF           : Nat                                    -- 45 uncompactified Dark Matter moduli
-  gellMannGluons      : Vect 8 (BoxSquareMaxel 3)              -- SU(3) subset G_2 gauge fields
+  gellMannGluons      : Vect 8 (SquareMaxel 3)                 -- SU(3) subset G_2 gauge fields
   galacticProfile     : GalacticProfile                        -- Active baryonic core & disk slope
   phaseState          : PhaseState                             -- Symplectic (q, p) phase space
   curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
-  spreadMatrix        : BoxSquareMaxel 2                       -- Companion spread transfer matrix M(s)^k
+  spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
   observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
   observerState       : ObserverBranchState                    -- Living matter active inference carrier
   coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
@@ -134,7 +134,7 @@ record UniverseSimulationState where
 ||| Canonical 2x2 companion spread transfer matrix for multiple spread recurrence:
 ||| M(s) = [[2 - 4s, -1], [1, 0]]. For s = 0, [[2, -1], [1, 0]].
 public export
-pythagoreanCompanionMaxel : BoxSquareMaxel 2
+pythagoreanCompanionMaxel : SquareMaxel 2
 pythagoreanCompanionMaxel =
   let c11 = intToBoxInt 2
       c12 = intToBoxInt (-1)
@@ -170,7 +170,7 @@ initUniverseSimulation =
        gal
        phase0
        (intToBoxInt 0)
-       (identityBoxSquareMaxel 2)
+       (identitySquareMaxel 2)
        False
        DormantObserver
        status0

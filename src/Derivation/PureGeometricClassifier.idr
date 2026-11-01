@@ -108,7 +108,7 @@ auditPureGeometricClassificationProof =
 public export
 classifyVexelSpreadAngle : (v1 : Vexel) -> (v2 : Vexel) -> (String, UnixelFraction)
 classifyVexelSpreadAngle v1 v2 =
-  let origin = MkVexel []
+  let origin = emptyVexel
       s = vexelSpread v1 origin v2
   in if rationalEquiv s (mkUnixelFraction (Stage0.BoxInt.intToBoxInt 1) 1)
        then ("Orthogonal", s)

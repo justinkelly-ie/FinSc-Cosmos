@@ -52,8 +52,7 @@ landauerTokenErasure : {vm, de, dm : Nat} ->
 landauerTokenErasure target active (MkUniverseState (_ :: vmRest) deVect dmVect) =
   let erasedWeight = lookupUnixel target active
       tokenToRelocate = if erasedWeight == intToBoxInt 0 then intToBoxInt 1 else erasedWeight
-      remainingTerms = filter (\(s, _) => s /= target) (vexelTerms active)
-      remainingVexel = mkVexel remainingTerms
+      remainingVexel = setBoxTree target (intToBoxInt 0) active
       newState = MkUniverseState vmRest deVect (tokenToRelocate :: dmVect)
   in (remainingVexel, newState)
 
@@ -64,7 +63,7 @@ public export
 auditLandauerTokenConservationProof : Bool
 auditLandauerTokenConservationProof =
   let target = MkUnixel 1
-      active = MkVexel [(target, intToBoxInt 10)]
+      active = singletonCell target (intToBoxInt 10)
       initialState = MkUniverseState {vmSize=27} {deSize=128} {dmSize=55}
                         (replicate 27 (intToBoxInt 1))
                         (replicate 128 (intToBoxInt 1))

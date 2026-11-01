@@ -46,7 +46,7 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
       nextPhase = symplecticLeapfrogStep1D metricScalar dt phase
       -- 4. O(1) Companion Spread Recurrence Stepping: M(s) * S (Rule 04 §4)
       nextSpread = case nextK of
-                     Z => identityBoxSquareMaxel 2
+                     Z => identitySquareMaxel 2
                      S _ => stepPythagoreanCompanionSpread spread
       -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
       nextIsObs = nextK == 38

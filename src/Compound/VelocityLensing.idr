@@ -8,6 +8,8 @@ import Compound.LinearEpsilonRouting
 import Stage0.BoxInt
 import Stage1.Basis.Coordinate
 import Data.Vect
+import Stage1.DihedronModel as DM
+import Stage1.TypeTheory.Staging
 
 %default total
 
@@ -27,8 +29,7 @@ lensVelocityAcrossScale (MkUniverseState vm de dm) metric vel =
   let drag = sumStructural dm
       scaleFactor = intToBoxInt 1 + drag
       unscaled = actMaxelVexel metric vel
-      scaledTerms = map (\(s, w) => (s, w `div` scaleFactor)) (vexelTerms unscaled)
-  in mkVexel scaledTerms
+  in mapBoxTreeWeight (\w => w `div` scaleFactor) unscaled
 
 ------------------------------------------------------------------------
 -- 2. RELATIVISTIC DEFLECTION & VELOCITY ABERRATION ON T^3
@@ -58,5 +59,34 @@ auditRelativisticVelocityLensingProof : Bool
 auditRelativisticVelocityLensingProof =
   let theta = relativisticDeflectionAngle (intToBoxInt 10) (intToBoxInt 100) (intToBoxInt 20) (intToBoxInt 3) (intToBoxInt 10)
   in theta == intToBoxInt 500
+
+------------------------------------------------------------------------
+-- 4. 2LTT STAGED PROJECTIVE VELOCITY LENSING
+------------------------------------------------------------------------
+
+||| 2LTT Staged Projective Velocity Lensing:
+||| Combines multi-lens deflection in homogeneous projective coordinates (V, D) at Level 1,
+||| preserving exact rational denominators without intermediate rounding.
+public export
+stagedLensVelocityProjective : Lift (Vect 3 BoxInt, BoxInt) ->
+                               Lift (Vect 3 BoxInt, BoxInt) ->
+                               Code (Vect 3 BoxInt, BoxInt)
+stagedLensVelocityProjective qV1 qV2 =
+  DM.stagedVelocityAdditionProjective qV1 qV2
+
+||| Staged evaluation of projective velocity lensing:
+public export
+evalStagedLensVelocityProjective : Lift (Vect 3 BoxInt, BoxInt) ->
+                                   Lift (Vect 3 BoxInt, BoxInt) ->
+                                   (Vect 3 BoxInt, BoxInt)
+evalStagedLensVelocityProjective qV1 qV2 =
+  splice (stagedLensVelocityProjective qV1 qV2)
+
+||| QTT 0 Erased Proof Witness: Staged Velocity Lensing Invariant
+public export
+0 prfStagedLensVelocityProjective : (v1, v2 : (Vect 3 BoxInt, BoxInt)) ->
+                                   splice (stagedLensVelocityProjective (quote v1) (quote v2)) =
+                                     DM.velocityAdditionProjective v1 v2
+prfStagedLensVelocityProjective _ _ = Refl
 
 

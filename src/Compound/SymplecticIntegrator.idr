@@ -95,8 +95,8 @@ harmonicEnergy k (MkPhaseState q p) =
 public export
 auditSymplecticStepProof : Bool
 auditSymplecticStepProof =
-  let q0 = MkVexel [(MkUnixel 1, intToBoxInt 0)]
-      p0 = MkVexel [(MkUnixel 1, intToBoxInt 10)]
+  let q0 = singletonCell (mkUnixel 1) (intToBoxInt 0)
+      p0 = singletonCell (mkUnixel 1) (intToBoxInt 10)
       s0 = MkPhaseState q0 p0
       dt = intToBoxInt 2
       k  = intToBoxInt 1
@@ -138,14 +138,14 @@ stepSymplecticWithNoether gradV dt symGen state =
 public export
 auditNoetherConservationProof : Bool
 auditNoetherConservationProof =
-  let zeroGrad = (\_ => MkVexel [])
-      q0 = MkVexel [(MkUnixel 1, intToBoxInt 5)]
-      p0 = MkVexel [(MkUnixel 1, intToBoxInt 12)]
+  let zeroGrad = (\_ => emptyVexel)
+      q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
+      p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
       s0 = MkPhaseState q0 p0
       dt = intToBoxInt 3
       s1 = symplecticLeapfrogStep zeroGrad dt s0
       s2 = symplecticLeapfrogStep zeroGrad dt s1
-      deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
+      deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       q0Charge = evaluateNoetherCharge s0 deltaQ
       q1Charge = evaluateNoetherCharge s1 deltaQ
       q2Charge = evaluateNoetherCharge s2 deltaQ
@@ -174,12 +174,12 @@ streamSymplecticOrbitWithNoether gradV dt symGen p0 =
 public export
 auditStreamSymplecticOrbitProof : Bool
 auditStreamSymplecticOrbitProof =
-  let zeroGrad = (\_ => MkVexel [])
-      q0 = MkVexel [(MkUnixel 1, intToBoxInt 5)]
-      p0 = MkVexel [(MkUnixel 1, intToBoxInt 12)]
+  let zeroGrad = (\_ => emptyVexel)
+      q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
+      p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
       s0 = MkPhaseState q0 p0
       dt = intToBoxInt 3
-      deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
+      deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamSymplecticOrbitWithNoether zeroGrad dt deltaQ s0
       chargesMatch = foldStreamNat 3
         (\acc, (_, qVal) => acc && (qVal == intToBoxInt 12))
@@ -229,12 +229,12 @@ streamVerifiedGeodesicOrbit gradV dt symGen p0 =
 public export
 auditGeodesicOrbitProof : Bool
 auditGeodesicOrbitProof =
-  let zeroGrad = (\_ => MkVexel [])
-      q0 = MkVexel [(MkUnixel 1, intToBoxInt 5)]
-      p0 = MkVexel [(MkUnixel 1, intToBoxInt 12)]
+  let zeroGrad = (\_ => emptyVexel)
+      q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
+      p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
       s0 = MkPhaseState q0 p0
       dt = intToBoxInt 3
-      deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
+      deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamVerifiedGeodesicOrbit zeroGrad dt deltaQ s0
       allConserved = foldStreamNat 5
         (\acc, step => acc && isConserved step && (conservedQ step == intToBoxInt 12))
@@ -288,12 +288,12 @@ streamDissipativeGeodesicHorizon gradV dt symGen a0 p0 =
 public export
 auditDissipativeLangevinHorizonProof : Bool
 auditDissipativeLangevinHorizonProof =
-  let zeroGrad = (\_ => MkVexel [])
-      q0 = MkVexel [(MkUnixel 1, intToBoxInt 5)]
-      p0 = MkVexel [(MkUnixel 1, intToBoxInt 12)]
+  let zeroGrad = (\_ => emptyVexel)
+      q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
+      p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
       s0 = MkPhaseState q0 p0
       dt = intToBoxInt 3
-      deltaQ = MkVexel [(MkUnixel 1, intToBoxInt 1)]
+      deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamDissipativeGeodesicHorizon zeroGrad dt deltaQ (intToBoxInt 16) s0
       tokens = runFueledStreamNat 4 strm
       allValid = foldl (\acc, step => acc && secondLawHold step && isConserved (orbitStep step)) True tokens

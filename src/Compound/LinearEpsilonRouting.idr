@@ -14,9 +14,8 @@ import Data.Vect
 public export
 velocityVexel : (vAlpha : BoxInt) -> (vBeta : BoxInt) -> Vexel
 velocityVexel vA vB =
-  MkVexel [ (MkUnixel 1, vA)
-          , (MkUnixel 2, vB)
-          ]
+  singletonCell (mkUnixel 1) vA <+>
+  singletonCell (mkUnixel 2) vB
 
 ||| Linearly routes a velocity Vexel through a symmetric gEM metric transformation.
 ||| Computed directly via pure Maxel-Vexel multiset contraction (g * v).
@@ -40,9 +39,8 @@ linearEpsilonSubstrateRouting g v = actMaxelVexel g v
 public export
 symplecticMatrixMaxel : Maxel
 symplecticMatrixMaxel =
-  MkMaxel [ (MkPixel 1 2, intToBoxInt 1)
-          , (MkPixel 2 1, intToBoxInt (-1))
-          ]
+  singletonCell (mkPixel 1 2) (intToBoxInt 1) <+>
+  singletonCell (mkPixel 2 1) (intToBoxInt (-1))
 
 ||| Computes Hamiltonian vector field phase flow:
 ||| \dot{z} = J * \nabla H(z)

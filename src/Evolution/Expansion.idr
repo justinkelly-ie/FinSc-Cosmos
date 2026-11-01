@@ -80,10 +80,8 @@ expandAndUnfoldGeneric {currentVM} {de} {dm} {nextScale} (MkUniverseState vmStat
       -- 2. Execute the Chiral Handshake Outer Product
       gridWeight = computeOuterProductSum chiralKet chiralBra
       
-      -- 3. Macro Maxel Unfold: anchor history at (nextScale, nextScale) and active field at (1, 1)
-      ancestralAnchor = (MkPixel nextScale nextScale, historyMass)
-      activeCell      = (MkPixel 1 1, intToBoxInt (cast gridWeight))
-  in MkMaxel [ancestralAnchor, activeCell]
+  in singletonCell (mkPixel nextScale nextScale) historyMass <+>
+     singletonCell (mkPixel 1 1) (intToBoxInt (cast gridWeight))
 
 ||| A structural pipeline wrapper that guarantees dimensional inflation
 ||| satisfies full resource accounting across the 4x4 scale transition.
@@ -107,9 +105,9 @@ expandAndUnfoldBoxel3D : {currentVM, de, dm : Nat} ->
                          Boxel
 expandAndUnfoldBoxel3D {currentVM} {de} {dm} {nextScale} (MkUniverseState vmState deState dmLog) activeFieldWeight =
   let historyMass = sumStructural dmLog
-      ancestralAnchor = (MkVoxel nextScale nextScale nextScale, historyMass)
-      activeCenter    = (MkVoxel 1 1 1, activeFieldWeight)
-  in canonicalizeBoxel (MkBoxel [ancestralAnchor, activeCenter])
+  in canonicalizeBoxel (
+       singletonCell (mkVoxel nextScale nextScale nextScale) historyMass <+>
+       singletonCell (mkVoxel 1 1 1) activeFieldWeight)
 
 ------------------------------------------------------------------------
 -- LINEAR QTT EXPANSION & BUDGET CONSERVATION

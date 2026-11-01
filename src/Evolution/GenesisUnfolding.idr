@@ -241,7 +241,7 @@ condenseGenesisToUniverse st =
   else
     let g10 = spacetime10DMetric
         g4  = project10Dto4D g10.metricMaxel
-        gluons : Vect 8 (BoxSquareMaxel 3) =
+        gluons : Vect 8 (SquareMaxel 3) =
           [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
           , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
           ]
@@ -262,7 +262,7 @@ condenseGenesisToUniverse st =
                gal
                phase0
                (intToBoxInt 0)
-               (identityBoxSquareMaxel 2)
+               (identitySquareMaxel 2)
                False
                DormantObserver
                status0
