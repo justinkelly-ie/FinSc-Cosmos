@@ -13,6 +13,7 @@ import Compound.SymplecticIntegrator
 import Stage0.FluctuationStream
 import Stage1.MaxelTransform
 import Derivation.MultisetTheoremExporter
+import Evolution.GenesisUnfolding
 import public Language.Reflection
 
 %default total
@@ -206,6 +207,55 @@ public export
 %macro
 auditUnrolledCosmicPipeline : Elab (Reflect.InvariantAuditor.auditUnrolledCosmicPipelineProofExport = True)
 auditUnrolledCosmicPipeline = auditWitness Reflect.InvariantAuditor.auditUnrolledCosmicPipelineProofExport
+
+------------------------------------------------------------------------
+-- PRE-GEOMETRIC GENESIS & BREAKDOWN BOUNDARY COMPILE-TIME MACRO AUDITS
+------------------------------------------------------------------------
+
+public export
+auditVacuumAttractorMitigationProofExport : Bool
+auditVacuumAttractorMitigationProofExport = Evolution.GenesisUnfolding.auditVacuumAttractorMitigationProof
+
+public export
+%macro
+auditVacuumAttractorMitigation : Elab (Reflect.InvariantAuditor.auditVacuumAttractorMitigationProofExport = True)
+auditVacuumAttractorMitigation = auditWitness Reflect.InvariantAuditor.auditVacuumAttractorMitigationProofExport
+
+public export
+auditNullMetricSingularityMitigationProofExport : Bool
+auditNullMetricSingularityMitigationProofExport = Evolution.GenesisUnfolding.auditNullMetricSingularityMitigationProof
+
+public export
+%macro
+auditNullMetricSingularityMitigation : Elab (Reflect.InvariantAuditor.auditNullMetricSingularityMitigationProofExport = True)
+auditNullMetricSingularityMitigation = auditWitness Reflect.InvariantAuditor.auditNullMetricSingularityMitigationProofExport
+
+public export
+auditCapacityGapMitigationProofExport : Bool
+auditCapacityGapMitigationProofExport = Evolution.GenesisUnfolding.auditCapacityGapMitigationProof
+
+public export
+%macro
+auditCapacityGapMitigation : Elab (Reflect.InvariantAuditor.auditCapacityGapMitigationProofExport = True)
+auditCapacityGapMitigation = auditWitness Reflect.InvariantAuditor.auditCapacityGapMitigationProofExport
+
+public export
+auditTotientHorizonMitigationProofExport : Bool
+auditTotientHorizonMitigationProofExport = Evolution.GenesisUnfolding.auditTotientHorizonMitigationProof
+
+public export
+%macro
+auditTotientHorizonMitigation : Elab (Reflect.InvariantAuditor.auditTotientHorizonMitigationProofExport = True)
+auditTotientHorizonMitigation = auditWitness Reflect.InvariantAuditor.auditTotientHorizonMitigationProofExport
+
+public export
+auditGenesisUnfoldingEndToEndProofExport : Bool
+auditGenesisUnfoldingEndToEndProofExport = Evolution.GenesisUnfolding.auditGenesisUnfoldingEndToEndProof
+
+public export
+%macro
+auditGenesisUnfoldingEndToEnd : Elab (Reflect.InvariantAuditor.auditGenesisUnfoldingEndToEndProofExport = True)
+auditGenesisUnfoldingEndToEnd = auditWitness Reflect.InvariantAuditor.auditGenesisUnfoldingEndToEndProofExport
 
 
 

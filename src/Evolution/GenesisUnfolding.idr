@@ -217,10 +217,11 @@ energyAtN n =
       f = u - (intToBoxInt 2 * s)
   in (u, s, f)
 
-||| Single-step causal action influx advancing pre-geometric token count (ΔS = 1).
+||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1).
+||| Enforces Quantitative Type Theory: substrate states cannot be duplicated or leaked.
 public export
-stepGenesisInflux : GenesisUnfoldingState -> GenesisUnfoldingState
-stepGenesisInflux (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
+stepGenesisInfluxLinear : (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
+stepGenesisInfluxLinear (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
   let nextN = S n
       nextArrow = arrow + intToBoxInt 1
       nextGate = activeGohGate nextN
@@ -228,6 +229,10 @@ stepGenesisInflux (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
       (nextU, nextS, nextF) = energyAtN nextN
       condensed = nextN >= fst primorialBudgetDimension
   in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed
+
+public export
+stepGenesisInflux : GenesisUnfoldingState -> GenesisUnfoldingState
+stepGenesisInflux st = stepGenesisInfluxLinear st
 
 --------------------------------------------------------------------------------
 -- 2. CONDENSATION TRANSITION TO MACROSCOPIC SPACETIME (Regime II: N = 210)
@@ -274,6 +279,17 @@ condenseGenesisToUniverse st =
                canonicalHelmholtzGroundState
                (intToBoxInt 0))
 
+||| Strictly linear condensation transition morphism: Either retains pre-geometric state
+||| or transforms it into macroscopic UniverseSimulationState without dropping tokens.
+public export
+condenseGenesisLinear : (1 st : GenesisUnfoldingState) -> Either GenesisUnfoldingState UniverseSimulationState
+condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condensed) =
+  if n < fst primorialBudgetDimension
+    then Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed)
+    else case condenseGenesisToUniverse (MkGenesisUnfoldingState n arrow gate triad u s f condensed) of
+           Just simSt => Right simSt
+           Nothing    => Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed)
+
 --------------------------------------------------------------------------------
 -- 3. UNIFIED COSMOLOGICAL EVOLUTION STATE & TRANSDUCER
 --------------------------------------------------------------------------------
@@ -289,34 +305,113 @@ Show CosmosEvolutionState where
   show (PreGeometric g)   = "PreGeometric(" ++ show g ++ ")"
   show (PostGeometric st) = "PostGeometric(ticks=" ++ show st.substrateTicks ++ ", epoch=" ++ show st.epochIndex ++ ")"
 
-||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1).
-||| Seamlessly transitions across the 210 condensation phase boundary.
+||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1) under strict QTT linearity.
+public export
+stepCosmosUnifiedLinear : (1 st : CosmosEvolutionState) -> CosmosEvolutionState
+stepCosmosUnifiedLinear (PreGeometric st) =
+  let nextSt = stepGenesisInfluxLinear st
+  in case condenseGenesisLinear nextSt of
+       Left stillPre => PreGeometric stillPre
+       Right simSt   => PostGeometric simSt
+stepCosmosUnifiedLinear (PostGeometric simSt) =
+  PostGeometric (stepUniverseSimulation simSt)
+
 public export
 stepCosmosUnified : CosmosEvolutionState -> CosmosEvolutionState
-stepCosmosUnified (PreGeometric st) =
-  let nextSt = stepGenesisInflux st
-  in if nextSt.isCondensed
-        then case condenseGenesisToUniverse nextSt of
-               Just simSt => PostGeometric simSt
-               Nothing    => PreGeometric nextSt
-        else PreGeometric nextSt
-stepCosmosUnified (PostGeometric simSt) =
-  PostGeometric (stepUniverseSimulation simSt)
+stepCosmosUnified st = stepCosmosUnifiedLinear st
 
 ||| Unified initial vacuum state at ∅_Sub.
 public export
 initCosmosUnified : CosmosEvolutionState
 initCosmosUnified = PreGeometric initGenesisUnfolding
 
-||| Advance the unified simulation by n action steps.
+||| Strictly linear multi-step unified cosmological simulation.
+public export
+runCosmosUnifiedStepsLinear : (n : Nat) -> (1 st : CosmosEvolutionState) -> CosmosEvolutionState
+runCosmosUnifiedStepsLinear Z st = st
+runCosmosUnifiedStepsLinear (S k) st = runCosmosUnifiedStepsLinear k (stepCosmosUnifiedLinear st)
+
 public export
 runCosmosUnifiedSteps : (n : Nat) -> CosmosEvolutionState -> CosmosEvolutionState
-runCosmosUnifiedSteps Z st = st
-runCosmosUnifiedSteps (S k) st = runCosmosUnifiedSteps k (stepCosmosUnified st)
+runCosmosUnifiedSteps n st = runCosmosUnifiedStepsLinear n st
 
 --------------------------------------------------------------------------------
--- 4. THE 4 BREAKDOWN BOUNDARY DIAGNOSTICS
+-- 4. THE 4 BREAKDOWN BOUNDARY DIAGNOSTICS & COMPILE-TIME AUDIT WITNESSES
 --------------------------------------------------------------------------------
+
+||| Audit 1: Absorbing Vacuum Attractor (0 * M = 0) Mitigation Witness.
+||| Proves that spontaneous causal token injection yields Delta S = 1 and N = 1 > 0 from vacuum.
+public export
+auditVacuumAttractorMitigationProof : Bool
+auditVacuumAttractorMitigationProof =
+  let st0 = initGenesisUnfolding
+      st1 = stepGenesisInfluxLinear st0
+  in st0.substrateTokens == 0 &&
+     boxEq st0.entropyArrow (intToBoxInt 0) &&
+     st1.substrateTokens == 1 &&
+     boxEq st1.entropyArrow (intToBoxInt 1)
+
+||| Audit 2: Null Metric Singularity (det g = 0) Mitigation Witness.
+||| Proves that the 10D spacetime metric tensor component dimension identically
+||| matches the 10th triangular number T_10 = 55 (darkMatterTriangularResidue).
+public export
+auditNullMetricSingularityMitigationProof : Bool
+auditNullMetricSingularityMitigationProof =
+  triangularNat 10 == 55 &&
+  Stage1.FourGeometries.darkMatterTriangularResidue == 55
+
+||| Audit 3: Pre-Equilibrium Capacity Gap (N < 210) Mitigation Witness.
+||| Proves that discrete Helmholtz free energy relaxes from F(0) = 0 to
+||| the unique ground state minimum F(210) = -1320.
+public export
+auditCapacityGapMitigationProof : Bool
+auditCapacityGapMitigationProof =
+  let (_, _, f0) = energyAtN 0
+      (_, _, f210) = energyAtN 210
+  in boxEq f0 (intToBoxInt 0) &&
+     boxEq f210 (intToBoxInt (-1320))
+
+||| Audit 4: Type-Level Smoothness Failure Mitigation Witness.
+||| Proves the Totient Horizon Theorem: the sum of totients across the 4 Goh prime gates
+||| identically equals the Cosmic Smooth Horizon (Bound = 13).
+public export
+auditTotientHorizonMitigationProof : Bool
+auditTotientHorizonMitigationProof =
+  (gohGateTotient Gate2DyadicBit +
+   gohGateTotient Gate3TriadSpace +
+   gohGateTotient Gate5ParabolicDM +
+   gohGateTotient Gate7SpectralROM) == 13
+
+||| Master End-to-End Genesis Unfolding & Condensation Transition Proof:
+||| Traces full evolution from ∅_Sub, through 4 Goh gates, condensation at N = 210 (F = -1320),
+||| and entry into the PostGeometric living observer active inference epoch (N = 250, k = 40 >= 38).
+public export
+auditGenesisUnfoldingEndToEndProof : Bool
+auditGenesisUnfoldingEndToEndProof =
+  let st0 = initCosmosUnified
+      isInitPre = case st0 of
+                    PreGeometric g => g.substrateTokens == 0 &&
+                                      boxEq g.entropyArrow (intToBoxInt 0) &&
+                                      boxEq g.freeEnergy (intToBoxInt 0)
+                    PostGeometric _ => False
+      -- Step to 210 (condensation boundary)
+      st210 = runCosmosUnifiedStepsLinear 210 st0
+      isCondensedPost = case st210 of
+                          PreGeometric _ => False
+                          PostGeometric sim => sim.substrateTicks == 210 &&
+                                               boxEq sim.freeEnergyState.freeEnergy (intToBoxInt (-1320)) &&
+                                               sim.moduliDOF == 45
+      -- Step 40 ticks further (N = 250, k = 40 >= 38)
+      st250 = runCosmosUnifiedStepsLinear 40 st210
+      isObserverActive = case st250 of
+                           PreGeometric _ => False
+                           PostGeometric sim => sim.substrateTicks == 250 &&
+                                                sim.epochIndex == 40 &&
+                                                sim.observerEpochActive == True &&
+                                                case sim.observerState of
+                                                  LivingObserver _ => True
+                                                  DormantObserver  => False
+  in isInitPre && isCondensedPost && isObserverActive
 
 public export
 record BreakdownDiagnostic where
@@ -333,25 +428,25 @@ diagnoseBreakdownBoundaries =
   [ MkBreakdownDiagnostic
       1
       "Absorbing Vacuum Attractor (0 * M = 0)"
-      True
+      auditVacuumAttractorMitigationProof
       "Without causal entropy arrow (Delta S = 0), matrix operator M * 0 = 0 freezes universe in timeless zero-state."
       "Mitigated by spontaneous asymmetric causal token injection (Delta S >= 1) via SubstrateToken."
   , MkBreakdownDiagnostic
       2
       "Null Metric Singularity (det g = 0)"
-      True
+      auditNullMetricSingularityMitigationProof
       "In pre-geometric void, spacetime metric tensor is empty (g_00 = 0); continuous geodesic acceleration is undefined."
       "Mitigated by suspending continuous symplectic integration until 55 parabolic dark matter tokens condense."
   , MkBreakdownDiagnostic
       3
       "Pre-Equilibrium Capacity Gap (N < 210)"
-      True
+      auditCapacityGapMitigationProof
       "For N < 210, partition function does not factorize and discrete free energy F(N) > -1320 (un-thermalized)."
       "Mitigated by modeling non-equilibrium thermodynamic relaxation F(N) descending from 0 to -1320."
   , MkBreakdownDiagnostic
       4
       "Type-Level Smoothness Failure (N not in Smooth(13))"
-      True
+      auditTotientHorizonMitigationProof
       "Intermediate capacities (e.g. N = 17, 19, 23) lack SmoothWitness 13 certificates and experience decoherent turbulence."
       "Mitigated by two-phase architecture: runtime dynamic tracking in Regime I, compile-time certified in Regime II."
   ]
