@@ -6,6 +6,8 @@ import Derivation.FunctorialScalePipeline
 import Stage1.Staged.Specializer as Spec
 import Stage1.TypeTheory.Staging
 import Stage1.Basis.Coordinate
+import Stage1.Math.OnSeq.SpreadStream
+import Stage1.Goh
 import Data.List
 import Data.String
 
@@ -21,6 +23,7 @@ data ReplTransformCmd =
     CmdCreateTransform String MetricSector UnixelFraction
   | CmdComposeTransform String String
   | CmdPullbackTransform String
+  | CmdCyclotomicSpread Nat
   | CmdUnknownTransform String
 
 public export
@@ -28,6 +31,7 @@ Eq ReplTransformCmd where
   (CmdCreateTransform n1 s1 f1) == (CmdCreateTransform n2 s2 f2) = n1 == n2 && s1 == s2 && f1 == f2
   (CmdComposeTransform t1 t2) == (CmdComposeTransform u1 u2) = t1 == u1 && t2 == u2
   (CmdPullbackTransform t1) == (CmdPullbackTransform t2) = t1 == t2
+  (CmdCyclotomicSpread n1) == (CmdCyclotomicSpread n2) = n1 == n2
   (CmdUnknownTransform s1) == (CmdUnknownTransform s2) = s1 == s2
   _ == _ = False
 
@@ -46,6 +50,10 @@ evalReplTransformCmd (CmdComposeTransform t1 t2) =
 
 evalReplTransformCmd (CmdPullbackTransform t1) =
   "PULLBACK: f^* Adjoint Expansion evaluated over " ++ t1
+evalReplTransformCmd (CmdCyclotomicSpread n) =
+  let cert = certifiedCyclotomicSpread n
+  in "CYCLOTOMIC SPREAD [" ++ show n ++ "]: TotientCapacity: " ++ show cert.totientCapacity ++
+     " FactorBag: " ++ show cert.factorBag
 evalReplTransformCmd (CmdUnknownTransform msg) =
   "UNKNOWN: " ++ msg
 
@@ -89,9 +97,12 @@ auditReplTransformEngineProof =
                 [ ((MkPixel 0 0, MkPixel 0 0), intToBoxInt 1) ]
       cmd = CmdCreateTransform "T_test" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
       resp = evalReplTransformCmd cmd
+      cmdSpread = CmdCyclotomicSpread 39
+      respSpread = evalReplTransformCmd cmdSpread
       word = Spec.GenWord testT
       compiled = Spec.evalStagedCompileWord 5 (quote testT) (quote word)
   in (isInfixOf "CREATED" resp) &&
      (isInfixOf "1/27" resp) &&
+     (isInfixOf "TotientCapacity: 39" respSpread) &&
      (compiled.fraction == mulUnixelFraction testT.fraction testT.fraction)
 
