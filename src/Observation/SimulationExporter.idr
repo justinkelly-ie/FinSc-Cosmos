@@ -6,6 +6,7 @@ import Stage1.MultisetTree
 import Stage1.SymmetricMetricTensor
 import Stage1.Math.GalacticRotationCurve
 import Stage1.Epoch.ScaleTrajectorySieve
+import Stage1.Multiset.PrimordialUnfolding
 import Evolution.SimulationState
 import Evolution.SimulationStepper
 import Compound.SymplecticIntegrator
@@ -28,10 +29,17 @@ vexelMagnitudeSquared v = dotVexel v v
 -- 2. CSV EXPORT FORMATTERS
 ------------------------------------------------------------------------
 
+||| Evaluates the dynamic Substrate-driven rotation velocity plateau at radius r:
+public export
+exportSubstrateRotationVelocity : UniverseSimulationState -> (radius : BoxInt) -> BoxInt
+exportSubstrateRotationVelocity st r =
+  let (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
+  in rotationVelocitySubstrate10D xk yk st.galacticProfile r
+
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
 exportStateCsvHeader : String
-exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,scale_factor_q,hubble_rate_s,observer_active,expansion_mode"
+exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,v10_sub,v20_sub,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,scale_factor_q,hubble_rate_s,observer_active,expansion_mode,dissipated_entropy"
 
 ||| Formats a single UniverseSimulationState as a CSV data row.
 public export
@@ -42,6 +50,9 @@ exportStateCsvRow st =
                  Decoherent _ => "Decoherent"
       v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
       v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+      (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
+      v10_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 10)
+      v20_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 20)
       fe  = st.freeEnergyState.freeEnergy
       posMag = vexelMagnitudeSquared st.phaseState.position
       momMag = vexelMagnitudeSquared st.phaseState.momentum
@@ -55,6 +66,8 @@ exportStateCsvRow st =
      show st.moduliDOF ++ "," ++
      show v10 ++ "," ++
      show v20 ++ "," ++
+     show v10_sub ++ "," ++
+     show v20_sub ++ "," ++
      show fe ++ "," ++
      show posMag ++ "," ++
      show momMag ++ "," ++
@@ -63,7 +76,8 @@ exportStateCsvRow st =
      show st.scaleFactor ++ "," ++
      show st.hubbleExpansionRate ++ "," ++
      obsStr ++ "," ++
-     show st.expansionMode
+     show st.expansionMode ++ "," ++
+     show st.dissipatedEntropy
 
 ------------------------------------------------------------------------
 -- 3. JSON EXPORT FORMATTERS
@@ -78,6 +92,9 @@ exportStateJson st =
                  Decoherent _ => "Decoherent"
       v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
       v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+      (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
+      v10_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 10)
+      v20_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 20)
       fe  = st.freeEnergyState.freeEnergy
       posMag = vexelMagnitudeSquared st.phaseState.position
       momMag = vexelMagnitudeSquared st.phaseState.momentum
@@ -91,6 +108,8 @@ exportStateJson st =
      ",\"moduli\":" ++ show st.moduliDOF ++
      ",\"v10\":" ++ show v10 ++
      ",\"v20\":" ++ show v20 ++
+     ",\"v10_sub\":" ++ show v10_sub ++
+     ",\"v20_sub\":" ++ show v20_sub ++
      ",\"free_energy\":" ++ show fe ++
      ",\"pos_mag\":" ++ show posMag ++
      ",\"mom_mag\":" ++ show momMag ++
@@ -99,7 +118,8 @@ exportStateJson st =
      ",\"scale_factor_q\":" ++ show st.scaleFactor ++
      ",\"hubble_rate_s\":" ++ show st.hubbleExpansionRate ++
      ",\"observer_active\":" ++ obsStr ++
-     ",\"expansion_mode\":\"" ++ show st.expansionMode ++ "\"}"
+     ",\"expansion_mode\":\"" ++ show st.expansionMode ++ "\"" ++
+     ",\"dissipated_entropy\":" ++ show st.dissipatedEntropy ++ "}"
 
 ------------------------------------------------------------------------
 -- 4. LINEAR TRAJECTORY GENERATORS
@@ -148,3 +168,12 @@ auditSimulationExporter =
   in length exportStateCsvHeader > 0 &&
      length row0 > 0 &&
      length json0 > 0
+
+||| Audits that live Substrate rotation velocity evaluates to a strictly positive plateau.
+public export
+auditSubstrateVelocityEvolutionProof : Bool
+auditSubstrateVelocityEvolutionProof =
+  let st0 = initUniverseSimulation
+      v10_sub_0 = exportSubstrateRotationVelocity st0 (intToBoxInt 10)
+      v20_sub_0 = exportSubstrateRotationVelocity st0 (intToBoxInt 20)
+  in (v10_sub_0 > intToBoxInt 0) && (v20_sub_0 > intToBoxInt 0)

@@ -173,6 +173,7 @@ record UniverseSimulationState where
   observerState       : ObserverBranchState                    -- Living matter active inference carrier
   coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
   freeEnergyState     : DiscreteHelmholtzState 27 128 55 2     -- Discrete F = U - TS
+  dissipatedEntropy   : BoxInt                                 -- Landauer dissipated thermal entropy from decoherent sieve scales
 
 ||| Canonical 2x2 companion spread transfer matrix for multiple spread recurrence:
 ||| M(s) = [[2 - 4s, -1], [1, 0]]. For s = 0, [[2, -1], [1, 0]].
@@ -222,6 +223,7 @@ initUniverseSimulationMode mode =
        DormantObserver
        status0
        canonicalHelmholtzGroundState
+       (intToBoxInt 0)
 
 ||| Canonical Genesis / Vacuum Initial Universe Simulation State (Default: MonotonicOpenExpansion).
 public export

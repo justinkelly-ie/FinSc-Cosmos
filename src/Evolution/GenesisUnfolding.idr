@@ -271,7 +271,8 @@ condenseGenesisToUniverse st =
                False
                DormantObserver
                status0
-               canonicalHelmholtzGroundState)
+               canonicalHelmholtzGroundState
+               (intToBoxInt 0))
 
 --------------------------------------------------------------------------------
 -- 3. UNIFIED COSMOLOGICAL EVOLUTION STATE & TRANSDUCER

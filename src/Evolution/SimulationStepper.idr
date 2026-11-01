@@ -22,13 +22,22 @@ import Data.Vect
 
 ||| Advances the entire universal state by exactly one quantum of physical action (Delta S = 1).
 ||| Time is strictly the count of processed steps: substrateTicks |-> S (substrateTicks).
+||| Advances living observer active inference state at epoch k >= 38:
+||| Evaluates sensory prediction error against expanding scale factor and updates internal free energy.
+public export
+stepObserverLivingState : (k : Nat) -> (scaleFactor : BoxInt) -> ObserverLivingState -> ObserverLivingState
+stepObserverLivingState k currentScale (MkObserverLivingState fe prevPred cyclotomic active) =
+  let predErr = absBox (currentScale - prevPred)
+      newFe = fe + modBox predErr (intToBoxInt 137)
+  in MkObserverLivingState newFe currentScale (S k) active
+
 ||| Coupled Einstein-Hamiltonian loop: phase-space stress-energy perturbs metric tensor,
 ||| which in turn modulates geodesic acceleration.
 ||| Evaluates companion spread matrix in O(log k) and branches observer epoch at k=38.
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe) =
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
   let (nextSuperEp, nextK) : (Nat, Nat) =
         if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
@@ -38,20 +47,20 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
       qRed  = (xk * xk) - (yk * yk)
       nextGov = parameterizedSubstrateSquareMaxel xk yk
       -- 2. Energy-Momentum Curvature Back-Reaction & Substrate Dissipation:
-      -- Excess kinetic magnification is drained into the timelike Ricci curvature defect
-      energy = harmonicEnergy (intToBoxInt 1) phase
+      -- Un-divided Hamiltonian energy dynamically back-reacts on timelike Ricci curvature defect
+      energy = modBox (hamiltonianEnergyExact (intToBoxInt 1) phase) (intToBoxInt 137)
       substrateDissipation = modBox (qBlue + qRed) (intToBoxInt 137)
       nextDefect = modBox (energy + substrateDissipation) (intToBoxInt 137)
       -- 3. 10D Bulk Spacetime Metric Update & 4D Leaf Projection in O(1)
       nextG10 = perturbMetric00 g10 nextDefect
       nextG4  = perturbSquareMaxel00 g4 nextDefect
       nextModuli : Nat = 45
-      -- 4. Metric-Coupled Symplectic Leapfrog Kick in O(1):
-      -- Geodesic acceleration gradient is modulated by active leaf g_00
+      -- 4. Metric-Coupled Symplectic Störmer-Verlet Kick in O(1):
+      -- Preserves phase-space volume in exact SL(2, Z) without integer division
       g00Val = projectSquareMaxel00 nextG4
       metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
       dt = intToBoxInt 1
-      nextPhase = symplecticLeapfrogStep1D metricScalar dt phase
+      nextPhase = symplecticStormerVerletStep1D metricScalar dt phase
       -- 5. Substrate-Regulated Dynamic Companion Spread Recurrence:
       -- Bounds the companion spread matrix in O(1) registers matching (2 - 4s_k) in [-2, 2]
       nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
@@ -60,18 +69,25 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
                           MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
                           ConformalCyclicBounce  => qBlue
       nextHubbleRate  = intToBoxInt 2 * (yk * yk)
-      -- 7. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
-      nextIsObs = nextK == 38
-      nextObsState = if nextK == 38
-                        then LivingObserver canonicalObserverState38
-                        else DormantObserver
+      -- 7. Dual-Branch Emergence: Persistent Living Observer ignited at k=38 (Rule 03 §5)
+      nextIsObs = nextK >= 38
+      nextObsState =
+        if nextK < 38
+          then DormantObserver
+          else case obsState of
+                 DormantObserver => LivingObserver (MkObserverLivingState (intToBoxInt 750) nextScaleFactor 39 True)
+                 LivingObserver liv => LivingObserver (stepObserverLivingState nextK nextScaleFactor liv)
       -- 8. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
       -- 9. Baryonic Matter Profile Update
       nextGal = gal
       -- 10. 13-Smoothness Coherence Status for generation n = S nextK
       nextStatus = evalScaleStepCoherence nextK
-      -- 11. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
+      -- 11. Cumulative Landauer Dissipated Entropy at Decoherent Prime Wall Scales
+      nextDissipated = case nextStatus of
+                         GatePure _   => dissEntropy
+                         Decoherent _ => dissEntropy + intToBoxInt 1
+      -- 12. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
       nextFE = fe
   in MkUniverseSimulationState
        nextK
@@ -94,6 +110,7 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
        nextObsState
        nextStatus
        nextFE
+       nextDissipated
 
 ||| Advances the simulation by n action steps recursively.
 public export
@@ -217,3 +234,23 @@ auditUniverseCapacityQuadProof : Bool
 auditUniverseCapacityQuadProof =
   let st = initUniverseSimulation
   in st.capacityBudget == canonicalQuadCapacityBudget
+
+||| Audit: Persistent Living Observer branch remains active for all epochs k >= 38.
+public export
+auditObserverBranchPersistenceProof : Bool
+auditObserverBranchPersistenceProof =
+  let st0 = initUniverseSimulation
+      st38 = runSimulationSteps 38 st0
+      st39 = runSimulationSteps 39 st0
+      st50 = runSimulationSteps 50 st0
+  in st38.observerEpochActive == True &&
+     st39.observerEpochActive == True &&
+     st50.observerEpochActive == True
+
+||| Audit: Landauer thermal entropy accumulates exactly 61 dissipated tokens across the 137-scale sieve.
+public export
+auditLandauerSieveDissipationProof : Bool
+auditLandauerSieveDissipationProof =
+  let st0 = initUniverseSimulation
+      st137 = runSimulationSteps 137 st0
+  in st137.dissipatedEntropy == intToBoxInt 61
