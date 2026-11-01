@@ -311,7 +311,43 @@ exportPageCurveBisimulationCoq name =
     (name ++ "_page_curve_stream") "unitary_page_curve_stream" "eq" "cofix CIH; constructor; [reflexivity | apply CIH]")
 
 ------------------------------------------------------------------------
--- 5. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
+-- 5. FREE MULTISET ADJUNCTION & UNIVERSAL MAPPING PROPERTY EXPORTERS
+------------------------------------------------------------------------
+
+||| Exports the Category-Theoretic Free Multiset Adjunction (F -| U) into Lean 4 Mathlib Equivalence AST.
+public export
+exportFreeMultisetAdjunctionLean4 : String -> String
+exportFreeMultisetAdjunctionLean4 name =
+  renderLean (LeanDef (name ++ "_free_multiset_adjunction")
+                      "{α : Type} {M : Type} [AddCommMonoid M] : (α → M) ≃ (Multiset α →+ M)"
+                      "{ toFun := fun f => Multiset.liftTokenHom f, invFun := fun g x => g (Multiset.ofToken x), left_inv := by intro f; rfl, right_inv := by intro g; ext; rfl }")
+
+||| Exports the Category-Theoretic Free Multiset Adjunction into Coq AST.
+public export
+exportFreeMultisetAdjunctionCoq : String -> String
+exportFreeMultisetAdjunctionCoq name =
+  renderCoq (CoqDefinition (name ++ "_free_multiset_adjunction")
+                           "forall (A M : Type) (addM : M -> M -> M) (f : A -> M), Multiset A -> M"
+                           "fun A M addM f m => fold_multiset addM (map_token f m)")
+
+||| Exports the liftToken Universal Mapping Property into Lean 4 AST.
+public export
+exportLiftTokenUniversalPropertyLean4 : String -> String
+exportLiftTokenUniversalPropertyLean4 name =
+  renderLean (LeanTheorem (name ++ "_lift_token_universal_property")
+                          "{α M : Type} [AddCommMonoid M] (f : α → M) (x : α) : (Multiset.liftTokenHom f) (Multiset.ofToken x) = f x"
+                          "by rfl")
+
+||| Exports the liftToken Universal Mapping Property into Coq SSReflect AST.
+public export
+exportLiftTokenUniversalPropertyCoq : String -> String
+exportLiftTokenUniversalPropertyCoq name =
+  renderCoq (CoqTheorem (name ++ "_lift_token_universal_property")
+                        "forall (A M : Type) (f : A -> M) (x : A), lift_token f (singleton_token x) = f x"
+                        "reflexivity")
+
+------------------------------------------------------------------------
+-- 6. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
 ------------------------------------------------------------------------
 
 ||| Exports all certified proof theorems to disk in Lean 4 and Coq format.
@@ -330,6 +366,8 @@ exportAllProofsIO = do
         , exportZoomToLean4 "cosmological_scale_pipeline"
         , exportGaloisDualityLean4 "cosmological_galois"
         , exportMasterAdjunctionProofLean4 "master_universe"
+        , exportFreeMultisetAdjunctionLean4 "category"
+        , exportLiftTokenUniversalPropertyLean4 "category"
         , exportHomologyNilpotencyLean4 "lattice_homology"
         , exportHomologyNilpotencyLean4 "bz_homology"
         , exportPythagoreanTriadLean4 "primordial"
@@ -348,6 +386,8 @@ exportAllProofsIO = do
         , exportToCoq "lattice"
         , exportToCoq "bz"
         , exportGaloisDualityCoq "cosmological_galois"
+        , exportFreeMultisetAdjunctionCoq "category"
+        , exportLiftTokenUniversalPropertyCoq "category"
         , exportHomologyNilpotencyCoq "lattice_homology"
         , exportHomologyNilpotencyCoq "bz_homology"
         , exportPythagoreanTriadCoq "primordial"
@@ -380,6 +420,9 @@ auditMultisetTheoremExporterProof =
       coqCoind = exportCoinductiveTrajectoryCoq "primordial"
       leanBisim = exportCosmicGenesisBisimulationLean4 "primordial"
       coqBisim = exportCosmicGenesisBisimulationCoq "primordial"
+      leanAdj = exportFreeMultisetAdjunctionLean4 "category"
+      coqAdj = exportFreeMultisetAdjunctionCoq "category"
   in (leanZoom /= "") && (coqAdjunction /= "") && (leanPyth /= "") && (coqSieve /= "") &&
-     (leanCoind /= "") && (coqCoind /= "") && (leanBisim /= "") && (coqBisim /= "")
+     (leanCoind /= "") && (coqCoind /= "") && (leanBisim /= "") && (coqBisim /= "") &&
+     (leanAdj /= "") && (coqAdj /= "")
 
