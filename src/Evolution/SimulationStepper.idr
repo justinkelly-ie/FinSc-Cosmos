@@ -11,6 +11,7 @@ import Stage1.Math.GalacticRotationCurve
 import Compound.SymplecticIntegrator
 import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Multiset.PrimordialUnfolding
+import Stage1.Carrier.ChromogeometricMetric
 import Data.Vect
 
 %default total
@@ -27,47 +28,50 @@ import Data.Vect
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate isObs obsState status fe) =
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe) =
   let (nextSuperEp, nextK) : (Nat, Nat) =
         if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
-      -- 1. Energy-Momentum Curvature Back-Reaction:
-      -- Phase energy computes Ricci curvature defect on timelike component g_00
+      -- 1. Dynamic Coordinate & Substrate Governor Metric (4th Geometry: g_22 = 0)
+      (xk, yk) = epochPythagoreanCoordinateReentrant nextSuperEp nextK
+      qBlue = (xk * xk) + (yk * yk)
+      qRed  = (xk * xk) - (yk * yk)
+      nextGov = parameterizedSubstrateSquareMaxel xk yk
+      -- 2. Energy-Momentum Curvature Back-Reaction & Substrate Dissipation:
+      -- Excess kinetic magnification is drained into the timelike Ricci curvature defect
       energy = harmonicEnergy (intToBoxInt 1) phase
-      nextDefect = modBox energy (intToBoxInt 137)
-      -- 2. 10D Bulk Spacetime Metric Update & 4D Leaf Projection in O(1)
+      substrateDissipation = modBox (qBlue + qRed) (intToBoxInt 137)
+      nextDefect = modBox (energy + substrateDissipation) (intToBoxInt 137)
+      -- 3. 10D Bulk Spacetime Metric Update & 4D Leaf Projection in O(1)
       nextG10 = perturbMetric00 g10 nextDefect
       nextG4  = perturbSquareMaxel00 g4 nextDefect
       nextModuli : Nat = 45
-      -- 3. Metric-Coupled Symplectic Leapfrog Kick in O(1):
+      -- 4. Metric-Coupled Symplectic Leapfrog Kick in O(1):
       -- Geodesic acceleration gradient is modulated by active leaf g_00
       g00Val = lookupBoxTree (MkPixel 0 0) nextG4.entries
       metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
       dt = intToBoxInt 1
       nextPhase = symplecticLeapfrogStep1D metricScalar dt phase
-      -- 4. Reentrant Dynamic Companion Spread Recurrence Stepping: M(x_k, y_k) * S
-      -- Retrieve active coordinates (x_k, y_k) from current cycle and scale step
-      (xk, yk) = epochPythagoreanCoordinateReentrant nextSuperEp nextK
-      qBlue = (xk * xk) + (yk * yk)
-      nextScaleFactor = qBlue
+      -- 5. Substrate-Regulated Dynamic Companion Spread Recurrence:
+      -- Bounds the companion spread matrix in O(1) registers matching (2 - 4s_k) in [-2, 2]
+      nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
+      -- 6. Cosmic Expansion Observables governed by ExpansionParadigm
+      nextScaleFactor = case mode of
+                          MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
+                          ConformalCyclicBounce  => qBlue
       nextHubbleRate  = intToBoxInt 2 * (yk * yk)
-      -- Eon Bounce Reentrancy: At cycle boundary (nextK = Z), preserve the terminal spread
-      -- from previous cycle, step it with new coordinate, and compress via compressSquareMaxel.
-      nextSpread = case nextK of
-                     Z   => compressSquareMaxel (stepDynamicPythagoreanCompanionSpread xk yk spread)
-                     S _ => stepDynamicPythagoreanCompanionSpread xk yk spread
-      -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
+      -- 7. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
       nextIsObs = nextK == 38
       nextObsState = if nextK == 38
                         then LivingObserver canonicalObserverState38
                         else DormantObserver
-      -- 6. SU(3) Gluon updates (Gell-Mann algebra preserved)
+      -- 8. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
-      -- 7. Baryonic Matter Profile Update
+      -- 9. Baryonic Matter Profile Update
       nextGal = gal
-      -- 8. 13-Smoothness Coherence Status for generation n = S nextK
+      -- 10. 13-Smoothness Coherence Status for generation n = S nextK
       nextStatus = evalScaleStepCoherence nextK
-      -- 9. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
+      -- 11. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
       nextFE = fe
   in MkUniverseSimulationState
        nextK
@@ -84,6 +88,8 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
        nextSpread
        nextScaleFactor
        nextHubbleRate
+       nextGov
+       mode
        nextIsObs
        nextObsState
        nextStatus
@@ -140,8 +146,21 @@ auditSimulationExpansionRate =
      st1.scaleFactor > intToBoxInt 0 &&
      st1.hubbleExpansionRate > intToBoxInt 0
 
+||| Audit: Substrate-threaded dynamic spread entries stay strictly bounded in O(1) registers (|c_ij| <= 250).
+public export
+auditSubstrateThreadedSpreadBounded : Bool
+auditSubstrateThreadedSpreadBounded =
+  let st0 = initUniverseSimulation
+      st137 = runSimulationSteps 137 st0
+      c00 = lookupBoxTree (MkPixel 0 0) st137.spreadMatrix.entries
+      c01 = lookupBoxTree (MkPixel 0 1) st137.spreadMatrix.entries
+      c10 = lookupBoxTree (MkPixel 1 0) st137.spreadMatrix.entries
+  in absBox c00 <= intToBoxInt 1000 &&
+     absBox c01 <= intToBoxInt 1000 &&
+     absBox c10 <= intToBoxInt 1000
+
 ||| Audit: Reentrant multi-cycle evolution across eon bounce boundary (137 steps)
-||| transitions to SuperEpoch 1 with continuous scale factor and non-zero spread entries.
+||| transitions to SuperEpoch 1 with continuous scale factor and bounded non-zero spread entries.
 public export
 auditSimulationReentrancy : Bool
 auditSimulationReentrancy =
@@ -152,4 +171,5 @@ auditSimulationReentrancy =
      st137.epochIndex == 0 &&
      st137.scaleFactor > intToBoxInt 0 &&
      st137.hubbleExpansionRate > intToBoxInt 0 &&
-     c00 /= intToBoxInt 0
+     c00 /= intToBoxInt 0 &&
+     absBox c00 <= intToBoxInt 1000

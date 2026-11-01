@@ -31,7 +31,7 @@ vexelMagnitudeSquared v = dotVexel v v
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
 exportStateCsvHeader : String
-exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,scale_factor_q,hubble_rate_s,observer_active"
+exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,free_energy,pos_mag,mom_mag,curvature_defect,spread_c11,scale_factor_q,hubble_rate_s,observer_active,expansion_mode"
 
 ||| Formats a single UniverseSimulationState as a CSV data row.
 public export
@@ -62,7 +62,8 @@ exportStateCsvRow st =
      show c11 ++ "," ++
      show st.scaleFactor ++ "," ++
      show st.hubbleExpansionRate ++ "," ++
-     obsStr
+     obsStr ++ "," ++
+     show st.expansionMode
 
 ------------------------------------------------------------------------
 -- 3. JSON EXPORT FORMATTERS
@@ -97,7 +98,8 @@ exportStateJson st =
      ",\"spread_c11\":" ++ show c11 ++
      ",\"scale_factor_q\":" ++ show st.scaleFactor ++
      ",\"hubble_rate_s\":" ++ show st.hubbleExpansionRate ++
-     ",\"observer_active\":" ++ obsStr ++ "}"
+     ",\"observer_active\":" ++ obsStr ++
+     ",\"expansion_mode\":\"" ++ show st.expansionMode ++ "\"}"
 
 ------------------------------------------------------------------------
 -- 4. LINEAR TRAJECTORY GENERATORS

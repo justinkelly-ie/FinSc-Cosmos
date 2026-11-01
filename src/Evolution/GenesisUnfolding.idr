@@ -22,6 +22,7 @@ import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Multiset.PrimordialUnfolding
 import Evolution.SimulationState
 import Evolution.SimulationStepper
+import Stage1.Carrier.ChromogeometricMetric
 import Stage0.PrimeMultiset
 import Stage1.FourGeometries
 import Stage1.Goh
@@ -262,9 +263,11 @@ condenseGenesisToUniverse st =
                gal
                phase0
                (intToBoxInt 0)
-               (identitySquareMaxel 2)
+               (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
                (intToBoxInt 25)
                (intToBoxInt 18)
+               (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
+               MonotonicOpenExpansion
                False
                DormantObserver
                status0

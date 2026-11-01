@@ -9,6 +9,8 @@ import Compound.SymplecticIntegrator
 import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Epoch.ObserverPredictions
 import Stage1.FourGeometries
+import Stage1.Carrier.ChromogeometricMetric
+import Stage1.Carrier.SquareMaxel
 import Data.Vect
 
 %default total
@@ -98,6 +100,27 @@ canonicalObserverState38 =
   MkObserverLivingState (intToBoxInt 750) (intToBoxInt 0) 39 True
 
 ------------------------------------------------------------------------
+-- 2C. COSMIC EXPANSION PARADIGM (Rule 03)
+------------------------------------------------------------------------
+
+||| The two constructivist cosmic expansion paradigms governed by the Substrate Metric:
+||| - MonotonicOpenExpansion: Irreversible forward arrow Delta S >= 1; scale factor accumulates monotonically across eons.
+||| - ConformalCyclicBounce: Conformal rescaling at grid wall k=136 -> 137 -> 0 bouncing back to ground state (25, 18).
+public export
+data ExpansionParadigm = MonotonicOpenExpansion | ConformalCyclicBounce
+
+public export
+Eq ExpansionParadigm where
+  MonotonicOpenExpansion == MonotonicOpenExpansion = True
+  ConformalCyclicBounce  == ConformalCyclicBounce  = True
+  _                      == _                      = False
+
+public export
+Show ExpansionParadigm where
+  show MonotonicOpenExpansion = "MonotonicOpen"
+  show ConformalCyclicBounce  = "ConformalCyclic"
+
+------------------------------------------------------------------------
 -- 3. UNIFIED UNIVERSE SIMULATION STATE (Rule 03 §5)
 ------------------------------------------------------------------------
 
@@ -111,6 +134,7 @@ canonicalObserverState38 =
 ||| - Rational Trig: 2x2 companion spread matrix M(s)^k in O(log k).
 ||| - Observer Branch: active inference & biomolecules at k=38 (Observer Epoch).
 ||| - Thermodynamics: canonical 137-scale sieve & Helmholtz free energy.
+||| - Substrate Metric: 4th Geometry governing capacity & thermodynamic dissipation.
 public export
 record UniverseSimulationState where
   constructor MkUniverseSimulationState
@@ -128,6 +152,8 @@ record UniverseSimulationState where
   spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
   scaleFactor         : BoxInt                                 -- Instantaneous scale factor a_k = Q_Blue(k) = x_k^2 + y_k^2
   hubbleExpansionRate : BoxInt                                 -- Discrete Hubble expansion parameter H_k = 2 * y_k^2
+  substrateGovernor   : SquareMaxel 2                          -- Substrate Metric Governor (4th Geometry: g_22 = 0)
+  expansionMode       : ExpansionParadigm                      -- Cosmic expansion mode (Monotonic Open vs CCC Bounce)
   observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
   observerState       : ObserverBranchState                    -- Living matter active inference carrier
   coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
@@ -146,10 +172,10 @@ pythagoreanCompanionMaxel =
       t2 = setBoxTree (mkCell2 1 0) c21 t1
   in MkSquareMaxel t2
 
-||| Genesis / Vacuum Initial Universe Simulation State (Epoch k = 0, Delta S = 0).
+||| Genesis / Vacuum Initial Universe Simulation State parameterized by ExpansionParadigm.
 public export
-initUniverseSimulation : UniverseSimulationState
-initUniverseSimulation =
+initUniverseSimulationMode : ExpansionParadigm -> UniverseSimulationState
+initUniverseSimulationMode mode =
   let g10 = spacetime10DMetric
       g4  = project10Dto4D g10.metricMaxel
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
@@ -172,10 +198,17 @@ initUniverseSimulation =
        gal
        phase0
        (intToBoxInt 0)
-       (identitySquareMaxel 2)
+       (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
        (intToBoxInt 25)
        (intToBoxInt 18)
+       (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
+       mode
        False
        DormantObserver
        status0
        canonicalHelmholtzGroundState
+
+||| Canonical Genesis / Vacuum Initial Universe Simulation State (Default: MonotonicOpenExpansion).
+public export
+initUniverseSimulation : UniverseSimulationState
+initUniverseSimulation = initUniverseSimulationMode MonotonicOpenExpansion
