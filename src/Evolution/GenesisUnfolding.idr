@@ -263,6 +263,8 @@ condenseGenesisToUniverse st =
                phase0
                (intToBoxInt 0)
                (identitySquareMaxel 2)
+               (intToBoxInt 25)
+               (intToBoxInt 18)
                False
                DormantObserver
                status0

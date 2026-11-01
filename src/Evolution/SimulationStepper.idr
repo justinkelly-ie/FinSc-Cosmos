@@ -10,6 +10,7 @@ import Stage1.Fields.OctonionGaugeUnification
 import Stage1.Math.GalacticRotationCurve
 import Compound.SymplecticIntegrator
 import Stage1.Epoch.ScaleTrajectorySieve
+import Stage1.Multiset.PrimordialUnfolding
 import Data.Vect
 
 %default total
@@ -26,7 +27,7 @@ import Data.Vect
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread isObs obsState status fe) =
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate isObs obsState status fe) =
   let (nextSuperEp, nextK) : (Nat, Nat) =
         if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
@@ -44,10 +45,17 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
       metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
       dt = intToBoxInt 1
       nextPhase = symplecticLeapfrogStep1D metricScalar dt phase
-      -- 4. O(1) Companion Spread Recurrence Stepping: M(s) * S (Rule 04 §4)
+      -- 4. Reentrant Dynamic Companion Spread Recurrence Stepping: M(x_k, y_k) * S
+      -- Retrieve active coordinates (x_k, y_k) from current cycle and scale step
+      (xk, yk) = epochPythagoreanCoordinateReentrant nextSuperEp nextK
+      qBlue = (xk * xk) + (yk * yk)
+      nextScaleFactor = qBlue
+      nextHubbleRate  = intToBoxInt 2 * (yk * yk)
+      -- Eon Bounce Reentrancy: At cycle boundary (nextK = Z), preserve the terminal spread
+      -- from previous cycle, step it with new coordinate, and compress via compressSquareMaxel.
       nextSpread = case nextK of
-                     Z => identitySquareMaxel 2
-                     S _ => stepPythagoreanCompanionSpread spread
+                     Z   => compressSquareMaxel (stepDynamicPythagoreanCompanionSpread xk yk spread)
+                     S _ => stepDynamicPythagoreanCompanionSpread xk yk spread
       -- 5. Dual-Branch Emergence: Observer Epoch k=38 (n=39=3x13) Activation
       nextIsObs = nextK == 38
       nextObsState = if nextK == 38
@@ -74,6 +82,8 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
        nextPhase
        nextDefect
        nextSpread
+       nextScaleFactor
+       nextHubbleRate
        nextIsObs
        nextObsState
        nextStatus
@@ -118,3 +128,28 @@ auditSimulationDynamicsAndObserver =
       st38 = runSimulationSteps 38 st0
   in st38.epochIndex == 38 &&
      st38.observerEpochActive == True
+
+||| Audit: Dynamic cosmic expansion scale factor and Hubble rate are positive and non-zero.
+public export
+auditSimulationExpansionRate : Bool
+auditSimulationExpansionRate =
+  let st0 = initUniverseSimulation
+      st1 = stepUniverseSimulation st0
+  in st0.scaleFactor == intToBoxInt 25 &&
+     st0.hubbleExpansionRate == intToBoxInt 18 &&
+     st1.scaleFactor > intToBoxInt 0 &&
+     st1.hubbleExpansionRate > intToBoxInt 0
+
+||| Audit: Reentrant multi-cycle evolution across eon bounce boundary (137 steps)
+||| transitions to SuperEpoch 1 with continuous scale factor and non-zero spread entries.
+public export
+auditSimulationReentrancy : Bool
+auditSimulationReentrancy =
+  let st0 = initUniverseSimulation
+      st137 = runSimulationSteps 137 st0
+      c00 = lookupBoxTree (MkPixel 0 0) st137.spreadMatrix.entries
+  in st137.superEpoch == 1 &&
+     st137.epochIndex == 0 &&
+     st137.scaleFactor > intToBoxInt 0 &&
+     st137.hubbleExpansionRate > intToBoxInt 0 &&
+     c00 /= intToBoxInt 0

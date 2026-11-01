@@ -126,6 +126,8 @@ record UniverseSimulationState where
   phaseState          : PhaseState                             -- Symplectic (q, p) phase space
   curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
   spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
+  scaleFactor         : BoxInt                                 -- Instantaneous scale factor a_k = Q_Blue(k) = x_k^2 + y_k^2
+  hubbleExpansionRate : BoxInt                                 -- Discrete Hubble expansion parameter H_k = 2 * y_k^2
   observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
   observerState       : ObserverBranchState                    -- Living matter active inference carrier
   coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
@@ -171,6 +173,8 @@ initUniverseSimulation =
        phase0
        (intToBoxInt 0)
        (identitySquareMaxel 2)
+       (intToBoxInt 25)
+       (intToBoxInt 18)
        False
        DormantObserver
        status0
