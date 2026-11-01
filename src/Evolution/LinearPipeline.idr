@@ -10,6 +10,7 @@ import Stage0.OnSeq.FusedStream
 import Stage1.TypeTheory.Staging
 import Stage2.ThreeLevel
 import Data.Vect
+import Stage1.UniverseStaging as US
 
 %default total
 
@@ -319,6 +320,51 @@ auditTier3MultiverseEvolutionProof =
      (finalStateMom.epochStep == 3) &&
      (moments.epochCount == 3) &&
      (moments.totalActiveEnergy > 0)
+
+------------------------------------------------------------------------
+-- 5. ALGEBRAIC UNIVERSE TRAJECTORY INTEGRATION
+------------------------------------------------------------------------
+
+||| Executes an inductive UniverseTrajectory path linearly with exact state preservation:
+public export
+executeUniverseTrajectoryLinear : {vm, de, dm, vm', dm' : Nat} ->
+                                  (1 s : UniverseState vm de dm) ->
+                                  US.UniverseTrajectory vm de dm vm' dm' ->
+                                  UniverseState vm' de dm'
+executeUniverseTrajectoryLinear s traj =
+  US.runTrajectoryLinear s traj
+
+||| 2LTT Staged evaluation of cosmological trajectory:
+public export
+stagedExecuteTrajectoryLQTT : {vm, de, dm, vm', dm' : Nat} ->
+                              (1 qState : LinearLift (UniverseState vm de dm)) ->
+                              Lift (US.UniverseTrajectory vm de dm vm' dm') ->
+                              LinearLift (UniverseState vm' de dm')
+stagedExecuteTrajectoryLQTT qState qTraj =
+  US.stagedRunTrajectoryLQTT qState qTraj
+
+||| QTT 0 Erased Proof: Trajectory execution preservation witness
+public export
+0 prfExecuteUniverseTrajectoryLinear : {vm, de, dm, vm', dm' : Nat} ->
+                                       (state : UniverseState vm de dm) ->
+                                       (traj : US.UniverseTrajectory vm de dm vm' dm') ->
+                                       spliceLinear (stagedExecuteTrajectoryLQTT (quoteLinear state) (quote traj)) =
+                                         executeUniverseTrajectoryLinear state traj
+prfExecuteUniverseTrajectoryLinear _ _ = Refl
+
+||| Audit: Multi-step trajectory linearly injects matter across 3 stages:
+public export
+auditUniverseTrajectoryCosmicProof : Bool
+auditUniverseTrajectoryCosmicProof =
+  let s0 = MkUniverseState {vmSize=2} {deSize=1} {dmSize=1}
+             [intToBoxInt 1, intToBoxInt 2]
+             [intToBoxInt 10]
+             [intToBoxInt 5]
+      traj = US.StepTrajectory (US.StepTrajectory (US.singleStepTrajectory [intToBoxInt 3]) [intToBoxInt 4, intToBoxInt 5]) [intToBoxInt 6]
+      sFinal = executeUniverseTrajectoryLinear s0 traj
+      (MkUniverseState vmFinal deFinal dmFinal) = sFinal
+  in (length vmFinal == 6) && (length dmFinal == 4)
+
 
 
 

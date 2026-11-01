@@ -89,4 +89,59 @@ public export
                                      DM.velocityAdditionProjective v1 v2
 prfStagedLensVelocityProjective _ _ = Refl
 
+------------------------------------------------------------------------
+-- 5. THE HOMOGENEOUS PROJECTIVE MULTI-LENS DEFLECTION ALGEBRA (LensingChain)
+------------------------------------------------------------------------
+
+||| Chain of gravitational lens deflections in projective homogeneous coordinates:
+public export
+data LensingChain : Type where
+  NilLensing  : LensingChain
+  ConsLensing : (Vect 3 BoxInt, BoxInt) -> LensingChain -> LensingChain
+
+||| Base projective identity velocity: ( [0, 0, 0], 1 ).
+public export
+identityProjectiveVelocity : (Vect 3 BoxInt, BoxInt)
+identityProjectiveVelocity = ([intToBoxInt 0, intToBoxInt 0, intToBoxInt 0], intToBoxInt 1)
+
+||| Structurally collapses a LensingChain into a single effective projective deflection:
+public export
+collapseLensingChain : LensingChain -> (Vect 3 BoxInt, BoxInt)
+collapseLensingChain NilLensing = identityProjectiveVelocity
+collapseLensingChain (ConsLensing lens rest) =
+  DM.velocityAdditionProjective lens (collapseLensingChain rest)
+
+||| 2LTT Staged Multi-Lens Deflection Compiler:
+||| Combines an arbitrary number of gravitational lenses into a single (V_eff, D_eff) deflection at Level 1,
+||| preserving exact rational denominators across the entire telescope baseline.
+public export
+stagedCompileLensingChain : LensingChain -> Code (Vect 3 BoxInt, BoxInt)
+stagedCompileLensingChain chain =
+  let eff = collapseLensingChain chain
+  in quote eff
+
+||| Staged evaluation of multi-lens deflection compiler:
+public export
+evalStagedCompileLensingChain : LensingChain -> (Vect 3 BoxInt, BoxInt)
+evalStagedCompileLensingChain chain =
+  splice (stagedCompileLensingChain chain)
+
+||| QTT 0 Erased Proof Witness: Multi-Lens Deflection Staged Compilation Soundness
+public export
+0 prfStagedCompileLensingChain : (chain : LensingChain) ->
+                                splice (stagedCompileLensingChain chain) =
+                                  collapseLensingChain chain
+prfStagedCompileLensingChain _ = Refl
+
+||| Audit: Staged LensingChain combines multiple lenses and preserves exact non-zero denominator:
+public export
+auditLensingChainPreservation : Bool
+auditLensingChainPreservation =
+  let l1 = ([intToBoxInt 1, intToBoxInt 0, intToBoxInt 0], intToBoxInt 10)
+      l2 = ([intToBoxInt 0, intToBoxInt 1, intToBoxInt 0], intToBoxInt 10)
+      chain = ConsLensing l1 (ConsLensing l2 NilLensing)
+      (vEff, dEff) = evalStagedCompileLensingChain chain
+  in dEff /= intToBoxInt 0
+
+
 
