@@ -3,6 +3,9 @@ module Derivation.ReplTransformEngine
 import Stage0.Multiset
 import Stage1.MaxelTransform
 import Derivation.FunctorialScalePipeline
+import Stage1.Staged.Specializer as Spec
+import Stage1.TypeTheory.Staging
+import Stage1.Basis.Coordinate
 import Data.List
 import Data.String
 
@@ -29,20 +32,50 @@ Eq ReplTransformCmd where
   _ == _ = False
 
 ------------------------------------------------------------------------
--- 2. REPL TRANSFORM COMMAND EVALUATOR
+-- 2. REPL TRANSFORM COMMAND EVALUATOR & DYNAMIC COMPILATION
 ------------------------------------------------------------------------
 
 ||| Evaluates a dynamic REPL transform command and returns formatted status response.
 public export
 evalReplTransformCmd : ReplTransformCmd -> String
 evalReplTransformCmd (CmdCreateTransform name sector fraction) =
-  "CREATED: TransformMultiset [" ++ name ++ "] Sector: Elliptic Weight: 1/27"
+  "CREATED: TransformMultiset [" ++ name ++ "] Sector: " ++ show sector ++
+  " Weight: " ++ show (unwrapBox (num fraction)) ++ "/" ++ show (denominatorNat fraction)
 evalReplTransformCmd (CmdComposeTransform t1 t2) =
   "COMPOSED: " ++ t1 ++ " ∘ " ++ t2 ++ " -> T_total (Factorized G ⊗ Z ⊗ J)"
+
 evalReplTransformCmd (CmdPullbackTransform t1) =
   "PULLBACK: f^* Adjoint Expansion evaluated over " ++ t1
 evalReplTransformCmd (CmdUnknownTransform msg) =
   "UNKNOWN: " ++ msg
+
+||| Evaluates a dynamic transform word in the REPL environment:
+public export
+evalReplPipelineWord : (fuel : Nat) ->
+                       MaxelTransform Pixel Pixel ->
+                       Spec.PipelineWord Pixel ->
+                       MaxelTransform Pixel Pixel
+evalReplPipelineWord fuel base word =
+  Spec.collapsePipelineWord fuel base word
+
+||| Staged compilation of a dynamic REPL pipeline word:
+public export
+stagedReplPipelineWord : (fuel : Nat) ->
+                         Lift (MaxelTransform Pixel Pixel) ->
+                         Lift (Spec.PipelineWord Pixel) ->
+                         Code (MaxelTransform Pixel Pixel)
+stagedReplPipelineWord fuel qBase qWord =
+  Spec.stagedCompileWord fuel qBase qWord
+
+||| QTT 0 Erased Proof Witness: Staged REPL Pipeline Word Soundness
+public export
+0 prfStagedReplPipelineWord : (fuel : Nat) ->
+                              (base : MaxelTransform Pixel Pixel) ->
+                              (w : Spec.PipelineWord Pixel) ->
+                              splice (stagedReplPipelineWord fuel (quote base) (quote w)) =
+                                evalReplPipelineWord fuel base w
+prfStagedReplPipelineWord fuel base w =
+  Spec.prfStagedCompileWord fuel base w
 
 ------------------------------------------------------------------------
 -- 3. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
@@ -51,4 +84,14 @@ evalReplTransformCmd (CmdUnknownTransform msg) =
 ||| Audits Interactive REPL Transform Synthesis and Evaluator.
 public export
 auditReplTransformEngineProof : Bool
-auditReplTransformEngineProof = True
+auditReplTransformEngineProof =
+  let testT = mkMaxelTransform EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
+                [ ((MkPixel 0 0, MkPixel 0 0), intToBoxInt 1) ]
+      cmd = CmdCreateTransform "T_test" EllipticSector (mkUnixelFraction (intToBoxInt 1) 27)
+      resp = evalReplTransformCmd cmd
+      word = Spec.GenWord testT
+      compiled = Spec.evalStagedCompileWord 5 (quote testT) (quote word)
+  in (isInfixOf "CREATED" resp) &&
+     (isInfixOf "1/27" resp) &&
+     (compiled.fraction == mulUnixelFraction testT.fraction testT.fraction)
+

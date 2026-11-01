@@ -8,6 +8,7 @@ import public Stage1.MaxelTransform
 import public Stage1.MultisetTensor
 import public Stage1.MultisetDuality
 import public Stage0.OnSeq.FusedStream
+import public Stage1.ScaleHierarchy
 
 %default total
 
@@ -15,10 +16,19 @@ public export
 auditFunctorialPipelineProof : Bool
 auditFunctorialPipelineProof = True
 
-||| Type-level ScaleTransition pipeline derivation witness
+||| Type-level ScaleTransition pipeline derivation witness verifying that
+||| the staged condensed scale path compilation evaluates identically to the composite transition:
 public export
 auditScaleTransitionPipelineDerivationProof : Bool
-auditScaleTransitionPipelineDerivationProof = True
+auditScaleTransitionPipelineDerivationProof =
+  evalStagedCondensedPipeline == sfTotalFunctorialPipeline
+
+||| QTT 0 Erased Proof Witness: Functorial Scale Pipeline Staged Derivation Invariant
+public export
+0 prfFunctorialPipelineDerivation : Stage1.ScalePipeline.evalStagedCondensedPipeline = Stage1.ScalePipeline.sfTotalFunctorialPipeline
+prfFunctorialPipelineDerivation = prfCondensedPipelineSoundness
+
+
 
 ||| Pushforward operator (f_*) for the end-to-end scale pipeline
 public export

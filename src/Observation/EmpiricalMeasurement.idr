@@ -196,3 +196,28 @@ auditPlanckInflationSpectralIndexProof =
       low = lowBound (measuredRange planckInflationSpectralIndex)
       high = highBound (measuredRange planckInflationSpectralIndex)
   in rationalGTE theory low && rationalLTE theory high
+
+------------------------------------------------------------------------
+-- 5. TYPE-DRIVEN VERIFIED EMPIRICAL MEASUREMENTS (Rule 03 §7)
+------------------------------------------------------------------------
+
+||| Predicate verifying that an empirical measurement range is well-formed: low <= high.
+public export
+isRangeValid : EmpiricalMeasurement -> Bool
+isRangeValid m =
+  rationalLTE (lowBound (measuredRange m)) (highBound (measuredRange m))
+
+||| Proof type verifying that an empirical measurement range is well-formed.
+public export
+ValidMeasurementRange : EmpiricalMeasurement -> Type
+ValidMeasurementRange m = isRangeValid m = True
+
+||| A verified empirical scientific measurement record bundling the measurement
+||| with an erased proof that its bounds are consistent:
+public export
+record VerifiedEmpiricalMeasurement where
+  constructor MkVerifiedMeasurement
+  measurement : EmpiricalMeasurement
+  0 validPrf  : ValidMeasurementRange measurement
+
+

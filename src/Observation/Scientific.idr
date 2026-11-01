@@ -85,3 +85,28 @@ public export
 deriveSpectralIndex : UnixelFraction
 deriveSpectralIndex = MkUnixelFraction (intToBoxInt 965) (MkUnixel 1000)
 
+------------------------------------------------------------------------
+-- 4. TYPE-DRIVEN VERIFIED OBSERVATIONS & DEPENDENT PAIRS (Rule 03 §7)
+------------------------------------------------------------------------
+
+||| Proof witness that an experimental interval is well-ordered (lower <= upper).
+public export
+ValidInterval : ScientificObservation -> Type
+ValidInterval obs = isValidInterval obs = True
+
+||| Proof witness that theoretical prediction falls within empirical bounds.
+public export
+EmpiricallyConsistent : ScientificObservation -> Type
+EmpiricallyConsistent obs = isEmpiricallyConsistent obs = True
+
+||| A verified scientific observation bundling the carrier record with its
+||| compile-time validity and empirical consistency proof witnesses:
+public export
+record VerifiedScientificObservation where
+  constructor MkVerifiedObservation
+  observation        : ScientificObservation
+  0 validIntervalPrf : ValidInterval observation
+  0 consistentPrf    : EmpiricallyConsistent observation
+
+
+
