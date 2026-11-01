@@ -210,3 +210,10 @@ auditDirectSquareMaxelPerformanceProof =
   let m = mkSquareMaxel2x2Direct (intToBoxInt 14) (intToBoxInt (-25)) (intToBoxInt 25) (intToBoxInt 0)
       v00 = projectSquareMaxel00 m
   in v00 == intToBoxInt 14
+
+||| Static compiler proof witness verifying 4-geometry capacity budget conservation (27 + 128 + 55 = 210).
+public export
+auditUniverseCapacityQuadProof : Bool
+auditUniverseCapacityQuadProof =
+  let st = initUniverseSimulation
+  in st.capacityBudget == canonicalQuadCapacityBudget

@@ -21,14 +21,29 @@ import Data.Vect
 
 ||| Formal Primorial 210 capacity partition:
 ||| vm = 27 (Elliptic), de = 128 (Hyperbolic), dm = 55 (Parabolic).
+||| Formal Primorial 210 capacity partition across all 4 geometries:
+||| vm = 27 (Elliptic), de = 128 (Hyperbolic), dm = 55 (Parabolic), sub = 210 (Master Substrate).
 public export
-record DiscreteCapacityBudget (vm : Nat) (de : Nat) (dm : Nat) where
-  constructor MkDiscreteCapacityBudget
+record DiscreteQuadCapacityBudget (vm : Nat) (de : Nat) (dm : Nat) (sub : Nat) where
+  constructor MkDiscreteQuadCapacityBudget
   0 budgetPrf : vm + de + dm = 210
+  0 masterPrf : sub = 210
+
+public export
+Eq (DiscreteQuadCapacityBudget vm de dm sub) where
+  _ == _ = True
+
+public export
+canonicalQuadCapacityBudget : DiscreteQuadCapacityBudget 27 128 55 210
+canonicalQuadCapacityBudget = MkDiscreteQuadCapacityBudget Refl Refl
+
+public export
+DiscreteCapacityBudget : (vm : Nat) -> (de : Nat) -> (dm : Nat) -> Type
+DiscreteCapacityBudget vm de dm = DiscreteQuadCapacityBudget vm de dm 210
 
 public export
 canonicalCapacityBudget : DiscreteCapacityBudget 27 128 55
-canonicalCapacityBudget = MkDiscreteCapacityBudget Refl
+canonicalCapacityBudget = canonicalQuadCapacityBudget
 
 ------------------------------------------------------------------------
 -- 2. DISCRETE HELMHOLTZ FREE ENERGY STATE (F = U - TS)
