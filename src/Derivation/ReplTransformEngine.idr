@@ -100,7 +100,7 @@ auditReplTransformEngineProof =
       cmdSpread = CmdCyclotomicSpread 39
       respSpread = evalReplTransformCmd cmdSpread
       word = Spec.GenWord testT
-      compiled = Spec.evalStagedCompileWord 5 (quote testT) (quote word)
+      compiled = Spec.evalStagedCompileWord ellipticLatticeCapacity (quote testT) (quote word)
   in (isInfixOf "CREATED" resp) &&
      (isInfixOf "1/27" resp) &&
      (isInfixOf "TotientCapacity: 39" respSpread) &&
