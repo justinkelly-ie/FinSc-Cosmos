@@ -13,6 +13,7 @@ import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Multiset.PrimordialUnfolding
 import Stage1.Carrier.ChromogeometricMetric
 import Stage0.OnSeq.FusedStream
+import Stage0.Biology.ActiveInferenceNeuralNetwork
 import Data.Vect
 
 %default total
@@ -28,12 +29,8 @@ import Data.Vect
 ||| minimizing sensory prediction error and relaxing internal free energy toward steady-state equilibrium.
 public export
 stepObserverLivingState : (k : Nat) -> (scaleFactor : BoxInt) -> (hubbleRate : BoxInt) -> ObserverLivingState -> ObserverLivingState
-stepObserverLivingState k currentScale hubble (MkObserverLivingState fe prevPred cyclotomic active) =
-  let predictedScale = prevPred + hubble
-      predErr = absBox (currentScale - predictedScale)
-      feBaseline = intToBoxInt 750
-      newFe = feBaseline + modBox predErr (intToBoxInt 137)
-  in MkObserverLivingState newFe currentScale (S k) active
+stepObserverLivingState k currentScale hubble liv =
+  stepObserverLivingFromEnvironment k currentScale hubble liv
 
 ||| Coupled Einstein-Hamiltonian loop: phase-space stress-energy perturbs metric tensor,
 ||| which in turn modulates geodesic acceleration.
@@ -41,7 +38,7 @@ stepObserverLivingState k currentScale hubble (MkObserverLivingState fe prevPred
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
   let (nextSuperEp, nextK) : (Nat, Nat) =
         if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
@@ -79,12 +76,13 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
         if nextK < 38
           then DormantObserver
           else case obsState of
-                 DormantObserver => LivingObserver (MkObserverLivingState (intToBoxInt 750) nextScaleFactor 39 True)
+                 DormantObserver => LivingObserver canonicalObserverState38
                  LivingObserver liv => LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate liv)
       -- 8. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
-      -- 9. Baryonic Matter Profile Update
+      -- 9. Baryonic Matter Profile & Dark Matter Halo Symplectic Step
       nextGal = gal
+      nextHalo = stepGalacticHaloMass (intToBoxInt 1) halo
       -- 10. 13-Smoothness Coherence Status for generation n = S nextK
       nextStatus = evalScaleStepCoherence nextK
       -- 11. Cumulative Landauer Dissipated Entropy with Conformal Parabolic Flush:
@@ -107,6 +105,7 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
        nextModuli
        nextGluons
        nextGal
+       nextHalo
        nextPhase
        nextDefect
        nextSpread
@@ -158,9 +157,9 @@ Show SimulationObservableRecord where
 ||| Linear simulation transition step emitting a SimulationObservableRecord alongside linearly consumed state.
 public export
 stepSimulationObservable : (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState SimulationObservableRecord
-stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
+stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
   let obs = MkSimObsRecord ticks k scaleFactor hubbleRate fe.freeEnergy dissEntropy
-      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
+      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
   in MkLStatePair st' obs
 
 ||| Streams universe simulation evolution across N action steps with strict QTT linearity,

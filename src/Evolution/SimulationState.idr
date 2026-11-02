@@ -11,6 +11,8 @@ import Stage1.Epoch.ObserverPredictions
 import Stage1.FourGeometries
 import Stage1.Carrier.ChromogeometricMetric
 import Stage1.Carrier.SquareMaxel
+import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage1.Thermodynamics.EntropicArrow
 import Data.Vect
 
 %default total
@@ -68,29 +70,6 @@ canonicalHelmholtzGroundState =
 -- 2B. OBSERVER LIVING-MATTER ACTIVE INFERENCE STATE (Rule 03 §5)
 ------------------------------------------------------------------------
 
-||| Dissipative non-equilibrium living-matter state active specifically at Epoch k=38:
-||| - metabolicYieldATP   : 30 ATP -> 750Q metabolic energy quantum
-||| - variationalSurprise : Free Energy surprise Delta F_obs <= 0 on Markov blanket
-||| - activeNeurons       : active neural network size (n = 39 = 3x13)
-||| - markovBlanketPurity : True when Markov blanket preserves internal entropy
-public export
-record ObserverLivingState where
-  constructor MkObserverLivingState
-  metabolicYieldATP   : BoxInt
-  variationalSurprise : BoxInt
-  activeNeurons       : Nat
-  markovBlanketPurity : Bool
-
-public export
-Eq ObserverLivingState where
-  (MkObserverLivingState a1 s1 n1 p1) == (MkObserverLivingState a2 s2 n2 p2) =
-    a1 == a2 && s1 == s2 && n1 == n2 && p1 == p2
-
-public export
-Show ObserverLivingState where
-  show (MkObserverLivingState atp surp n bl) =
-    "LivingObserver(ATP=" ++ show (unwrapBox atp) ++ "Q, F_surp=" ++ show (unwrapBox surp) ++ ", Neurons=" ++ show n ++ ")"
-
 ||| Observer branch lifecycle: dormant during cosmic trunk, living at k=38.
 public export
 data ObserverBranchState : Type where
@@ -107,12 +86,6 @@ public export
 Show ObserverBranchState where
   show DormantObserver = "DormantObserver"
   show (LivingObserver liv) = show liv
-
-||| Canonical active inference state at Observer Epoch k=38 (n=39=3x13).
-public export
-canonicalObserverState38 : ObserverLivingState
-canonicalObserverState38 =
-  MkObserverLivingState (intToBoxInt 750) (intToBoxInt 0) 39 True
 
 ------------------------------------------------------------------------
 -- 2C. COSMIC EXPANSION PARADIGM (Rule 03)
@@ -162,6 +135,7 @@ record UniverseSimulationState where
   moduliDOF           : Nat                                    -- 45 uncompactified Dark Matter moduli
   gellMannGluons      : Vect 8 (SquareMaxel 3)                 -- SU(3) subset G_2 gauge fields
   galacticProfile     : GalacticProfile                        -- Active baryonic core & disk slope
+  galacticHalo        : GalacticHaloMultiset                   -- Active dark matter halo phase points
   phaseState          : PhaseState                             -- Symplectic (q, p) phase space
   curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
   spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
@@ -198,6 +172,7 @@ initUniverseSimulationMode mode =
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
       gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
+      halo = canonicalGalacticHalo
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
       p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
       phase0 = MkPhaseState q0 p0
@@ -212,6 +187,7 @@ initUniverseSimulationMode mode =
        45
        gluons
        gal
+       halo
        phase0
        (intToBoxInt 0)
        (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))

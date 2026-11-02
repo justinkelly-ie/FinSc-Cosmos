@@ -24,10 +24,12 @@ import Evolution.SimulationState
 import Evolution.SimulationStepper
 import Stage1.Carrier.ChromogeometricMetric
 import Stage0.PrimeMultiset
+import Stage0.Multiset
 import Stage1.FourGeometries
 import Stage1.Goh
 import Stage1.Goh.Factor
 import Stage1.Goh.SpreadFactorization
+import Stage0.Biology.ActiveInferenceNeuralNetwork
 import Data.Vect
 
 %default total
@@ -168,6 +170,7 @@ record GenesisUnfoldingState where
   entropy         : BoxInt
   freeEnergy      : BoxInt
   isCondensed     : Bool
+  carrierTokens   : Multiset BoxInt FundamentalGeometry
 
 public export
 Show GenesisUnfoldingState where
@@ -183,7 +186,7 @@ public export
 initGenesisUnfolding : GenesisUnfoldingState
 initGenesisUnfolding =
   let t0 = epochTriadQuadrance 0
-  in MkGenesisUnfoldingState 0 (intToBoxInt 0) Gate2DyadicBit t0 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) False
+  in MkGenesisUnfoldingState 0 (intToBoxInt 0) Gate2DyadicBit t0 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) False ZeroM
 
 ||| Computes exact matter partition via the 4 Goh prime gates using model capacity dimensions:
 public export
@@ -221,14 +224,16 @@ energyAtN n =
 ||| Enforces Quantitative Type Theory: substrate states cannot be duplicated or leaked.
 public export
 stepGenesisInfluxLinear : (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
-stepGenesisInfluxLinear (MkGenesisUnfoldingState n arrow _ _ _ _ _ _) =
+stepGenesisInfluxLinear (MkGenesisUnfoldingState n arrow _ _ _ _ _ _ tokens) =
   let nextN = S n
       nextArrow = arrow + intToBoxInt 1
       nextGate = activeGohGate nextN
       nextTriad = epochTriadQuadrance nextN
       (nextU, nextS, nextF) = energyAtN nextN
       condensed = nextN >= fst primorialBudgetDimension
-  in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed
+      geom = geometryAtTokenIndex n
+      nextTokens = AddM geom (intToBoxInt 1) tokens
+  in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed nextTokens
 
 public export
 stepGenesisInflux : GenesisUnfoldingState -> GenesisUnfoldingState
@@ -245,13 +250,15 @@ condenseGenesisToUniverse : GenesisUnfoldingState -> Maybe UniverseSimulationSta
 condenseGenesisToUniverse st =
   if st.substrateTokens < fst primorialBudgetDimension then Nothing
   else
-    let g10 = spacetime10DMetric
+    let parabolicCount = multiplicity ParabolicGeom st.carrierTokens
+        g10 = synthesize10DMetricFromParabolicCount (boxToNat parabolicCount)
         g4  = project10Dto4D g10.metricMaxel
         gluons : Vect 8 (SquareMaxel 3) =
           [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
           , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
           ]
         gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
+        halo = canonicalGalacticHalo
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
         p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
         phase0 = MkPhaseState q0 p0
@@ -266,6 +273,7 @@ condenseGenesisToUniverse st =
                45
                gluons
                gal
+               halo
                phase0
                (intToBoxInt 0)
                (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
@@ -283,12 +291,12 @@ condenseGenesisToUniverse st =
 ||| or transforms it into macroscopic UniverseSimulationState without dropping tokens.
 public export
 condenseGenesisLinear : (1 st : GenesisUnfoldingState) -> Either GenesisUnfoldingState UniverseSimulationState
-condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condensed) =
+condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens) =
   if n < fst primorialBudgetDimension
-    then Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed)
-    else case condenseGenesisToUniverse (MkGenesisUnfoldingState n arrow gate triad u s f condensed) of
+    then Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens)
+    else case condenseGenesisToUniverse (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens) of
            Just simSt => Right simSt
-           Nothing    => Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed)
+           Nothing    => Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens)
 
 --------------------------------------------------------------------------------
 -- 3. UNIFIED COSMOLOGICAL EVOLUTION STATE & TRANSDUCER
