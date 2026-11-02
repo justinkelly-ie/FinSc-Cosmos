@@ -223,18 +223,34 @@ public export
 partitionAtN : Nat -> (BoxInt, BoxInt, BoxInt)
 partitionAtN n = gohPrimePartition n cosmicSmoothHorizonGohFuel
 
-||| Computes non-equilibrium thermodynamic energies (U, S, F) for token count N:
-||| - U(N) = 10 * VM + 1 * DE
-||| - S(N) = 2 * VM + 5 * DE + 3 * DM
-||| - F(N) = U - 2 * S (temperature T = 2)
+||| Computes exact non-equilibrium thermodynamic energies (U, S, F) directly from the discrete carrier multiset:
+||| - VM = multiplicity of EllipticGeom tokens
+||| - DE = multiplicity of HyperbolicGeom tokens
+||| - DM = multiplicity of ParabolicGeom tokens
+||| - U = 10 * VM + 1 * DE
+||| - S = 2 * VM + 5 * DE + 3 * DM
+||| - F = U - 2 * S (temperature T = 2)
 public export
-energyAtN : Nat -> (BoxInt, BoxInt, BoxInt)
-energyAtN n =
-  let (vm, de, dm) = partitionAtN n
+energyFromTokens : Multiset BoxInt FundamentalGeometry -> (BoxInt, BoxInt, BoxInt)
+energyFromTokens tokens =
+  let vm = multiplicity EllipticGeom tokens
+      de = multiplicity HyperbolicGeom tokens
+      dm = multiplicity ParabolicGeom tokens
       u = (intToBoxInt 10 * vm) + (intToBoxInt 1 * de)
       s = (intToBoxInt 2 * vm) + (intToBoxInt 5 * de) + (intToBoxInt 3 * dm)
       f = u - (intToBoxInt 2 * s)
   in (u, s, f)
+
+||| Canonical sequence of fundamental geometry tokens up to count N:
+public export
+canonicalTokensAtN : (n : Nat) -> Multiset BoxInt FundamentalGeometry
+canonicalTokensAtN Z = ZeroM
+canonicalTokensAtN (S k) = AddM (geometryAtTokenIndex k) (intToBoxInt 1) (canonicalTokensAtN k)
+
+||| Computes non-equilibrium thermodynamic energies (U, S, F) for token count N grounded in discrete carrier multiset:
+public export
+energyAtN : Nat -> (BoxInt, BoxInt, BoxInt)
+energyAtN n = energyFromTokens (canonicalTokensAtN n)
 
 ||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1) from an incoming SubstrateActionToken.
 ||| Enforces Quantitative Type Theory: substrate states and action quanta cannot be duplicated or leaked.
@@ -245,10 +261,10 @@ stepGenesisInfluxLinearWithToken (MkLToken (MkActionToken q)) (MkGenesisUnfoldin
       nextArrow = arrow + q
       nextGate = activeGohGate nextN
       nextTriad = epochTriadQuadrance nextN
-      (nextU, nextS, nextF) = energyAtN nextN
-      condensed = nextN >= fst primorialBudgetDimension
       geom = geometryAtTokenIndex n
       nextTokens = AddM geom q tokens
+      (nextU, nextS, nextF) = energyFromTokens nextTokens
+      condensed = nextN >= fst primorialBudgetDimension
   in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed nextTokens
 
 ||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1).

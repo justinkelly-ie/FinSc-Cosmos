@@ -147,6 +147,12 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
       q2 = lookupUnixel (MkUnixel 2) q
       q3 = lookupUnixel (MkUnixel 3) q
 
+      p0 = lookupUnixel (MkUnixel 0) p
+      p1 = lookupUnixel (MkUnixel 1) p
+      p2 = lookupUnixel (MkUnixel 2) p
+      p3 = lookupUnixel (MkUnixel 3) p
+      charge = if boxIsZero q0 then intToBoxInt 1 else q0
+
       -- Evaluate non-Abelian color force on spatial direction idx in {0, 1, 2}
       colorForce : Nat -> BoxInt
       colorForce idx =
@@ -162,13 +168,15 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
             totalFlux = sumForces gluons
         in divBox totalFlux (intToBoxInt 137)
 
-      -- Evaluate U(1) Maxwell Lorentz force on spacetime direction mu
+      -- Evaluate U(1) Maxwell Lorentz 4-force on spacetime direction mu:
+      -- mu = 0: Electric power (E . p)
+      -- mu in {1, 2, 3}: q * E_mu + (p x B)_mu (coupling to conjugate momentum p)
       emForce : Nat -> BoxInt
       emForce mu =
-        let f0 = lookupBoxTree (MkPixel mu 0) maxwell4D.entries * q0
-            f1 = lookupBoxTree (MkPixel mu 1) maxwell4D.entries * q1
-            f2 = lookupBoxTree (MkPixel mu 2) maxwell4D.entries * q2
-            f3 = lookupBoxTree (MkPixel mu 3) maxwell4D.entries * q3
+        let f0 = lookupBoxTree (MkPixel mu 0) maxwell4D.entries * (if mu == 0 then p0 else charge)
+            f1 = lookupBoxTree (MkPixel mu 1) maxwell4D.entries * p1
+            f2 = lookupBoxTree (MkPixel mu 2) maxwell4D.entries * p2
+            f3 = lookupBoxTree (MkPixel mu 3) maxwell4D.entries * p3
             totalEM = f0 + f1 + f2 + f3
         in divBox totalEM (intToBoxInt 137)
 

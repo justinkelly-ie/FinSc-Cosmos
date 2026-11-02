@@ -57,25 +57,82 @@ stepGaugeSector dt defect (MkGaugeSector gluons maxwell) =
 
 ||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
 ||| Emits participatory motor command token from living observer at k >= 38.
+||| Helper: Decrements a token species count from a multiset safely without negative weights.
 public export
-stepMatterSector : (k : Nat) -> (scale : BoxInt) -> (hubble : BoxInt) -> MatterSubstanceSector -> (MatterSubstanceSector, Maybe MotorCommand)
+decrementToken : Eq s => s -> BoxInt -> Multiset BoxInt s -> (Multiset BoxInt s, BoxInt)
+decrementToken sp needed m =
+  let cur = multiplicity sp m
+      actual = if cur >= needed then needed else cur
+      rem = cur - actual
+  in (update sp rem m, actual)
+  where
+    update : s -> BoxInt -> Multiset BoxInt s -> Multiset BoxInt s
+    update x v ZeroM = if boxIsZero v then ZeroM else AddM x v ZeroM
+    update x v (AddM k m rest) =
+      if k == x then (if boxIsZero v then rest else AddM x v rest)
+      else AddM k m (update x v rest)
+
+public export
+minBoxVal : BoxInt -> BoxInt -> BoxInt
+minBoxVal a b = if unwrapBox a <= unwrapBox b then a else b
+
+||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
+||| Emits participatory motor command token from living observer and trophic dissipation at k >= 38.
+public export
+stepMatterSector : (k : Nat) -> (scale : BoxInt) -> (hubble : BoxInt) -> MatterSubstanceSector -> (MatterSubstanceSector, Maybe MotorCommand, BoxInt)
 stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
   let -- Tier 1: Stellar nucleosynthesis (k in [11, 20])
-      nextNucl = if (k >= 11 && k <= 20)
-                   then stepStellarNucleosynthesis k nucl
-                   else nucl
-      -- Tier 2: Atomic recombination (k in [15, 25])
-      nextAtoms = if (k >= 15 && k <= 25)
-                    then stepAtomicRecombination k atoms
-                    else atoms
-      -- Tier 3: Prebiotic volatile aggregation (k in [21, 30])
-      nextMols = if (k >= 21 && k <= 30)
-                   then stepPrebioticVolatiles k mols
-                   else mols
-      -- Tier 4: Macromolecular assembly (k in [26, 37])
-      chemRes  = stepChemicalAssembly k chem
-      nextChem = fst chemRes
-      chemAtp  = snd chemRes
+      t1Nucl = if (k >= 11 && k <= 20)
+                 then stepStellarNucleosynthesis k nucl
+                 else nucl
+      -- Tier 2: Atomic recombination (k in [15, 25]) - consumes nuclides to form atoms
+      (remNucl, nextAtoms) =
+        if (k >= 15 && k <= 25)
+          then let (n1, actH)  = decrementToken ElemH (intToBoxInt 10) t1Nucl
+                   (n2, actHe) = decrementToken ElemHe (intToBoxInt 2) n1
+                   (n3, actC)  = decrementToken ElemC (intToBoxInt 1) n2
+                   (n4, actO)  = decrementToken ElemO (intToBoxInt 1) n3
+                   numH  = if boxIsZero actH then intToBoxInt 10 else actH
+                   numHe = if boxIsZero actHe then intToBoxInt 2 else actHe
+                   numC  = if boxIsZero actC then intToBoxInt 1 else actC
+                   numO  = if boxIsZero actO then intToBoxInt 1 else actO
+                   gainedAtoms = AddM HydrogenToken numH
+                                 (AddM HeliumToken numHe
+                                 (AddM CarbonToken numC
+                                 (AddM OxygenToken numO atoms)))
+               in (n4, gainedAtoms)
+          else (t1Nucl, atoms)
+      -- Tier 3: Prebiotic volatile aggregation (k in [21, 30]) - consumes atoms to form molecules
+      (remAtoms, nextMols) =
+        if (k >= 21 && k <= 30)
+          then let (a1, actH_w) = decrementToken HydrogenToken (intToBoxInt 8) nextAtoms
+                   (a2, actO_w) = decrementToken OxygenToken (intToBoxInt 4) a1
+                   numH2O = if boxIsZero actH_w then intToBoxInt 4 else minBoxVal (divBox actH_w (intToBoxInt 2)) actO_w
+                   (a3, actC_co2) = decrementToken CarbonToken (intToBoxInt 2) a2
+                   (a4, actO_co2) = decrementToken OxygenToken (intToBoxInt 4) a3
+                   numCO2 = if boxIsZero actC_co2 then intToBoxInt 2 else minBoxVal actC_co2 (divBox actO_co2 (intToBoxInt 2))
+                   (a5, actC_ch4) = decrementToken CarbonToken (intToBoxInt 1) a4
+                   (a6, actH_ch4) = decrementToken HydrogenToken (intToBoxInt 4) a5
+                   numCH4 = if boxIsZero actC_ch4 then intToBoxInt 1 else minBoxVal actC_ch4 (divBox actH_ch4 (intToBoxInt 4))
+                   (a7, actN_nh3) = decrementToken NitrogenToken (intToBoxInt 1) a6
+                   (a8, actH_nh3) = decrementToken HydrogenToken (intToBoxInt 3) a7
+                   numNH3 = if boxIsZero actN_nh3 then intToBoxInt 1 else minBoxVal actN_nh3 (divBox actH_nh3 (intToBoxInt 3))
+                   gainedMols = AddM WaterMoleculeToken (if boxIsZero numH2O then intToBoxInt 4 else numH2O)
+                                (AddM CarbonDioxideToken (if boxIsZero numCO2 then intToBoxInt 2 else numCO2)
+                                (AddM MethaneToken (if boxIsZero numCH4 then intToBoxInt 1 else numCH4)
+                                (AddM AmmoniaToken (if boxIsZero numNH3 then intToBoxInt 1 else numNH3) mols)))
+               in (a8, gainedMols)
+          else (nextAtoms, mols)
+      -- Tier 4: Macromolecular assembly (k in [26, 37]) - consumes volatiles
+      (remMols, nextChem, chemAtp) =
+        if (k >= 26 && k < 38)
+          then let (m1, _) = decrementToken WaterMoleculeToken (intToBoxInt 2) nextMols
+                   (m2, _) = decrementToken MethaneToken (intToBoxInt 1) m1
+                   (m3, _) = decrementToken CarbonDioxideToken (intToBoxInt 1) m2
+                   (m4, _) = decrementToken AmmoniaToken (intToBoxInt 1) m3
+                   chemRes = stepChemicalAssembly k chem
+               in (m4, fst chemRes, snd chemRes)
+          else (nextMols, fst (stepChemicalAssembly k chem), snd (stepChemicalAssembly k chem))
       -- Tier 5: Observer active inference (k >= 38)
       (nextObs, maybeMotor) =
         if k < 38
@@ -95,14 +152,17 @@ stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
                        kInt = cast {to = Integer} k
                        modality = integerToNat (kInt `mod` 137)
                        percept = MkLToken (MkSensoryPercept modality intensity)
-                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept liv
+                       livWithAtp = if boxIsNonZero chemAtp
+                                      then MkObserverLivingState (addBox liv.metabolicYieldATP chemAtp) liv.variationalSurprise liv.activeNeurons liv.markovBlanketPurity liv.networkState
+                                      else liv
+                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept livWithAtp
                    in (LivingObserver nextLiv, Just motor)
       -- Tier 6: Systems ecology trophic pyramid (k >= 38)
-      (nextEco, _) =
+      (nextEco, ecoDiss) =
         if k < 38
           then (eco, intToBoxInt 0)
           else stepTrophicEcosystem eco
-  in (MkMatterSector nextNucl nextAtoms nextMols nextChem nextObs nextEco, maybeMotor)
+  in (MkMatterSector remNucl remAtoms remMols nextChem nextObs nextEco, maybeMotor, ecoDiss)
 
 ||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge and Maxwell coupling.
 public export
@@ -171,7 +231,7 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
       maxwell4D = maxwellStateTo4DMaxel gauge.gaugeMaxwellField
       nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons maxwell4D dt dynamics
       -- 3. Step Matter Sector (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology)
-      (nextMatter, maybeMotor) = stepMatterSector nextK nextThermo.subScaleFactor nextThermo.subHubbleRate matter
+      (nextMatter, maybeMotor, ecoDiss) = stepMatterSector nextK nextThermo.subScaleFactor nextThermo.subHubbleRate matter
       -- 4. Closed-Loop Participatory Feedback (Phase 2):
       -- Motor command action energy back-reacts on local curvature defect
       participatoryDefect = case maybeMotor of
@@ -180,7 +240,8 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
       hamiltonianE = modBox (hamiltonianEnergyExact (intToBoxInt 1) nextDynamics.dynPhaseState) (intToBoxInt 137)
       -- If rollover (epochIndex >= 136), route the 61 dissipated tokens into the parabolic defect drain:
       drainTokens = if thermo.subEpochIndex >= 136 then modBox thermo.subDissipatedEntropy (intToBoxInt 55) else intToBoxInt 0
-      substrateDiss = modBox (qBlue + qRed + drainTokens) (intToBoxInt 137)
+      ecoEntropy = divBox ecoDiss (intToBoxInt 137)
+      substrateDiss = modBox (qBlue + qRed + drainTokens + ecoEntropy) (intToBoxInt 137)
       totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) (intToBoxInt 137)
       -- 5. Step Spacetime Sector under total defect
       nextSpacetime = stepSpacetimeSector spacetime totalDefect
