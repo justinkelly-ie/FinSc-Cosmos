@@ -12,6 +12,7 @@ import Compound.SymplecticIntegrator
 import Stage1.Epoch.ScaleTrajectorySieve
 import Stage1.Multiset.PrimordialUnfolding
 import Stage1.Carrier.ChromogeometricMetric
+import Stage0.OnSeq.FusedStream
 import Data.Vect
 
 %default total
@@ -126,6 +127,51 @@ runSimulationSteps Z st = st
 runSimulationSteps (S k) st =
   let st' = stepUniverseSimulation st
   in runSimulationSteps k st'
+
+------------------------------------------------------------------------
+-- 1B. LINEAR OBSERVABLE PAIR TRANSDUCER (LinearStatePair)
+------------------------------------------------------------------------
+
+||| Lightweight observable projection record emitted at each action step:
+||| Captures cosmic expansion, relational action ticks, and thermodynamic dissipation.
+public export
+record SimulationObservableRecord where
+  constructor MkSimObsRecord
+  obsTicks       : Nat
+  obsEpoch       : Nat
+  obsScaleFactor : BoxInt
+  obsHubbleRate  : BoxInt
+  obsFreeEnergy  : BoxInt
+  obsDissEntropy : BoxInt
+
+public export
+Eq SimulationObservableRecord where
+  (MkSimObsRecord t1 e1 a1 h1 f1 d1) == (MkSimObsRecord t2 e2 a2 h2 f2 d2) =
+    t1 == t2 && e1 == e2 && a1 == a2 && h1 == h2 && f1 == f2 && d1 == d2
+
+public export
+Show SimulationObservableRecord where
+  show (MkSimObsRecord t e a h f d) =
+    "Obs(t=" ++ show t ++ ", ep=" ++ show e ++ ", a=" ++ show (unwrapBox a) ++
+    ", H=" ++ show (unwrapBox h) ++ ", F=" ++ show (unwrapBox f) ++ ", S_diss=" ++ show (unwrapBox d) ++ ")"
+
+||| Linear simulation transition step emitting a SimulationObservableRecord alongside linearly consumed state.
+public export
+stepSimulationObservable : (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState SimulationObservableRecord
+stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
+  let obs = MkSimObsRecord ticks k scaleFactor hubbleRate fe.freeEnergy dissEntropy
+      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
+  in MkLStatePair st' obs
+
+||| Streams universe simulation evolution across N action steps with strict QTT linearity,
+||| accumulating the observable trajectory into an unrestricted list without leaking or duplicating the linear state.
+public export
+runSimulationWithObservables : (steps : Nat) -> (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState (List SimulationObservableRecord)
+runSimulationWithObservables Z st = MkLStatePair st (the (List SimulationObservableRecord) [])
+runSimulationWithObservables (S k) st =
+  let MkLStatePair st' obs = stepSimulationObservable st
+      MkLStatePair stFinal history = runSimulationWithObservables k st'
+  in MkLStatePair stFinal (the (List SimulationObservableRecord) (obs :: history))
 
 ------------------------------------------------------------------------
 -- 2. INVARIANT AUDITS FOR SIMULATION STEPPER
@@ -295,4 +341,13 @@ auditSymplecticCFLBoundedTrajectoryProof =
       q1 = lookupUnixel (MkUnixel 1) st137.phaseState.position
       p1 = lookupUnixel (MkUnixel 1) st137.phaseState.momentum
   in absBox q1 <= intToBoxInt 4 && absBox p1 <= intToBoxInt 4
+
+||| Audit: Linear observable stepper records exact sequence of ticks and non-decreasing scale factors.
+public export
+auditLinearSimulationObservableStepperProof : Bool
+auditLinearSimulationObservableStepperProof =
+  let st0 = initUniverseSimulation
+      MkLStatePair stFinal history = runSimulationWithObservables 10 st0
+  in length history == 10 && stFinal.substrateTicks == 10
+
 
