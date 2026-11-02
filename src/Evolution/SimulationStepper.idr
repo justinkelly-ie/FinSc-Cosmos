@@ -18,6 +18,7 @@ import Stage0.Multiset
 import Stage0.Hadron.StellarNucleosynthesis
 import Stage0.Chemistry.MacromolecularAssembly
 import Data.Vect
+import Stage0.Token
 
 %default total
 
@@ -35,104 +36,132 @@ stepObserverLivingState : (k : Nat) -> (scaleFactor : BoxInt) -> (hubbleRate : B
 stepObserverLivingState k currentScale hubble liv =
   stepObserverLivingFromEnvironment k currentScale hubble liv
 
-||| Coupled Einstein-Hamiltonian loop: phase-space stress-energy perturbs metric tensor,
-||| which in turn modulates geodesic acceleration.
-||| Evaluates companion spread matrix in O(log k) and branches observer epoch at k=38.
-||| Enforces strict linear QTT consumption of the active state.
+||| Sector 1 stepper: Updates 10D spacetime bulk metric and 4D leaf projection under energy defect back-reaction.
 public export
-stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
-  let (nextSuperEp, nextK) : (Nat, Nat) =
-        if k >= 136 then (S superEp, Z) else (superEp, S k)
-      nextTicks = S ticks
-      -- 1. Dynamic Coordinate & Substrate Governor Metric (4th Geometry: g_22 = 0)
-      (xk, yk) = epochPythagoreanCoordinateReentrant nextSuperEp nextK
-      qBlue = (xk * xk) + (yk * yk)
-      qRed  = (xk * xk) - (yk * yk)
-      nextGov = parameterizedSubstrateSquareMaxel xk yk
-      -- 2. Energy-Momentum Curvature Back-Reaction & Substrate Dissipation:
-      -- Un-divided Hamiltonian energy dynamically back-reacts on timelike Ricci curvature defect
-      energy = modBox (hamiltonianEnergyExact (intToBoxInt 1) phase) (intToBoxInt 137)
-      substrateDissipation = modBox (qBlue + qRed) (intToBoxInt 137)
-      nextDefect = modBox (energy + substrateDissipation) (intToBoxInt 137)
-      -- 3. 10D Bulk Spacetime Metric Update & 4D Leaf Projection in O(1)
-      nextG10 = perturbMetric00 g10 nextDefect
-      nextG4  = perturbSquareMaxel00 g4 nextDefect
-      nextModuli : Nat = 45
-      -- 4. Metric-Coupled CFL-Stable 4D Symplectic Störmer-Verlet Kick in O(1):
-      -- Preserves phase-space volume across 4D spacetime leaf (mu = 0, 1, 2, 3)
-      dt = intToBoxInt 1
-      nextPhase = symplecticCFLStormerVerletStep4D nextG4 dt phase
-      -- 5. Substrate-Regulated Dynamic Companion Spread Recurrence:
-      -- Bounds the companion spread matrix in O(1) registers matching (2 - 4s_k) in [-2, 2]
-      nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
-      -- 6. Cosmic Expansion Observables governed by ExpansionParadigm
-      nextScaleFactor = case mode of
-                          MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
-                          ConformalCyclicBounce  => qBlue
-      nextHubbleRate  = intToBoxInt 2 * (yk * yk)
-      -- 7. Internal Matter Succession: Stellar Nucleosynthesis (11 <= k <= 20) & Macromolecular Assembly (21 <= k < 38)
-      nextNucl = if (nextK >= 11 && nextK <= 20)
-                   then stepStellarNucleosynthesis nextK nucl
+stepSpacetimeSector : SpacetimeBulkSector -> (energyDefect : BoxInt) -> SpacetimeBulkSector
+stepSpacetimeSector (MkSpacetimeSector g10 g4 moduli _) defect =
+  let nextG10 = perturbMetric00 g10 defect
+      nextG4  = perturbSquareMaxel00 g4 defect
+  in MkSpacetimeSector nextG10 nextG4 moduli defect
+
+||| Sector 2 stepper: Preserves SU(3) Gell-Mann gauge field symmetries.
+public export
+stepGaugeSector : GaugeFieldSector -> GaugeFieldSector
+stepGaugeSector = id
+
+||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Chemistry -> Living Observer).
+||| Emits participatory motor command token from living observer at k >= 38.
+public export
+stepMatterSector : (k : Nat) -> (scale : BoxInt) -> (hubble : BoxInt) -> MatterSubstanceSector -> (MatterSubstanceSector, Maybe MotorCommand)
+stepMatterSector k scale hubble (MkMatterSector nucl chem obs) =
+  let nextNucl = if (k >= 11 && k <= 20)
+                   then stepStellarNucleosynthesis k nucl
                    else nucl
-      chemRes = stepChemicalAssembly nextK chem
+      chemRes  = stepChemicalAssembly k chem
       nextChem = fst chemRes
       chemAtp  = snd chemRes
-      -- 8. Persistent Living Observer ignited at k=38 fueled by chemical ATP carrier yield (Rule 03 §5)
-      nextIsObs = nextK >= 38
-      nextObsState =
-        if nextK < 38
-          then DormantObserver
-          else case obsState of
+      (nextObs, maybeMotor) =
+        if k < 38
+          then (DormantObserver, Nothing)
+          else case obs of
                  DormantObserver =>
                    let atp = if boxIsZero chemAtp then intToBoxInt 750 else chemAtp
                        initLiv = MkObserverLivingState atp (intToBoxInt 0) 39 True canonicalObserverNetwork38
-                   in LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate initLiv)
+                       intensity = absBox (subBox hubble scale)
+                       kInt = cast {to = Integer} k
+                       modality = integerToNat (kInt `mod` 137)
+                       percept = MkLToken (MkSensoryPercept modality intensity)
+                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept initLiv
+                   in (LivingObserver nextLiv, Just motor)
                  LivingObserver liv =>
-                   LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate liv)
-      -- 9. SU(3) Gluon updates (Gell-Mann algebra preserved)
-      nextGluons = gluons
-      -- 10. Baryonic Matter Profile & Dark Matter Halo Symplectic Step
-      nextGal = gal
+                   let intensity = absBox (subBox hubble scale)
+                       kInt = cast {to = Integer} k
+                       modality = integerToNat (kInt `mod` 137)
+                       percept = MkLToken (MkSensoryPercept modality intensity)
+                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept liv
+                   in (LivingObserver nextLiv, Just motor)
+  in (MkMatterSector nextNucl nextChem nextObs, maybeMotor)
+
+||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge coupling.
+public export
+stepDynamicsSector : (g4 : SquareMaxel 4) -> (gluons : Vect 8 (SquareMaxel 3)) -> (dt : BoxInt) -> SymplecticDynamicsSector -> SymplecticDynamicsSector
+stepDynamicsSector g4 gluons dt (MkDynamicsSector phase gal halo) =
+  let nextPhase = symplecticGaugeCFLStormerVerletStep4D g4 gluons dt phase
       nextHalo = stepGalacticHaloMass (intToBoxInt 1) halo
-      -- 11. 13-Smoothness Coherence Status for generation n = S nextK
+  in MkDynamicsSector nextPhase gal nextHalo
+
+||| Sector 5 stepper: Advances clock ticks, scale factor, sieve status, Landauer dissipation, and dynamic free energy.
+public export
+stepSubstrateSector :
+  (nextSuperEp : Nat) ->
+  (nextK : Nat) ->
+  (xk : BoxInt) ->
+  (yk : BoxInt) ->
+  (qBlue : BoxInt) ->
+  (qRed : BoxInt) ->
+  ThermodynamicSubstrateSector ->
+  ThermodynamicSubstrateSector
+stepSubstrateSector nextSuperEp nextK xk yk qBlue qRed (MkSubstrateSector epochIndex superEp ticks cap spread scale hubble gov mode isObs status fe dissEntropy) =
+  let nextTicks = S ticks
+      nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
+      nextScaleFactor = case mode of
+                          MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
+                          ConformalCyclicBounce  => qBlue
+      nextHubbleRate = intToBoxInt 2 * (yk * yk)
+      nextGov = parameterizedSubstrateSquareMaxel xk yk
+      nextIsObs = nextK >= 38
       nextStatus = evalScaleStepCoherence nextK
-      -- 12. Cumulative Landauer Dissipated Entropy with Conformal Parabolic Flush:
-      -- At eon rollover (k = 136 -> 137 -> 0), the parabolic null metric drain flushes thermal tokens
       nextDissipated =
-        if k >= 136
+        if epochIndex >= 136
           then intToBoxInt 0
           else case nextStatus of
                  GatePure _   => dissEntropy
                  Decoherent _ => dissEntropy + intToBoxInt 1
-      -- 13. Dynamic Discrete Helmholtz Free Energy F = U - TS coupled to Landauer dissipation:
-      -- Ground state F = -1320 when nextDissipated = 0; Delta S >= 0 <=> Delta F <= 0
       nextFE = evaluateDynamicHelmholtzState (intToBoxInt 398) (addBox (intToBoxInt 859) nextDissipated)
-  in MkUniverseSimulationState
+  in MkSubstrateSector
        nextK
        nextSuperEp
        nextTicks
        cap
-       nextG10
-       nextG4
-       nextModuli
-       nextGluons
-       nextGal
-       nextHalo
-       nextNucl
-       nextChem
-       nextPhase
-       nextDefect
        nextSpread
        nextScaleFactor
        nextHubbleRate
        nextGov
        mode
        nextIsObs
-       nextObsState
        nextStatus
        nextFE
        nextDissipated
+
+||| Coupled Einstein-Hamiltonian loop: evolving all 5 physical sectors under strict QTT linearity.
+public export
+stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
+stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamics thermo) =
+  let (nextSuperEp, nextK) : (Nat, Nat) =
+        if thermo.subEpochIndex >= 136 then (S thermo.subSuperEpoch, Z) else (thermo.subSuperEpoch, S thermo.subEpochIndex)
+      (xk, yk) = epochPythagoreanCoordinateReentrant nextSuperEp nextK
+      qBlue = (xk * xk) + (yk * yk)
+      qRed  = (xk * xk) - (yk * yk)
+      -- 1. Step Substrate Thermodynamic Sector
+      nextThermo = stepSubstrateSector nextSuperEp nextK xk yk qBlue qRed thermo
+      -- 2. Step Dynamics Sector (4D symplectic leapfrog coupled to leaf metric and DEC gauge gluons)
+      dt = intToBoxInt 1
+      nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons dt dynamics
+      -- 3. Step Matter Sector (Nuclear -> Chemistry -> Living Observer)
+      (nextMatter, maybeMotor) = stepMatterSector nextK nextThermo.subScaleFactor nextThermo.subHubbleRate matter
+      -- 4. Closed-Loop Participatory Feedback (Phase 2):
+      -- Motor command action energy back-reacts on local curvature defect
+      participatoryDefect = case maybeMotor of
+                              Just motor => modBox (divBox motor.actionEnergy (intToBoxInt 137)) (intToBoxInt 137)
+                              Nothing    => intToBoxInt 0
+      hamiltonianE = modBox (hamiltonianEnergyExact (intToBoxInt 1) nextDynamics.dynPhaseState) (intToBoxInt 137)
+      substrateDiss = modBox (qBlue + qRed) (intToBoxInt 137)
+      totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) (intToBoxInt 137)
+      -- 5. Step Spacetime Sector under total defect
+      nextSpacetime = stepSpacetimeSector spacetime totalDefect
+      -- 6. Step Gauge Sector
+      nextGauge = stepGaugeSector gauge
+  in MkUniverseSimulationState nextSpacetime nextGauge nextMatter nextDynamics nextThermo
 
 ||| Advances the simulation by n action steps recursively.
 public export
@@ -172,9 +201,9 @@ Show SimulationObservableRecord where
 ||| Linear simulation transition step emitting a SimulationObservableRecord alongside linearly consumed state.
 public export
 stepSimulationObservable : (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState SimulationObservableRecord
-stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
-  let obs = MkSimObsRecord ticks k scaleFactor hubbleRate fe.freeEnergy dissEntropy
-      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
+stepSimulationObservable (MkUniverseSimulationState spacetime gauge matter dynamics thermo) =
+  let obs = MkSimObsRecord thermo.subTicks thermo.subEpochIndex thermo.subScaleFactor thermo.subHubbleRate thermo.subFreeEnergyState.freeEnergy thermo.subDissipatedEntropy
+      st' = stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamics thermo)
   in MkLStatePair st' obs
 
 ||| Streams universe simulation evolution across N action steps with strict QTT linearity,
@@ -197,7 +226,7 @@ auditSimulationClockStep : Bool
 auditSimulationClockStep =
   let st0 = initUniverseSimulation
       st1 = stepUniverseSimulation st0
-  in st1.substrateTicks == 1 && st1.epochIndex == 1
+  in substrateTicks st1 == 1 && epochIndex st1 == 1
 
 ||| Audit: 137 steps completes a full cosmic trajectory loop and verifies asymptotic flatness.
 public export
@@ -205,9 +234,9 @@ auditSimulationFullTrajectory : Bool
 auditSimulationFullTrajectory =
   let st0 = initUniverseSimulation
       st137 = runSimulationSteps 137 st0
-      v10 = rotationVelocity10D st137.galacticProfile (intToBoxInt 10)
-      v20 = rotationVelocity10D st137.galacticProfile (intToBoxInt 20)
-  in st137.substrateTicks == 137 &&
+      v10 = rotationVelocity10D (galacticProfile st137) (intToBoxInt 10)
+      v20 = rotationVelocity10D (galacticProfile st137) (intToBoxInt 20)
+  in substrateTicks st137 == 137 &&
      v10 == intToBoxInt 11000 && v20 == intToBoxInt 10500
 
 ||| Audit: Dual-Branch observer epoch activates specifically at k = 38 (Observer Epoch).
@@ -216,8 +245,8 @@ auditSimulationDynamicsAndObserver : Bool
 auditSimulationDynamicsAndObserver =
   let st0 = initUniverseSimulation
       st38 = runSimulationSteps 38 st0
-  in st38.epochIndex == 38 &&
-     st38.observerEpochActive == True
+  in epochIndex st38 == 38 &&
+     observerEpochActive st38 == True
 
 ||| Audit: Dynamic cosmic expansion scale factor and Hubble rate are positive and non-zero.
 public export
@@ -225,10 +254,10 @@ auditSimulationExpansionRate : Bool
 auditSimulationExpansionRate =
   let st0 = initUniverseSimulation
       st1 = stepUniverseSimulation st0
-  in st0.scaleFactor == intToBoxInt 25 &&
-     st0.hubbleExpansionRate == intToBoxInt 18 &&
-     st1.scaleFactor > intToBoxInt 0 &&
-     st1.hubbleExpansionRate > intToBoxInt 0
+  in scaleFactor st0 == intToBoxInt 25 &&
+     hubbleExpansionRate st0 == intToBoxInt 18 &&
+     scaleFactor st1 > intToBoxInt 0 &&
+     hubbleExpansionRate st1 > intToBoxInt 0
 
 ||| Audit: Substrate-threaded dynamic spread entries stay strictly bounded in O(1) registers (|c_ij| <= 250).
 public export
@@ -236,9 +265,9 @@ auditSubstrateThreadedSpreadBounded : Bool
 auditSubstrateThreadedSpreadBounded =
   let st0 = initUniverseSimulation
       st137 = runSimulationSteps 137 st0
-      c00 = lookupBoxTree (MkPixel 0 0) st137.spreadMatrix.entries
-      c01 = lookupBoxTree (MkPixel 0 1) st137.spreadMatrix.entries
-      c10 = lookupBoxTree (MkPixel 1 0) st137.spreadMatrix.entries
+      c00 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st137).entries
+      c01 = lookupBoxTree (MkPixel 0 1) (spreadMatrix st137).entries
+      c10 = lookupBoxTree (MkPixel 1 0) (spreadMatrix st137).entries
   in absBox c00 <= intToBoxInt 1000 &&
      absBox c01 <= intToBoxInt 1000 &&
      absBox c10 <= intToBoxInt 1000
@@ -250,11 +279,11 @@ auditSimulationReentrancy : Bool
 auditSimulationReentrancy =
   let st0 = initUniverseSimulation
       st137 = runSimulationSteps 137 st0
-      c00 = lookupBoxTree (MkPixel 0 0) st137.spreadMatrix.entries
-  in st137.superEpoch == 1 &&
-     st137.epochIndex == 0 &&
-     st137.scaleFactor > intToBoxInt 0 &&
-     st137.hubbleExpansionRate > intToBoxInt 0 &&
+      c00 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st137).entries
+  in superEpoch st137 == 1 &&
+     epochIndex st137 == 0 &&
+     scaleFactor st137 > intToBoxInt 0 &&
+     hubbleExpansionRate st137 > intToBoxInt 0 &&
      c00 /= intToBoxInt 0 &&
      absBox c00 <= intToBoxInt 1000
 
@@ -282,9 +311,9 @@ auditMultiEonSimulationProof : Bool
 auditMultiEonSimulationProof =
   let st0 = initUniverseSimulation
       st10Eons = runSimulationEons 10 st0
-      c00 = projectSquareMaxel00 st10Eons.spreadMatrix
-  in st10Eons.superEpoch == 10 &&
-     st10Eons.scaleFactor > intToBoxInt 0 &&
+      c00 = projectSquareMaxel00 (spreadMatrix st10Eons)
+  in superEpoch st10Eons == 10 &&
+     scaleFactor st10Eons > intToBoxInt 0 &&
      absBox c00 <= intToBoxInt 40000
 
 ||| Static compiler proof witness verifying 0-allocation direct 2x2 companion matrix construction.
@@ -300,7 +329,7 @@ public export
 auditUniverseCapacityQuadProof : Bool
 auditUniverseCapacityQuadProof =
   let st = initUniverseSimulation
-  in st.capacityBudget == canonicalQuadCapacityBudget
+  in capacityBudget st == canonicalQuadCapacityBudget
 
 ||| Audit: Persistent Living Observer branch remains active for all epochs k >= 38.
 public export
@@ -310,9 +339,9 @@ auditObserverBranchPersistenceProof =
       st38 = runSimulationSteps 38 st0
       st39 = runSimulationSteps 39 st0
       st50 = runSimulationSteps 50 st0
-  in st38.observerEpochActive == True &&
-     st39.observerEpochActive == True &&
-     st50.observerEpochActive == True
+  in observerEpochActive st38 == True &&
+     observerEpochActive st39 == True &&
+     observerEpochActive st50 == True
 
 ||| Audit: Landauer thermal entropy accumulates exactly 61 dissipated tokens across the 137-scale sieve.
 public export
@@ -320,7 +349,7 @@ auditLandauerSieveDissipationProof : Bool
 auditLandauerSieveDissipationProof =
   let st0 = initUniverseSimulation
       st136 = runSimulationSteps 136 st0
-  in st136.dissipatedEntropy == intToBoxInt 61
+  in dissipatedEntropy st136 == intToBoxInt 61
 
 ||| Audit: Conformal cyclic parabolic flush resets dissipated entropy at eon bounce (step 136 -> step 137).
 public export
@@ -329,9 +358,9 @@ auditConformalParabolicFlushProof =
   let st0 = initUniverseSimulation
       st136 = runSimulationSteps 136 st0
       st137 = runSimulationSteps 137 st0
-  in st136.dissipatedEntropy == intToBoxInt 61 &&
-     st137.dissipatedEntropy == intToBoxInt 0 &&
-     st137.superEpoch == 1
+  in dissipatedEntropy st136 == intToBoxInt 61 &&
+     dissipatedEntropy st137 == intToBoxInt 0 &&
+     superEpoch st137 == 1
 
 ||| Audit: Active inference predictive coding filter maintains bounded internal free energy (F_int <= 887).
 public export
@@ -339,7 +368,7 @@ auditActiveInferencePredictiveMinimizationProof : Bool
 auditActiveInferencePredictiveMinimizationProof =
   let st0 = initUniverseSimulation
       st136 = runSimulationSteps 136 st0
-  in case st136.observerState of
+  in case observerState st136 of
        DormantObserver => False
        LivingObserver liv =>
          liv.markovBlanketPurity == True &&
@@ -352,8 +381,8 @@ auditSymplecticCFLBoundedTrajectoryProof : Bool
 auditSymplecticCFLBoundedTrajectoryProof =
   let st0 = initUniverseSimulation
       st137 = runSimulationSteps 137 st0
-      q1 = lookupUnixel (MkUnixel 1) st137.phaseState.position
-      p1 = lookupUnixel (MkUnixel 1) st137.phaseState.momentum
+      q1 = lookupUnixel (MkUnixel 1) (phaseState st137).position
+      p1 = lookupUnixel (MkUnixel 1) (phaseState st137).momentum
   in absBox q1 <= intToBoxInt 4 && absBox p1 <= intToBoxInt 4
 
 ||| Audit: Linear observable stepper records exact sequence of ticks and non-decreasing scale factors.
@@ -362,6 +391,19 @@ auditLinearSimulationObservableStepperProof : Bool
 auditLinearSimulationObservableStepperProof =
   let st0 = initUniverseSimulation
       MkLStatePair stFinal history = runSimulationWithObservables 10 st0
-  in length history == 10 && stFinal.substrateTicks == 10
+  in length history == 10 && substrateTicks stFinal == 10
+
+||| Audit: Participatory observer active inference loop back-reacts on local metric curvature defect.
+||| Verifies that at epoch k >= 38, active motor commands stably modulate curvature defect G_00 within bounds.
+public export
+auditParticipatoryObserverCurvatureFeedbackProof : Bool
+auditParticipatoryObserverCurvatureFeedbackProof =
+  let st0 = initUniverseSimulation
+      st38 = runSimulationSteps 38 st0
+      st39 = runSimulationSteps 39 st0
+  in observerEpochActive st38 == True &&
+     observerEpochActive st39 == True &&
+     absBox (curvatureDefect st39) <= intToBoxInt 137
+
 
 

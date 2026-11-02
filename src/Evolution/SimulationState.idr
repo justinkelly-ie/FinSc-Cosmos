@@ -65,6 +65,12 @@ record DiscreteHelmholtzState (vm : Nat) (de : Nat) (dm : Nat) (temp : Nat) wher
   0 freeEnergyPrf: freeEnergy = internalEnergy - (intToBoxInt (cast temp) * entropy)
 
 public export
+{vm, de, dm, temp : Nat} -> Eq (DiscreteHelmholtzState vm de dm temp) where
+  (MkDiscreteHelmholtzState u1 s1 f1 _) == (MkDiscreteHelmholtzState u2 s2 f2 _) =
+    u1 == u2 && s1 == s2 && f1 == f2
+
+
+public export
 canonicalHelmholtzGroundState : DiscreteHelmholtzState 27 128 55 2
 canonicalHelmholtzGroundState =
   MkDiscreteHelmholtzState (intToBoxInt 398) (intToBoxInt 859) (intToBoxInt (-1320)) Refl
@@ -119,47 +125,125 @@ Show ExpansionParadigm where
   show ConformalCyclicBounce  = "ConformalCyclic"
 
 ------------------------------------------------------------------------
--- 3. UNIFIED UNIVERSE SIMULATION STATE (Rule 03 §5)
+-- 3. UNIFIED UNIVERSE SIMULATION SECTORS (Rule 03 §5)
 ------------------------------------------------------------------------
 
-||| Complete constructivist simulation state tracking the universal evolution:
-||| - Relational Clock: time is exactly the accumulated action quanta (substrateTicks: Delta S = 1).
-||| - Geometry & Bulk: 10D SymmetricMetricTensor (55 components), projected to 4D leaf (10 components).
-||| - Uncompactified Moduli: 45 moduli driving dark matter rotation curves.
-||| - Gauge Symmetry: 8 discrete Gell-Mann matrices of SU(3) subset G_2.
-||| - Matter & Dynamics: PhaseState (q, p) symplectic carrier.
-||| - Curvature Back-Reaction: active G_00 defect perturbing spacetime.
-||| - Rational Trig: 2x2 companion spread matrix M(s)^k in O(log k).
-||| - Observer Branch: active inference & biomolecules at k=38 (Observer Epoch).
-||| - Thermodynamics: canonical 137-scale sieve & Helmholtz free energy.
-||| - Substrate Metric: 4th Geometry governing capacity & thermodynamic dissipation.
+||| Sector 1: Spacetime bulk geometry and metric perturbations (55 + 10 DoF).
+public export
+record SpacetimeBulkSector where
+  constructor MkSpacetimeSector
+  bulkMetricTensor    : SymmetricMetricTensor 10
+  bulkProjectedLeaf   : SquareMaxel 4
+  bulkModuliDOF       : Nat
+  bulkCurvatureDefect : BoxInt
+
+public export
+Eq SpacetimeBulkSector where
+  (MkSpacetimeSector m1 p1 d1 c1) == (MkSpacetimeSector m2 p2 d2 c2) =
+    m1 == m2 && p1 == p2 && d1 == d2 && c1 == c2
+
+||| Sector 2: Non-Abelian gauge field symmetries (SU(3) subset G_2).
+public export
+record GaugeFieldSector where
+  constructor MkGaugeSector
+  gaugeGellMannGluons : Vect 8 (SquareMaxel 3)
+
+public export
+Eq GaugeFieldSector where
+  (MkGaugeSector g1) == (MkGaugeSector g2) = g1 == g2
+
+||| Sector 3: Internal matter trunk (Nuclear -> Chemistry -> Living Observer).
+public export
+record MatterSubstanceSector where
+  constructor MkMatterSector
+  matNuclearNuclides : Multiset BoxInt StellarElement
+  matChemicalYield   : Multiset BoxInt MacromoleculeSpec
+  matObserverState   : ObserverBranchState
+
+public export
+Eq MatterSubstanceSector where
+  (MkMatterSector n1 c1 o1) == (MkMatterSector n2 c2 o2) =
+    n1 == n2 && c1 == c2 && o1 == o2
+
+||| Sector 4: Hamiltonian phase space dynamics and dark matter halo distribution.
+public export
+record SymplecticDynamicsSector where
+  constructor MkDynamicsSector
+  dynPhaseState      : PhaseState
+  dynGalacticProfile : GalacticProfile
+  dynGalacticHalo    : GalacticHaloMultiset
+
+public export
+Eq SymplecticDynamicsSector where
+  (MkDynamicsSector p1 g1 h1) == (MkDynamicsSector p2 g2 h2) =
+    p1 == p2 && g1 == g2 && h1 == h2
+
+||| Sector 5: Substrate clock, 4th geometry governor, and thermodynamics.
+public export
+record ThermodynamicSubstrateSector where
+  constructor MkSubstrateSector
+  subEpochIndex          : Nat
+  subSuperEpoch          : Nat
+  subTicks               : Nat
+  subCapacityBudget      : DiscreteCapacityBudget 27 128 55
+  subSpreadMatrix        : SquareMaxel 2
+  subScaleFactor         : BoxInt
+  subHubbleRate          : BoxInt
+  subGovernor            : SquareMaxel 2
+  subExpansionMode       : ExpansionParadigm
+  subObserverEpochActive : Bool
+  subCoherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S subEpochIndex)
+  subFreeEnergyState     : DiscreteHelmholtzState 27 128 55 2
+  subDissipatedEntropy   : BoxInt
+
+public export
+Eq ThermodynamicSubstrateSector where
+  (MkSubstrateSector e1 s1 t1 c1 m1 a1 h1 g1 x1 o1 k1 f1 d1) == (MkSubstrateSector e2 s2 t2 c2 m2 a2 h2 g2 x2 o2 k2 f2 d2) =
+    e1 == e2 && s1 == s2 && t1 == t2 && c1 == c2 && m1 == m2 && a1 == a2 && h1 == h2 && g1 == g2 && x1 == x2 && o1 == o2 && isStatusGatePure k1 == isStatusGatePure k2 && f1 == f2 && d1 == d2
+
+||| Canonical Universal Simulation State as a product of the 5 physical sectors:
 public export
 record UniverseSimulationState where
   constructor MkUniverseSimulationState
-  epochIndex          : Nat                                    -- Trajectory scale step k (0 to 136)
-  superEpoch          : Nat                                    -- Macro cosmic cycle count (rebound at k=136)
-  substrateTicks      : Nat                                    -- Action count Delta S = total ticks elapsed
-  capacityBudget      : DiscreteCapacityBudget 27 128 55       -- 210 Master partition
-  metricTensor        : SymmetricMetricTensor 10               -- 10D Spacetime bulk metric (55 DoF)
-  projectedLeaf       : SquareMaxel 4                          -- 4D Spacetime projected leaf (10 DoF)
-  moduliDOF           : Nat                                    -- 45 uncompactified Dark Matter moduli
-  gellMannGluons      : Vect 8 (SquareMaxel 3)                 -- SU(3) subset G_2 gauge fields
-  galacticProfile     : GalacticProfile                        -- Active baryonic core & disk slope
-  galacticHalo        : GalacticHaloMultiset                   -- Active dark matter halo phase points
-  nuclearNuclides     : Multiset BoxInt StellarElement         -- Stellar nucleosynthesis nuclide inventory (11 <= k <= 20)
-  chemicalYield       : Multiset BoxInt MacromoleculeSpec      -- Macromolecular assembly & ATP carrier yield (21 <= k < 38)
-  phaseState          : PhaseState                             -- Symplectic (q, p) phase space
-  curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
-  spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
-  scaleFactor         : BoxInt                                 -- Instantaneous scale factor a_k = Q_Blue(k) = x_k^2 + y_k^2
-  hubbleExpansionRate : BoxInt                                 -- Discrete Hubble expansion parameter H_k = 2 * y_k^2
-  substrateGovernor   : SquareMaxel 2                          -- Substrate Metric Governor (4th Geometry: g_22 = 0)
-  expansionMode       : ExpansionParadigm                      -- Cosmic expansion mode (Monotonic Open vs CCC Bounce)
-  observerEpochActive : Bool                                   -- True specifically at k=38 (Observer Epoch)
-  observerState       : ObserverBranchState                    -- Living matter active inference carrier
-  coherenceStatus     : CoherenceStatus CosmicSmoothHorizon (S epochIndex) -- 13-smoothness status
-  freeEnergyState     : DiscreteHelmholtzState 27 128 55 2     -- Discrete F = U - TS
-  dissipatedEntropy   : BoxInt                                 -- Landauer dissipated thermal entropy from decoherent sieve scales
+  spacetimeSector     : SpacetimeBulkSector
+  gaugeSector         : GaugeFieldSector
+  matterSector        : MatterSubstanceSector
+  dynamicsSector      : SymplecticDynamicsSector
+  thermodynamicSector : ThermodynamicSubstrateSector
+
+public export
+Eq UniverseSimulationState where
+  (MkUniverseSimulationState s1 g1 m1 d1 t1) == (MkUniverseSimulationState s2 g2 m2 d2 t2) =
+    s1 == s2 && g1 == g2 && m1 == m2 && d1 == d2 && t1 == t2
+
+------------------------------------------------------------------------
+-- 3B. BACKWARD-COMPATIBLE FIELD ACCESSORS (Rule 04 §10)
+------------------------------------------------------------------------
+
+public export %inline epochIndex : UniverseSimulationState -> Nat; epochIndex st = st.thermodynamicSector.subEpochIndex
+public export %inline superEpoch : UniverseSimulationState -> Nat; superEpoch st = st.thermodynamicSector.subSuperEpoch
+public export %inline substrateTicks : UniverseSimulationState -> Nat; substrateTicks st = st.thermodynamicSector.subTicks
+public export %inline capacityBudget : UniverseSimulationState -> DiscreteCapacityBudget 27 128 55; capacityBudget st = st.thermodynamicSector.subCapacityBudget
+public export %inline metricTensor : UniverseSimulationState -> SymmetricMetricTensor 10; metricTensor st = st.spacetimeSector.bulkMetricTensor
+public export %inline projectedLeaf : UniverseSimulationState -> SquareMaxel 4; projectedLeaf st = st.spacetimeSector.bulkProjectedLeaf
+public export %inline moduliDOF : UniverseSimulationState -> Nat; moduliDOF st = st.spacetimeSector.bulkModuliDOF
+public export %inline gellMannGluons : UniverseSimulationState -> Vect 8 (SquareMaxel 3); gellMannGluons st = st.gaugeSector.gaugeGellMannGluons
+public export %inline galacticProfile : UniverseSimulationState -> GalacticProfile; galacticProfile st = st.dynamicsSector.dynGalacticProfile
+public export %inline galacticHalo : UniverseSimulationState -> GalacticHaloMultiset; galacticHalo st = st.dynamicsSector.dynGalacticHalo
+public export %inline nuclearNuclides : UniverseSimulationState -> Multiset BoxInt StellarElement; nuclearNuclides st = st.matterSector.matNuclearNuclides
+public export %inline chemicalYield : UniverseSimulationState -> Multiset BoxInt MacromoleculeSpec; chemicalYield st = st.matterSector.matChemicalYield
+public export %inline phaseState : UniverseSimulationState -> PhaseState; phaseState st = st.dynamicsSector.dynPhaseState
+public export %inline curvatureDefect : UniverseSimulationState -> BoxInt; curvatureDefect st = st.spacetimeSector.bulkCurvatureDefect
+public export %inline spreadMatrix : UniverseSimulationState -> SquareMaxel 2; spreadMatrix st = st.thermodynamicSector.subSpreadMatrix
+public export %inline scaleFactor : UniverseSimulationState -> BoxInt; scaleFactor st = st.thermodynamicSector.subScaleFactor
+public export %inline hubbleExpansionRate : UniverseSimulationState -> BoxInt; hubbleExpansionRate st = st.thermodynamicSector.subHubbleRate
+public export %inline substrateGovernor : UniverseSimulationState -> SquareMaxel 2; substrateGovernor st = st.thermodynamicSector.subGovernor
+public export %inline expansionMode : UniverseSimulationState -> ExpansionParadigm; expansionMode st = st.thermodynamicSector.subExpansionMode
+public export %inline observerEpochActive : UniverseSimulationState -> Bool; observerEpochActive st = st.thermodynamicSector.subObserverEpochActive
+public export %inline observerState : UniverseSimulationState -> ObserverBranchState; observerState st = st.matterSector.matObserverState
+public export %inline coherenceStatus : (st : UniverseSimulationState) -> CoherenceStatus CosmicSmoothHorizon (S st.thermodynamicSector.subEpochIndex); coherenceStatus st = st.thermodynamicSector.subCoherenceStatus
+public export %inline freeEnergyState : UniverseSimulationState -> DiscreteHelmholtzState 27 128 55 2; freeEnergyState st = st.thermodynamicSector.subFreeEnergyState
+public export %inline dissipatedEntropy : UniverseSimulationState -> BoxInt; dissipatedEntropy st = st.thermodynamicSector.subDissipatedEntropy
 
 ||| Canonical 2x2 companion spread transfer matrix for multiple spread recurrence:
 ||| M(s) = [[2 - 4s, -1], [1, 0]]. For s = 0, [[2, -1], [1, 0]].
@@ -180,42 +264,36 @@ initUniverseSimulationMode : ExpansionParadigm -> UniverseSimulationState
 initUniverseSimulationMode mode =
   let g10 = spacetime10DMetric
       g4  = project10Dto4D g10.metricMaxel
+      spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0)
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
-      gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
-      halo = canonicalGalacticHalo
+      gauge = MkGaugeSector gluons
       nucl = canonicalNuclearState
       chem = canonicalChemistryState
+      matter = MkMatterSector nucl chem DormantObserver
+      gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
+      halo = canonicalGalacticHalo
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
       p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
       phase0 = MkPhaseState q0 p0
+      dynamics = MkDynamicsSector phase0 gal halo
       status0 = evalScaleStepCoherence Z
-  in MkUniverseSimulationState
-       0
-       0
-       0
-       canonicalCapacityBudget
-       g10
-       g4
-       45
-       gluons
-       gal
-       halo
-       nucl
-       chem
-       phase0
-       (intToBoxInt 0)
-       (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
-       (intToBoxInt 25)
-       (intToBoxInt 18)
-       (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
-       mode
-       False
-       DormantObserver
-       status0
-       canonicalHelmholtzGroundState
-       (intToBoxInt 0)
+      thermo = MkSubstrateSector
+                 0
+                 0
+                 0
+                 canonicalCapacityBudget
+                 (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
+                 (intToBoxInt 25)
+                 (intToBoxInt 18)
+                 (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
+                 mode
+                 False
+                 status0
+                 canonicalHelmholtzGroundState
+                 (intToBoxInt 0)
+  in MkUniverseSimulationState spacetime gauge matter dynamics thermo
 
 ||| Canonical Genesis / Vacuum Initial Universe Simulation State (Default: MonotonicOpenExpansion).
 public export

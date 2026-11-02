@@ -184,24 +184,24 @@ printSimStatus st = do
   putStrLn "========================================================"
   putStrLn "🌌 Constructivist Universe Simulation State (FinSc-Cosmos)"
   putStrLn "========================================================"
-  putStrLn $ "  Substrate Clock Ticks (ΔS=1) : " ++ show st.substrateTicks
-  putStrLn $ "  Cyclotomic Epoch Index (k)   : " ++ show st.epochIndex
+  putStrLn $ "  Substrate Clock Ticks (ΔS=1) : " ++ show (substrateTicks st)
+  putStrLn $ "  Cyclotomic Epoch Index (k)   : " ++ show (epochIndex st)
   putStrLn $ "  Master Capacity Budget (210) : 210 (27 VM + 128 DE + 55 DM)"
-  putStrLn $ "  Scale Coherence Status (13)  : " ++ case st.coherenceStatus of
+  putStrLn $ "  Scale Coherence Status (13)  : " ++ case coherenceStatus st of
                                                      GatePure _   => "GatePure (13-smooth coherent matter)"
                                                      Decoherent _ => "Decoherent (thermal dissipation prime wall)"
   putStrLn "  Bulk 10D Spacetime Metric DoF: 55 components (dim 10)"
   putStrLn $ "  Leaf 4D Projected Metric DoF : 10 components"
-  putStrLn $ "  Uncompactified Moduli DoF    : " ++ show st.moduliDOF
-  putStrLn $ "  SU(3) Gauge Gluons Count     : " ++ show (length st.gellMannGluons)
-  let v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
-  let v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
+  putStrLn $ "  Uncompactified Moduli DoF    : " ++ show (moduliDOF st)
+  putStrLn $ "  SU(3) Gauge Gluons Count     : " ++ show (length (gellMannGluons st))
+  let v10 = rotationVelocity10D (galacticProfile st) (intToBoxInt 10)
+  let v20 = rotationVelocity10D (galacticProfile st) (intToBoxInt 20)
   putStrLn $ "  Galactic Rotation v^2(r=10)  : " ++ show v10
-  putStrLn $ "  Hamiltonian Phase State      : " ++ show st.phaseState
-  putStrLn $ "  Curvature Defect (G_00)      : " ++ show st.curvatureDefect
-  putStrLn $ "  Companion Spread M(s)^k c_11 : " ++ show (lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries)
-  putStrLn $ "  Observer Branch (k=38)       : " ++ (if st.observerEpochActive then "ACTIVE (Living Matter & Active Inference)" else "Inactive (Cosmological Trunk)")
-  putStrLn $ "  Helmholtz Free Energy (F)    : " ++ show st.freeEnergyState.freeEnergy ++ " (Minimum: F = -1320)"
+  putStrLn $ "  Hamiltonian Phase State      : " ++ show (phaseState st)
+  putStrLn $ "  Curvature Defect (G_00)      : " ++ show (curvatureDefect st)
+  putStrLn $ "  Companion Spread M(s)^k c_11 : " ++ show (lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries)
+  putStrLn $ "  Observer Branch (k=38)       : " ++ (if observerEpochActive st then "ACTIVE (Living Matter & Active Inference)" else "Inactive (Cosmological Trunk)")
+  putStrLn $ "  Helmholtz Free Energy (F)    : " ++ show (freeEnergyState st).freeEnergy ++ " (Minimum: F = -1320)"
   putStrLn "========================================================"
 
 ||| Runs N simulation steps from an existing UniverseSimulationState.

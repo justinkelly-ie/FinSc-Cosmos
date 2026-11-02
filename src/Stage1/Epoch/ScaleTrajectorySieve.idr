@@ -26,6 +26,22 @@ public export
 evalScaleStepCoherence : (k : Nat) -> CoherenceStatus CosmicSmoothHorizon (S k)
 evalScaleStepCoherence = evalScaleStepCoherenceBounded CosmicSmoothHorizon
 
+||| A certified smooth scale degree bundling a natural number with its smoothness proof witness (Rule 03 §7):
+public export
+SmoothScale : (bound : Nat) -> Type
+SmoothScale bound = (n : Nat ** SmoothWitness bound n)
+
+||| A dependent scale step bundling a scale index k with its constructive coherence status at S k (Rule 03 §7):
+public export
+DependentScaleStep : (bound : Nat) -> Type
+DependentScaleStep bound = (k : Nat ** CoherenceStatus bound (S k))
+
+||| Canonical smart constructor for a DependentScaleStep under any prime bound:
+public export
+mkDependentScaleStep : (bound : Nat) -> (k : Nat) -> DependentScaleStep bound
+mkDependentScaleStep bound k = (k ** evalScaleStepCoherenceBounded bound k)
+
+
 ||| Term-indexed discrete cosmological scale step parameterized by smoothness bound.
 ||| Bundles its scale index k, generation number n = S k, its chromogeometric
 ||| TriadQuadrance payload, and dependent coherence status witness (Rule 03).

@@ -33,8 +33,8 @@ vexelMagnitudeSquared v = dotVexel v v
 public export
 exportSubstrateRotationVelocity : UniverseSimulationState -> (radius : BoxInt) -> BoxInt
 exportSubstrateRotationVelocity st r =
-  let (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-  in rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo r
+  let (xk, yk) = epochPythagoreanCoordinateReentrant (superEpoch st) (epochIndex st)
+  in rotationVelocityHaloSubstrate10D xk yk (galacticProfile st) (galacticHalo st) r
 
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
@@ -45,25 +45,25 @@ exportStateCsvHeader = "tick,superepoch,epoch,coherence,moduli,v10,v20,v10_sub,v
 public export
 exportStateCsvRow : UniverseSimulationState -> String
 exportStateCsvRow st =
-  let cohStr = case st.coherenceStatus of
+  let cohStr = case coherenceStatus st of
                  GatePure _   => "GatePure"
                  Decoherent _ => "Decoherent"
-      v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
-      v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
-      (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-      v10_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 10)
-      v20_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 20)
-      fe  = st.freeEnergyState.freeEnergy
-      posMag = vexelMagnitudeSquared st.phaseState.position
-      momMag = vexelMagnitudeSquared st.phaseState.momentum
-      defect = st.curvatureDefect
-      c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
-      obsStr = if st.observerEpochActive then "True" else "False"
-  in show st.substrateTicks ++ "," ++
-     show st.superEpoch ++ "," ++
-     show st.epochIndex ++ "," ++
+      v10 = rotationVelocity10D (galacticProfile st) (intToBoxInt 10)
+      v20 = rotationVelocity10D (galacticProfile st) (intToBoxInt 20)
+      (xk, yk) = epochPythagoreanCoordinateReentrant (superEpoch st) (epochIndex st)
+      v10_sub = rotationVelocityHaloSubstrate10D xk yk (galacticProfile st) (galacticHalo st) (intToBoxInt 10)
+      v20_sub = rotationVelocityHaloSubstrate10D xk yk (galacticProfile st) (galacticHalo st) (intToBoxInt 20)
+      fe  = (freeEnergyState st).freeEnergy
+      posMag = vexelMagnitudeSquared (phaseState st).position
+      momMag = vexelMagnitudeSquared (phaseState st).momentum
+      defect = curvatureDefect st
+      c11 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries
+      obsStr = if observerEpochActive st then "True" else "False"
+  in show (substrateTicks st) ++ "," ++
+     show (superEpoch st) ++ "," ++
+     show (epochIndex st) ++ "," ++
      cohStr ++ "," ++
-     show st.moduliDOF ++ "," ++
+     show (moduliDOF st) ++ "," ++
      show v10 ++ "," ++
      show v20 ++ "," ++
      show v10_sub ++ "," ++
@@ -73,11 +73,11 @@ exportStateCsvRow st =
      show momMag ++ "," ++
      show defect ++ "," ++
      show c11 ++ "," ++
-     show st.scaleFactor ++ "," ++
-     show st.hubbleExpansionRate ++ "," ++
+     show (scaleFactor st) ++ "," ++
+     show (hubbleExpansionRate st) ++ "," ++
      obsStr ++ "," ++
-     show st.expansionMode ++ "," ++
-     show st.dissipatedEntropy
+     show (expansionMode st) ++ "," ++
+     show (dissipatedEntropy st)
 
 ------------------------------------------------------------------------
 -- 3. JSON EXPORT FORMATTERS
@@ -87,25 +87,25 @@ exportStateCsvRow st =
 public export
 exportStateJson : UniverseSimulationState -> String
 exportStateJson st =
-  let cohStr = case st.coherenceStatus of
+  let cohStr = case coherenceStatus st of
                  GatePure _   => "GatePure"
                  Decoherent _ => "Decoherent"
-      v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
-      v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
-      (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-      v10_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 10)
-      v20_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 20)
-      fe  = st.freeEnergyState.freeEnergy
-      posMag = vexelMagnitudeSquared st.phaseState.position
-      momMag = vexelMagnitudeSquared st.phaseState.momentum
-      defect = st.curvatureDefect
-      c11 = lookupBoxTree (MkPixel 0 0) st.spreadMatrix.entries
-      obsStr = if st.observerEpochActive then "true" else "false"
-  in "{\"tick\":" ++ show st.substrateTicks ++
-     ",\"superepoch\":" ++ show st.superEpoch ++
-     ",\"epoch\":" ++ show st.epochIndex ++
+      v10 = rotationVelocity10D (galacticProfile st) (intToBoxInt 10)
+      v20 = rotationVelocity10D (galacticProfile st) (intToBoxInt 20)
+      (xk, yk) = epochPythagoreanCoordinateReentrant (superEpoch st) (epochIndex st)
+      v10_sub = rotationVelocityHaloSubstrate10D xk yk (galacticProfile st) (galacticHalo st) (intToBoxInt 10)
+      v20_sub = rotationVelocityHaloSubstrate10D xk yk (galacticProfile st) (galacticHalo st) (intToBoxInt 20)
+      fe  = (freeEnergyState st).freeEnergy
+      posMag = vexelMagnitudeSquared (phaseState st).position
+      momMag = vexelMagnitudeSquared (phaseState st).momentum
+      defect = curvatureDefect st
+      c11 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries
+      obsStr = if observerEpochActive st then "true" else "false"
+  in "{\"tick\":" ++ show (substrateTicks st) ++
+     ",\"superepoch\":" ++ show (superEpoch st) ++
+     ",\"epoch\":" ++ show (epochIndex st) ++
      ",\"coherence\":\"" ++ cohStr ++ "\"" ++
-     ",\"moduli\":" ++ show st.moduliDOF ++
+     ",\"moduli\":" ++ show (moduliDOF st) ++
      ",\"v10\":" ++ show v10 ++
      ",\"v20\":" ++ show v20 ++
      ",\"v10_sub\":" ++ show v10_sub ++
@@ -115,11 +115,11 @@ exportStateJson st =
      ",\"mom_mag\":" ++ show momMag ++
      ",\"curvature_defect\":" ++ show defect ++
      ",\"spread_c11\":" ++ show c11 ++
-     ",\"scale_factor_q\":" ++ show st.scaleFactor ++
-     ",\"hubble_rate_s\":" ++ show st.hubbleExpansionRate ++
+     ",\"scale_factor_q\":" ++ show (scaleFactor st) ++
+     ",\"hubble_rate_s\":" ++ show (hubbleExpansionRate st) ++
      ",\"observer_active\":" ++ obsStr ++
-     ",\"expansion_mode\":\"" ++ show st.expansionMode ++ "\"" ++
-     ",\"dissipated_entropy\":" ++ show st.dissipatedEntropy ++ "}"
+     ",\"expansion_mode\":\"" ++ show (expansionMode st) ++ "\"" ++
+     ",\"dissipated_entropy\":" ++ show (dissipatedEntropy st) ++ "}"
 
 ------------------------------------------------------------------------
 -- 4. LINEAR TRAJECTORY GENERATORS

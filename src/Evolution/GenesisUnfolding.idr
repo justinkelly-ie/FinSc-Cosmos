@@ -33,6 +33,7 @@ import Stage0.Biology.ActiveInferenceNeuralNetwork
 import Stage0.Hadron.StellarNucleosynthesis
 import Stage0.Chemistry.MacromolecularAssembly
 import Data.Vect
+import Stage0.OnSeq.FusedStream
 
 %default total
 
@@ -257,43 +258,37 @@ condenseGenesisToUniverse st =
         hyperbolicCount = multiplicity HyperbolicGeom st.carrierTokens
         g10 = synthesize10DMetricFromParabolicCount (boxToNat parabolicCount)
         g4  = project10Dto4D g10.metricMaxel
+        spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0)
         gluons = synthesizeGellMannFromEllipticCount (boxToNat ellipticCount)
-        initialSpread = if boxToNat hyperbolicCount >= 128
-                          then pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3)
-                          else pythagoreanCompanionSquareMaxel (intToBoxInt 1) (intToBoxInt 0)
-        gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
-        halo = canonicalGalacticHalo
+        gauge = MkGaugeSector gluons
         nucl = canonicalNuclearState
         chem = canonicalChemistryState
+        matter = MkMatterSector nucl chem DormantObserver
+        gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
+        halo = canonicalGalacticHalo
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
         p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
         phase0 = MkPhaseState q0 p0
+        dynamics = MkDynamicsSector phase0 gal halo
         status0 = evalScaleStepCoherence Z
-    in Just (MkUniverseSimulationState
-               0
-               0
-               st.substrateTokens
-               canonicalCapacityBudget
-               g10
-               g4
-               45
-               gluons
-               gal
-               halo
-               nucl
-               chem
-               phase0
-               (intToBoxInt 0)
-               initialSpread
-               (intToBoxInt 25)
-               (intToBoxInt 18)
-               (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
-               MonotonicOpenExpansion
-               False
-               DormantObserver
-               status0
-               canonicalHelmholtzGroundState
-               (intToBoxInt 0))
+        initialSpread = if boxToNat hyperbolicCount >= 128
+                          then pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3)
+                          else pythagoreanCompanionSquareMaxel (intToBoxInt 1) (intToBoxInt 0)
+        thermo = MkSubstrateSector
+                   0
+                   0
+                   st.substrateTokens
+                   canonicalCapacityBudget
+                   initialSpread
+                   (intToBoxInt 25)
+                   (intToBoxInt 18)
+                   (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
+                   MonotonicOpenExpansion
+                   False
+                   status0
+                   canonicalHelmholtzGroundState
+                   (intToBoxInt 0)
+    in Just (MkUniverseSimulationState spacetime gauge matter dynamics thermo)
 
 ||| Strictly linear condensation transition morphism: Either retains pre-geometric state
 ||| or transforms it into macroscopic UniverseSimulationState without dropping tokens.
@@ -319,7 +314,7 @@ data CosmosEvolutionState : Type where
 public export
 Show CosmosEvolutionState where
   show (PreGeometric g)   = "PreGeometric(" ++ show g ++ ")"
-  show (PostGeometric st) = "PostGeometric(ticks=" ++ show st.substrateTicks ++ ", epoch=" ++ show st.epochIndex ++ ")"
+  show (PostGeometric st) = "PostGeometric(ticks=" ++ show (substrateTicks st) ++ ", epoch=" ++ show (epochIndex st) ++ ")"
 
 ||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1) under strict QTT linearity.
 public export
@@ -350,6 +345,58 @@ runCosmosUnifiedStepsLinear (S k) st = runCosmosUnifiedStepsLinear k (stepCosmos
 public export
 runCosmosUnifiedSteps : (n : Nat) -> CosmosEvolutionState -> CosmosEvolutionState
 runCosmosUnifiedSteps n st = runCosmosUnifiedStepsLinear n st
+
+||| Cosmological Quantum observable record emitted at each step of universal evolution.
+public export
+record CosmologicalQuantum where
+  constructor MkCosmologicalQuantum
+  quantumEpoch             : Nat
+  quantumSuperEpoch        : Nat
+  quantumScaleFactor       : BoxInt
+  quantumCurvatureDefect   : BoxInt
+  quantumObserverPhase     : ObserverBranchState
+  quantumFreeEnergy        : BoxInt
+  quantumDissipatedEntropy : BoxInt
+
+public export
+Eq CosmologicalQuantum where
+  (MkCosmologicalQuantum e1 s1 a1 c1 o1 f1 d1) == (MkCosmologicalQuantum e2 s2 a2 c2 o2 f2 d2) =
+    e1 == e2 && s1 == s2 && a1 == a2 && c1 == c2 && o1 == o2 && f1 == f2 && d1 == d2
+
+public export
+Show CosmologicalQuantum where
+  show (MkCosmologicalQuantum e s a c o f d) =
+    "CosmologicalQuantum(ep=" ++ show e ++ ", super=" ++ show s ++
+    ", a=" ++ show (unwrapBox a) ++ ", defect=" ++ show (unwrapBox c) ++
+    ", obs=" ++ show o ++ ", F=" ++ show (unwrapBox f) ++ ", S_diss=" ++ show (unwrapBox d) ++ ")"
+
+||| Project current physical observables from either pre-geometric void or post-geometric cosmos into a CosmologicalQuantum.
+public export
+snapshotCosmosQuantum : CosmosEvolutionState -> CosmologicalQuantum
+snapshotCosmosQuantum (PreGeometric g) =
+  MkCosmologicalQuantum g.substrateTokens 0 (intToBoxInt 1) (intToBoxInt 0) DormantObserver g.freeEnergy (intToBoxInt 0)
+snapshotCosmosQuantum (PostGeometric sim) =
+  MkCosmologicalQuantum (epochIndex sim) (superEpoch sim) (scaleFactor sim) (curvatureDefect sim) (observerState sim) (freeEnergyState sim).freeEnergy (dissipatedEntropy sim)
+
+||| Deforested infinite coinductive stream generator of universal cosmological evolution:
+||| Spans from the initial empty multiset carrier ∅_Sub, through the 4 Goh prime gates,
+||| condensation at Primorial 210 ground state (F = -1320), into continuous 137-epoch simulation.
+public export
+streamUniversalCosmology : FusedStream CosmologicalQuantum
+streamUniversalCosmology =
+  unfoldStream (\st => Yield (snapshotCosmosQuantum st) (stepCosmosUnified st)) initCosmosUnified
+
+||| Static compiler proof witness verifying that streaming cosmological evolution
+||| evaluates continuously from vacuum without deadlock:
+public export
+auditStreamUniversalCosmologyProof : Bool
+auditStreamUniversalCosmologyProof =
+  let initialQuantum = snapshotCosmosQuantum initCosmosUnified
+      strm = streamUniversalCosmology
+      tokens = runFueledStreamNat 5 strm
+  in initialQuantum.quantumEpoch == 0 &&
+     initialQuantum.quantumFreeEnergy == intToBoxInt 0 &&
+     length tokens == 5
 
 --------------------------------------------------------------------------------
 -- 4. THE 4 BREAKDOWN BOUNDARY DIAGNOSTICS & COMPILE-TIME AUDIT WITNESSES
@@ -414,17 +461,17 @@ auditGenesisUnfoldingEndToEndProof =
       st210 = runCosmosUnifiedStepsLinear 210 st0
       isCondensedPost = case st210 of
                           PreGeometric _ => False
-                          PostGeometric sim => sim.substrateTicks == 210 &&
-                                               boxEq sim.freeEnergyState.freeEnergy (intToBoxInt (-1320)) &&
-                                               sim.moduliDOF == 45
+                          PostGeometric sim => substrateTicks sim == 210 &&
+                                               boxEq (freeEnergyState sim).freeEnergy (intToBoxInt (-1320)) &&
+                                               moduliDOF sim == 45
       -- Step 40 ticks further (N = 250, k = 40 >= 38)
       st250 = runCosmosUnifiedStepsLinear 40 st210
       isObserverActive = case st250 of
                            PreGeometric _ => False
-                           PostGeometric sim => sim.substrateTicks == 250 &&
-                                                sim.epochIndex == 40 &&
-                                                sim.observerEpochActive == True &&
-                                                case sim.observerState of
+                           PostGeometric sim => substrateTicks sim == 250 &&
+                                                epochIndex sim == 40 &&
+                                                observerEpochActive sim == True &&
+                                                case observerState sim of
                                                   LivingObserver _ => True
                                                   DormantObserver  => False
   in isInitPre && isCondensedPost && isObserverActive
