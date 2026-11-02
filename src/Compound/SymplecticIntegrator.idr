@@ -18,22 +18,32 @@ import Data.Vect
 -- 1. PHASE SPACE STATE (q, p) AS VEXEL PAIRS
 ------------------------------------------------------------------------
 
-||| Phase Space state representing generalized coordinate q and momentum p.
+||| Null SU(3) color triplet for color-singlet states.
+public export
+nullColorCharge : Vect 3 BoxInt
+nullColorCharge = [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0]
+
+||| Phase Space state representing generalized coordinate q, momentum p, and internal SU(3) color triplet.
 public export
 record PhaseState where
   constructor MkPhaseState
-  position : Vexel
-  momentum : Vexel
+  position    : Vexel
+  momentum    : Vexel
+  colorCharge : Vect 3 BoxInt
+
+public export
+mkPhaseState : Vexel -> Vexel -> PhaseState
+mkPhaseState q p = MkPhaseState q p nullColorCharge
 
 public export
 Eq PhaseState where
-  (MkPhaseState q1 p1) == (MkPhaseState q2 p2) =
-    q1 == q2 && p1 == p2
+  (MkPhaseState q1 p1 c1) == (MkPhaseState q2 p2 c2) =
+    q1 == q2 && p1 == p2 && c1 == c2
 
 public export
 Show PhaseState where
-  show (MkPhaseState q p) =
-    "Phase(q=" ++ show q ++ ", p=" ++ show p ++ ")"
+  show (MkPhaseState q p c) =
+    "Phase(q=" ++ show q ++ ", p=" ++ show p ++ ", color=" ++ show c ++ ")"
 
 ------------------------------------------------------------------------
 -- 2. DISCRETE SYMPLECTIC LEAPFROG INTEGRATOR
@@ -45,7 +55,7 @@ Show PhaseState where
 ||| p_{n+1}   = p_{n+1/2} - (dt / 2) * gradV(q_{n+1})
 public export
 symplecticLeapfrogStep : (gradV : Vexel -> Vexel) -> (dt : BoxInt) -> PhaseState -> PhaseState
-symplecticLeapfrogStep gradV dt (MkPhaseState q p) =
+symplecticLeapfrogStep gradV dt (MkPhaseState q p color) =
   let -- Half kick
       halfDt = dt `div` intToBoxInt 2
       kick1 = scaleVexel halfDt (gradV q)
@@ -56,12 +66,12 @@ symplecticLeapfrogStep gradV dt (MkPhaseState q p) =
       -- Second half kick
       kick2 = scaleVexel halfDt (gradV qNext)
       pNext = canonicalizeVexel (subVexel pHalf kick2)
-  in MkPhaseState qNext pNext
+  in MkPhaseState qNext pNext color
 
 ||| Fast 1D discrete symplectic leapfrog step directly on PhaseState (coordinate 1) in O(1):
 public export
 symplecticLeapfrogStep1D : (metricScalar : BoxInt) -> (dt : BoxInt) -> PhaseState -> PhaseState
-symplecticLeapfrogStep1D g dt (MkPhaseState q p) =
+symplecticLeapfrogStep1D g dt (MkPhaseState q p color) =
   let halfDt = dt `div` intToBoxInt 2
       q1 = lookupUnixel (MkUnixel 1) q
       p1 = lookupUnixel (MkUnixel 1) p
@@ -70,7 +80,7 @@ symplecticLeapfrogStep1D g dt (MkPhaseState q p) =
       pNext1 = pHalf1 - (halfDt * g * qNext1)
       qTree = if boxIsZero qNext1 then emptyVexel else singletonCell (mkCell1 1) qNext1
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
-  in MkPhaseState qTree pTree
+  in MkPhaseState qTree pTree color
 
 ||| Exact unimodular SL(2, Z) discrete symplectic Störmer-Verlet integrator in O(1):
 ||| Preserves phase-space volume det(M) = 1 identically without integer division.
@@ -78,19 +88,19 @@ symplecticLeapfrogStep1D g dt (MkPhaseState q p) =
 ||| q_{n+1} = q_n + dt * p_{n+1}
 public export
 symplecticStormerVerletStep1D : (metricScalar : BoxInt) -> (dt : BoxInt) -> PhaseState -> PhaseState
-symplecticStormerVerletStep1D g dt (MkPhaseState q p) =
+symplecticStormerVerletStep1D g dt (MkPhaseState q p color) =
   let q1 = lookupUnixel (MkUnixel 1) q
       p1 = lookupUnixel (MkUnixel 1) p
       pNext1 = p1 - (dt * g * q1)
       qNext1 = q1 + (dt * pNext1)
       qTree = if boxIsZero qNext1 then emptyVexel else singletonCell (mkCell1 1) qNext1
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
-  in MkPhaseState qTree pTree
+  in MkPhaseState qTree pTree color
 
 ||| Discrete total Hamiltonian energy E = sum_{mu=0}^3 (p_mu^2 + k * q_mu^2) (un-divided integer quadratic form).
 public export
 hamiltonianEnergyExact : BoxInt -> PhaseState -> BoxInt
-hamiltonianEnergyExact k (MkPhaseState q p) =
+hamiltonianEnergyExact k (MkPhaseState q p _) =
   let energyDim : Nat -> BoxInt
       energyDim mu =
         let qMu = lookupUnixel (MkUnixel mu) q
@@ -117,7 +127,7 @@ auditUnimodularSymplecticDeterminantProof =
 ||| Preserves phase-space volume det(M) = 1 identically and bounds orbits to exact period-6 cycles (|q| <= 1, |p| <= 1).
 public export
 symplecticCFLStormerVerletStep1D : (metricScalar : BoxInt) -> (dt : BoxInt) -> PhaseState -> PhaseState
-symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p) =
+symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p color) =
   let q1 = lookupUnixel (MkUnixel 1) q
       p1 = lookupUnixel (MkUnixel 1) p
       -- Elliptic CFL bound-state condition: kappa = 1 => Tr = 1, det = 1, period 6
@@ -126,7 +136,7 @@ symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p) =
       qNext1 = q1 + (dt * pNext1)
       qTree = if boxIsZero qNext1 then emptyVexel else singletonCell (mkCell1 1) qNext1
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
-  in MkPhaseState qTree pTree
+  in MkPhaseState qTree pTree color
 
 ||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) + U(1) gauge field coupling:
 ||| Couples spacetime metric leaf g4, the 8 SU(3) Gell-Mann gluon fields, and the 4D Maxwell tensor F_mu_nu
@@ -141,7 +151,7 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D :
     (dt : BoxInt) ->
     PhaseState ->
     PhaseState
-symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseState q p) =
+symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseState q p color) =
   let q0 = lookupUnixel (MkUnixel 0) q
       q1 = lookupUnixel (MkUnixel 1) q
       q2 = lookupUnixel (MkUnixel 2) q
@@ -153,6 +163,10 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
       p3 = lookupUnixel (MkUnixel 3) p
       charge = if boxIsZero q0 then intToBoxInt 1 else q0
 
+      c0 = index 0 color
+      c1 = index 1 color
+      c2 = index 2 color
+
       -- Evaluate non-Abelian color force on spatial direction idx in {0, 1, 2}
       colorForce : Nat -> BoxInt
       colorForce idx =
@@ -161,7 +175,7 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
               let m0 = lookupBoxTree (MkPixel idx 0) tree
                   m1 = lookupBoxTree (MkPixel idx 1) tree
                   m2 = lookupBoxTree (MkPixel idx 2) tree
-              in (m0 * q1) + (m1 * q2) + (m2 * q3)
+              in (m0 * c0) + (m1 * c1) + (m2 * c2)
             sumForces : Vect k (SquareMaxel 3) -> BoxInt
             sumForces [] = intToBoxInt 0
             sumForces (g :: gs) = evalGluon g + sumForces gs
@@ -185,7 +199,10 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
         let qMu = lookupUnixel (MkUnixel mu) q
             pMu = lookupUnixel (MkUnixel mu) p
             gMu = lookupBoxTree (MkPixel mu mu) g4.entries
-            kappaMu = if boxIsZero gMu then intToBoxInt 1 else (if absBox gMu == intToBoxInt 1 then gMu else intToBoxInt 1)
+            kappaMu =
+              if boxIsZero gMu
+                then intToBoxInt 1
+                else addBox (modBox (subBox (absBox gMu) (intToBoxInt 1)) (intToBoxInt 3)) (intToBoxInt 1)
             fColor = if mu == 0 then intToBoxInt 0 else colorForce (minus mu 1)
             fEM = emForce mu
             accelMu = (kappaMu * qMu) + fColor + fEM
@@ -195,7 +212,7 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
             pAcc' = if boxIsZero pNextMu then pAcc else setBoxTree (mkCell1 mu) pNextMu pAcc
         in (qAcc', pAcc')
       res = stepDim 3 (stepDim 2 (stepDim 1 (stepDim 0 (emptyVexel, emptyVexel))))
-  in MkPhaseState (fst res) (snd res)
+  in MkPhaseState (fst res) (snd res) color
 
 ||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) gauge field coupling:
 ||| Couples spacetime metric leaf g4 and the 8 SU(3) Gell-Mann gluon fields into a unified 4D phase flow.
@@ -225,7 +242,7 @@ auditGaugeCoupledSymplecticStepProof =
       dt = intToBoxInt 1
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
       p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
-      phase0 = MkPhaseState q0 p0
+      phase0 = mkPhaseState q0 p0
       nullGluons = replicate 8 (MkSquareMaxel BoxLeaf)
       pNull = symplecticGaugeCFLStormerVerletStep4D g4 nullGluons dt phase0
       pDirect = symplecticCFLStormerVerletStep4D g4 dt phase0
@@ -255,7 +272,7 @@ metricCoupledGrad g q = scaleVexel g q
 ||| Computes discrete total Hamiltonian energy E = p^2 / 2 + k q^2 / 2.
 public export
 harmonicEnergy : BoxInt -> PhaseState -> BoxInt
-harmonicEnergy k (MkPhaseState q p) =
+harmonicEnergy k (MkPhaseState q p _) =
   let q1 = lookupUnixel (MkUnixel 1) q
       p1 = lookupUnixel (MkUnixel 1) p
       kinetic = (p1 * p1) `div` intToBoxInt 2
@@ -268,7 +285,7 @@ auditSymplecticStepProof : Bool
 auditSymplecticStepProof =
   let q0 = singletonCell (mkUnixel 1) (intToBoxInt 0)
       p0 = singletonCell (mkUnixel 1) (intToBoxInt 10)
-      s0 = MkPhaseState q0 p0
+      s0 = mkPhaseState q0 p0
       dt = intToBoxInt 2
       k  = intToBoxInt 1
       s1 = symplecticLeapfrogStep (harmonicOscillatorGrad k) dt s0
@@ -288,7 +305,7 @@ auditSymplecticStepProof =
 ||| Evaluates the discrete Noether charge Q = p^T * delta_q for a phase state.
 public export
 evaluateNoetherCharge : PhaseState -> Vexel -> BoxInt
-evaluateNoetherCharge (MkPhaseState _ p) deltaQ =
+evaluateNoetherCharge (MkPhaseState _ p _) deltaQ =
   let p1 = lookupUnixel (MkUnixel 1) p
       dq1 = lookupUnixel (MkUnixel 1) deltaQ
   in p1 * dq1
@@ -312,7 +329,7 @@ auditNoetherConservationProof =
   let zeroGrad = (\_ => emptyVexel)
       q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
       p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
-      s0 = MkPhaseState q0 p0
+      s0 = mkPhaseState q0 p0
       dt = intToBoxInt 3
       s1 = symplecticLeapfrogStep zeroGrad dt s0
       s2 = symplecticLeapfrogStep zeroGrad dt s1
@@ -348,7 +365,7 @@ auditStreamSymplecticOrbitProof =
   let zeroGrad = (\_ => emptyVexel)
       q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
       p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
-      s0 = MkPhaseState q0 p0
+      s0 = mkPhaseState q0 p0
       dt = intToBoxInt 3
       deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamSymplecticOrbitWithNoether zeroGrad dt deltaQ s0
@@ -403,7 +420,7 @@ auditGeodesicOrbitProof =
   let zeroGrad = (\_ => emptyVexel)
       q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
       p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
-      s0 = MkPhaseState q0 p0
+      s0 = mkPhaseState q0 p0
       dt = intToBoxInt 3
       deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamVerifiedGeodesicOrbit zeroGrad dt deltaQ s0
@@ -462,7 +479,7 @@ auditDissipativeLangevinHorizonProof =
   let zeroGrad = (\_ => emptyVexel)
       q0 = singletonCell (mkUnixel 1) (intToBoxInt 5)
       p0 = singletonCell (mkUnixel 1) (intToBoxInt 12)
-      s0 = MkPhaseState q0 p0
+      s0 = mkPhaseState q0 p0
       dt = intToBoxInt 3
       deltaQ = singletonCell (mkUnixel 1) (intToBoxInt 1)
       strm = streamDissipativeGeodesicHorizon zeroGrad dt deltaQ (intToBoxInt 16) s0

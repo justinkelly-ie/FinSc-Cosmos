@@ -40,19 +40,53 @@ stepObserverLivingState : (k : Nat) -> (scaleFactor : BoxInt) -> (hubbleRate : B
 stepObserverLivingState k currentScale hubble liv =
   stepObserverLivingFromEnvironment k currentScale hubble liv
 
-||| Sector 1 stepper: Updates 10D spacetime bulk metric and 4D leaf projection under energy defect back-reaction.
+||| Scales spatial diagonal entries g_11, g_22, g_33 of 4D leaf metric by scale factor.
 public export
-stepSpacetimeSector : SpacetimeBulkSector -> (energyDefect : BoxInt) -> SpacetimeBulkSector
-stepSpacetimeSector (MkSpacetimeSector g10 g4 moduli _) defect =
+setSpatialDiagonalMetric : SquareMaxel 4 -> BoxInt -> SquareMaxel 4
+setSpatialDiagonalMetric (MkSquareMaxel tree) aNorm =
+  let t1 = setBoxTree (mkPixel 1 1) aNorm tree
+      t2 = setBoxTree (mkPixel 2 2) aNorm t1
+      t3 = setBoxTree (mkPixel 3 3) aNorm t2
+  in MkSquareMaxel t3
+
+||| Sector 1 stepper: Updates 10D spacetime bulk metric and 4D leaf projection under energy defect back-reaction and scale factor.
+public export
+stepSpacetimeSector : SpacetimeBulkSector -> (energyDefect : BoxInt) -> (scaleFactor : BoxInt) -> SpacetimeBulkSector
+stepSpacetimeSector (MkSpacetimeSector g10 g4 moduli _) defect scale =
   let nextG10 = perturbMetric00 g10 defect
-      nextG4  = perturbSquareMaxel00 g4 defect
+      g00_p   = perturbSquareMaxel00 g4 defect
+      aNorm   = if scale < intToBoxInt 25 then intToBoxInt 1 else divBox scale (intToBoxInt 25)
+      nextG4  = setSpatialDiagonalMetric g00_p aNorm
   in MkSpacetimeSector nextG10 nextG4 moduli defect
 
-||| Sector 2 stepper: Preserves SU(3) Gell-Mann gauge field symmetries and DEC steps U(1) Maxwell field.
+||| Computes discrete matter current J and charge density rho from PhaseState.
+||| Current J_i = q * p_i / 137 on edges (0, i); charge density rho = q on cell 0.
 public export
-stepGaugeSector : (dt : BoxInt) -> (defect : BoxInt) -> GaugeFieldSector -> GaugeFieldSector
-stepGaugeSector dt defect (MkGaugeSector gluons maxwell) =
-  let nextMaxwell = stepMaxwellFieldDEC dt defect maxwell
+computeMatterElectromagneticSources : PhaseState -> (EdgeCochain, CellCochain)
+computeMatterElectromagneticSources (MkPhaseState q p _) =
+  let q0 = lookupUnixel (MkUnixel 0) q
+      charge = if boxIsZero q0 then intToBoxInt 1 else q0
+      p1 = lookupUnixel (MkUnixel 1) p
+      p2 = lookupUnixel (MkUnixel 2) p
+      p3 = lookupUnixel (MkUnixel 3) p
+      j1 = divBox (charge * p1) (intToBoxInt 137)
+      j2 = divBox (charge * p2) (intToBoxInt 137)
+      j3 = divBox (charge * p3) (intToBoxInt 137)
+      treeJ : BoxMultisetTree Pixel = BoxLeaf
+      t1 = if boxIsNonZero j1 then setBoxTree (mkPixel 0 1) j1 treeJ else treeJ
+      t2 = if boxIsNonZero j2 then setBoxTree (mkPixel 0 2) j2 t1 else t1
+      t3 = if boxIsNonZero j3 then setBoxTree (mkPixel 0 3) j3 t2 else t2
+      treeRho : CellCochain =
+        if boxIsNonZero charge
+          then singletonCell (mkCell3 0 0 0) charge
+          else emptyCellMultiset
+  in (t3, treeRho)
+
+||| Sector 2 stepper: Preserves SU(3) Gell-Mann gauge field symmetries and DEC steps U(1) Maxwell field with dynamic matter current and charge sources.
+public export
+stepGaugeSector : (dt : BoxInt) -> (defect : BoxInt) -> (EdgeCochain, CellCochain) -> GaugeFieldSector -> GaugeFieldSector
+stepGaugeSector dt defect (jSrc, rhoSrc) (MkGaugeSector gluons (e, b, _, _)) =
+  let nextMaxwell = stepMaxwellFieldDEC dt defect (e, b, jSrc, rhoSrc)
   in MkGaugeSector gluons nextMaxwell
 
 ||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
@@ -61,16 +95,22 @@ stepGaugeSector dt defect (MkGaugeSector gluons maxwell) =
 public export
 decrementToken : Eq s => s -> BoxInt -> Multiset BoxInt s -> (Multiset BoxInt s, BoxInt)
 decrementToken sp needed m =
-  let cur = multiplicity sp m
+  let cur = lookupCountBox sp m
       actual = if cur >= needed then needed else cur
       rem = cur - actual
   in (update sp rem m, actual)
   where
+    removeAll : s -> Multiset BoxInt s -> Multiset BoxInt s
+    removeAll x ZeroM = ZeroM
+    removeAll x (AddM k m rest) =
+      if k == x then removeAll x rest else AddM k m (removeAll x rest)
+
     update : s -> BoxInt -> Multiset BoxInt s -> Multiset BoxInt s
     update x v ZeroM = if boxIsZero v then ZeroM else AddM x v ZeroM
     update x v (AddM k m rest) =
-      if k == x then (if boxIsZero v then rest else AddM x v rest)
-      else AddM k m (update x v rest)
+      if k == x
+        then (if boxIsZero v then removeAll x rest else AddM x v (removeAll x rest))
+        else AddM k m (update x v rest)
 
 public export
 minBoxVal : BoxInt -> BoxInt -> BoxInt
@@ -92,14 +132,10 @@ stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
                    (n2, actHe) = decrementToken ElemHe (intToBoxInt 2) n1
                    (n3, actC)  = decrementToken ElemC (intToBoxInt 1) n2
                    (n4, actO)  = decrementToken ElemO (intToBoxInt 1) n3
-                   numH  = if boxIsZero actH then intToBoxInt 10 else actH
-                   numHe = if boxIsZero actHe then intToBoxInt 2 else actHe
-                   numC  = if boxIsZero actC then intToBoxInt 1 else actC
-                   numO  = if boxIsZero actO then intToBoxInt 1 else actO
-                   gainedAtoms = AddM HydrogenToken numH
-                                 (AddM HeliumToken numHe
-                                 (AddM CarbonToken numC
-                                 (AddM OxygenToken numO atoms)))
+                   at1 = if boxIsNonZero actO then insertItemBox OxygenToken actO atoms else atoms
+                   at2 = if boxIsNonZero actC then insertItemBox CarbonToken actC at1 else at1
+                   at3 = if boxIsNonZero actHe then insertItemBox HeliumToken actHe at2 else at2
+                   gainedAtoms = if boxIsNonZero actH then insertItemBox HydrogenToken actH at3 else at3
                in (n4, gainedAtoms)
           else (t1Nucl, atoms)
       -- Tier 3: Prebiotic volatile aggregation (k in [21, 30]) - consumes atoms to form molecules
@@ -107,20 +143,20 @@ stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
         if (k >= 21 && k <= 30)
           then let (a1, actH_w) = decrementToken HydrogenToken (intToBoxInt 8) nextAtoms
                    (a2, actO_w) = decrementToken OxygenToken (intToBoxInt 4) a1
-                   numH2O = if boxIsZero actH_w then intToBoxInt 4 else minBoxVal (divBox actH_w (intToBoxInt 2)) actO_w
+                   numH2O = minBoxVal (divBox actH_w (intToBoxInt 2)) actO_w
                    (a3, actC_co2) = decrementToken CarbonToken (intToBoxInt 2) a2
                    (a4, actO_co2) = decrementToken OxygenToken (intToBoxInt 4) a3
-                   numCO2 = if boxIsZero actC_co2 then intToBoxInt 2 else minBoxVal actC_co2 (divBox actO_co2 (intToBoxInt 2))
+                   numCO2 = minBoxVal actC_co2 (divBox actO_co2 (intToBoxInt 2))
                    (a5, actC_ch4) = decrementToken CarbonToken (intToBoxInt 1) a4
                    (a6, actH_ch4) = decrementToken HydrogenToken (intToBoxInt 4) a5
-                   numCH4 = if boxIsZero actC_ch4 then intToBoxInt 1 else minBoxVal actC_ch4 (divBox actH_ch4 (intToBoxInt 4))
+                   numCH4 = minBoxVal actC_ch4 (divBox actH_ch4 (intToBoxInt 4))
                    (a7, actN_nh3) = decrementToken NitrogenToken (intToBoxInt 1) a6
                    (a8, actH_nh3) = decrementToken HydrogenToken (intToBoxInt 3) a7
-                   numNH3 = if boxIsZero actN_nh3 then intToBoxInt 1 else minBoxVal actN_nh3 (divBox actH_nh3 (intToBoxInt 3))
-                   gainedMols = AddM WaterMoleculeToken (if boxIsZero numH2O then intToBoxInt 4 else numH2O)
-                                (AddM CarbonDioxideToken (if boxIsZero numCO2 then intToBoxInt 2 else numCO2)
-                                (AddM MethaneToken (if boxIsZero numCH4 then intToBoxInt 1 else numCH4)
-                                (AddM AmmoniaToken (if boxIsZero numNH3 then intToBoxInt 1 else numNH3) mols)))
+                   numNH3 = minBoxVal actN_nh3 (divBox actH_nh3 (intToBoxInt 3))
+                   m1 = if boxIsNonZero numNH3 then insertItemBox AmmoniaToken numNH3 mols else mols
+                   m2 = if boxIsNonZero numCH4 then insertItemBox MethaneToken numCH4 m1 else m1
+                   m3 = if boxIsNonZero numCO2 then insertItemBox CarbonDioxideToken numCO2 m2 else m2
+                   gainedMols = if boxIsNonZero numH2O then insertItemBox WaterMoleculeToken numH2O m3 else m3
                in (a8, gainedMols)
           else (nextAtoms, mols)
       -- Tier 4: Macromolecular assembly (k in [26, 37]) - consumes volatiles
@@ -160,17 +196,19 @@ stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
       -- Tier 6: Systems ecology trophic pyramid (k >= 38)
       (nextEco, ecoDiss) =
         if k < 38
-          then (eco, intToBoxInt 0)
-          else stepTrophicEcosystem eco
+          then (emptyTrophicPyramid, intToBoxInt 0)
+          else let activeEco = if eco.producerEnergy == 0 then canonicalTrophicPyramid else eco
+               in stepTrophicEcosystem activeEco
   in (MkMatterSector remNucl remAtoms remMols nextChem nextObs nextEco, maybeMotor, ecoDiss)
 
 ||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge and Maxwell coupling.
 public export
-stepDynamicsSector : (g4 : SquareMaxel 4) -> (gluons : Vect 8 (SquareMaxel 3)) -> (maxwell4D : SquareMaxel 4) -> (dt : BoxInt) -> SymplecticDynamicsSector -> SymplecticDynamicsSector
-stepDynamicsSector g4 gluons maxwell4D dt (MkDynamicsSector phase gal halo) =
+stepDynamicsSector : (g4 : SquareMaxel 4) -> (gluons : Vect 8 (SquareMaxel 3)) -> (maxwell4D : SquareMaxel 4) -> (dt : BoxInt) -> (baryonMass : BoxInt) -> SymplecticDynamicsSector -> SymplecticDynamicsSector
+stepDynamicsSector g4 gluons maxwell4D dt baryonMass (MkDynamicsSector phase gal halo) =
   let nextPhase = symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt phase
+      nextGal = MkGalacticProfile baryonMass gal.diskMassSlope
       nextHalo = stepGalacticHaloMass (intToBoxInt 1) halo
-  in MkDynamicsSector nextPhase gal nextHalo
+  in MkDynamicsSector nextPhase nextGal nextHalo
 
 ||| Sector 5 stepper: Advances clock ticks, scale factor, sieve status, Landauer dissipation, and dynamic free energy.
 public export
@@ -229,7 +267,8 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
       -- 2. Step Dynamics Sector (4D symplectic leapfrog coupled to leaf metric, DEC gauge gluons, and U(1) Maxwell field)
       dt = intToBoxInt 1
       maxwell4D = maxwellStateTo4DMaxel gauge.gaugeMaxwellField
-      nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons maxwell4D dt dynamics
+      baryonMass = totalNucleonCount matter.matNuclearNuclides
+      nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons maxwell4D dt baryonMass dynamics
       -- 3. Step Matter Sector (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology)
       (nextMatter, maybeMotor, ecoDiss) = stepMatterSector nextK nextThermo.subScaleFactor nextThermo.subHubbleRate matter
       -- 4. Closed-Loop Participatory Feedback (Phase 2):
@@ -243,10 +282,11 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
       ecoEntropy = divBox ecoDiss (intToBoxInt 137)
       substrateDiss = modBox (qBlue + qRed + drainTokens + ecoEntropy) (intToBoxInt 137)
       totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) (intToBoxInt 137)
-      -- 5. Step Spacetime Sector under total defect
-      nextSpacetime = stepSpacetimeSector spacetime totalDefect
-      -- 6. Step Gauge Sector
-      nextGauge = stepGaugeSector dt totalDefect gauge
+      -- 5. Step Spacetime Sector under total defect and scale factor
+      nextSpacetime = stepSpacetimeSector spacetime totalDefect nextThermo.subScaleFactor
+      -- 6. Step Gauge Sector with dynamic matter current and charge sources
+      emSources = computeMatterElectromagneticSources nextDynamics.dynPhaseState
+      nextGauge = stepGaugeSector dt totalDefect emSources gauge
   in MkUniverseSimulationState nextSpacetime nextGauge nextMatter nextDynamics nextThermo
 
 ||| Advances the simulation by n action steps recursively.

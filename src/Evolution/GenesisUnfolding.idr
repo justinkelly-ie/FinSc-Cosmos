@@ -298,12 +298,12 @@ condenseGenesisToUniverse st =
         gauge = MkGaugeSector gluons vacuumMaxwellState
         nucl = canonicalNuclearState
         chem = canonicalChemistryState
-        matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver canonicalTrophicPyramid
+        matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver emptyTrophicPyramid
         gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
         halo = canonicalGalacticHalo
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
         p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
-        phase0 = MkPhaseState q0 p0
+        phase0 = mkPhaseState q0 p0
         dynamics = MkDynamicsSector phase0 gal halo
         status0 = evalScaleStepCoherence Z
         initialSpread = if boxToNat hyperbolicCount >= 128
