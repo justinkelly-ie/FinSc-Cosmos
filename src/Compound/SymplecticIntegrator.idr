@@ -128,18 +128,22 @@ symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p) =
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
   in MkPhaseState qTree pTree
 
-||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) gauge field coupling:
-||| Couples spacetime metric leaf g4 and the 8 SU(3) Gell-Mann gluon fields into a unified 4D phase flow.
+||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) + U(1) gauge field coupling:
+||| Couples spacetime metric leaf g4, the 8 SU(3) Gell-Mann gluon fields, and the 4D Maxwell tensor F_mu_nu
+||| into a unified 4D phase flow:
+||| accel_mu = kappa_mu * q_mu + fColor_mu + fEM_mu
 ||| Preserves phase-space volume det(M) = 1 identically across each spacetime leaf dimension.
 public export
-symplecticGaugeCFLStormerVerletStep4D :
+symplecticUnifiedGaugeCFLStormerVerletStep4D :
     (g4 : SquareMaxel 4) ->
     (gluons : Vect 8 (SquareMaxel 3)) ->
+    (maxwell4D : SquareMaxel 4) ->
     (dt : BoxInt) ->
     PhaseState ->
     PhaseState
-symplecticGaugeCFLStormerVerletStep4D g4 gluons dt (MkPhaseState q p) =
-  let q1 = lookupUnixel (MkUnixel 1) q
+symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseState q p) =
+  let q0 = lookupUnixel (MkUnixel 0) q
+      q1 = lookupUnixel (MkUnixel 1) q
       q2 = lookupUnixel (MkUnixel 2) q
       q3 = lookupUnixel (MkUnixel 3) q
 
@@ -158,6 +162,16 @@ symplecticGaugeCFLStormerVerletStep4D g4 gluons dt (MkPhaseState q p) =
             totalFlux = sumForces gluons
         in divBox totalFlux (intToBoxInt 137)
 
+      -- Evaluate U(1) Maxwell Lorentz force on spacetime direction mu
+      emForce : Nat -> BoxInt
+      emForce mu =
+        let f0 = lookupBoxTree (MkPixel mu 0) maxwell4D.entries * q0
+            f1 = lookupBoxTree (MkPixel mu 1) maxwell4D.entries * q1
+            f2 = lookupBoxTree (MkPixel mu 2) maxwell4D.entries * q2
+            f3 = lookupBoxTree (MkPixel mu 3) maxwell4D.entries * q3
+            totalEM = f0 + f1 + f2 + f3
+        in divBox totalEM (intToBoxInt 137)
+
       stepDim : Nat -> (Vexel, Vexel) -> (Vexel, Vexel)
       stepDim mu (qAcc, pAcc) =
         let qMu = lookupUnixel (MkUnixel mu) q
@@ -165,7 +179,8 @@ symplecticGaugeCFLStormerVerletStep4D g4 gluons dt (MkPhaseState q p) =
             gMu = lookupBoxTree (MkPixel mu mu) g4.entries
             kappaMu = if boxIsZero gMu then intToBoxInt 1 else (if absBox gMu == intToBoxInt 1 then gMu else intToBoxInt 1)
             fColor = if mu == 0 then intToBoxInt 0 else colorForce (minus mu 1)
-            accelMu = (kappaMu * qMu) + fColor
+            fEM = emForce mu
+            accelMu = (kappaMu * qMu) + fColor + fEM
             pNextMu = pMu - (dt * accelMu)
             qNextMu = qMu + (dt * pNextMu)
             qAcc' = if boxIsZero qNextMu then qAcc else setBoxTree (mkCell1 mu) qNextMu qAcc
@@ -173,6 +188,19 @@ symplecticGaugeCFLStormerVerletStep4D g4 gluons dt (MkPhaseState q p) =
         in (qAcc', pAcc')
       res = stepDim 3 (stepDim 2 (stepDim 1 (stepDim 0 (emptyVexel, emptyVexel))))
   in MkPhaseState (fst res) (snd res)
+
+||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) gauge field coupling:
+||| Couples spacetime metric leaf g4 and the 8 SU(3) Gell-Mann gluon fields into a unified 4D phase flow.
+||| Preserves phase-space volume det(M) = 1 identically across each spacetime leaf dimension.
+public export
+symplecticGaugeCFLStormerVerletStep4D :
+    (g4 : SquareMaxel 4) ->
+    (gluons : Vect 8 (SquareMaxel 3)) ->
+    (dt : BoxInt) ->
+    PhaseState ->
+    PhaseState
+symplecticGaugeCFLStormerVerletStep4D g4 gluons dt phase =
+  symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons (MkSquareMaxel BoxLeaf) dt phase
 
 ||| Forwarder from pure metric 4D leapfrog to DEC gauge-coupled leapfrog with null gluons:
 public export

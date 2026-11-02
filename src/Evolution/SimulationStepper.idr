@@ -14,9 +14,13 @@ import Stage1.Multiset.PrimordialUnfolding
 import Stage1.Carrier.ChromogeometricMetric
 import Stage0.OnSeq.FusedStream
 import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage0.Biology.TrophicEcology
 import Stage0.Multiset
 import Stage0.Hadron.StellarNucleosynthesis
 import Stage0.Chemistry.MacromolecularAssembly
+import Stage0.Chemistry.MolecularAggregation
+import Stage1.ScalePipeline
+import Electromagnetism
 import Data.Vect
 import Stage0.Token
 
@@ -44,22 +48,35 @@ stepSpacetimeSector (MkSpacetimeSector g10 g4 moduli _) defect =
       nextG4  = perturbSquareMaxel00 g4 defect
   in MkSpacetimeSector nextG10 nextG4 moduli defect
 
-||| Sector 2 stepper: Preserves SU(3) Gell-Mann gauge field symmetries.
+||| Sector 2 stepper: Preserves SU(3) Gell-Mann gauge field symmetries and DEC steps U(1) Maxwell field.
 public export
-stepGaugeSector : GaugeFieldSector -> GaugeFieldSector
-stepGaugeSector = id
+stepGaugeSector : (dt : BoxInt) -> (defect : BoxInt) -> GaugeFieldSector -> GaugeFieldSector
+stepGaugeSector dt defect (MkGaugeSector gluons maxwell) =
+  let nextMaxwell = stepMaxwellFieldDEC dt defect maxwell
+  in MkGaugeSector gluons nextMaxwell
 
-||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Chemistry -> Living Observer).
+||| Sector 3 stepper: Advances internal matter succession (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
 ||| Emits participatory motor command token from living observer at k >= 38.
 public export
 stepMatterSector : (k : Nat) -> (scale : BoxInt) -> (hubble : BoxInt) -> MatterSubstanceSector -> (MatterSubstanceSector, Maybe MotorCommand)
-stepMatterSector k scale hubble (MkMatterSector nucl chem obs) =
-  let nextNucl = if (k >= 11 && k <= 20)
+stepMatterSector k scale hubble (MkMatterSector nucl atoms mols chem obs eco) =
+  let -- Tier 1: Stellar nucleosynthesis (k in [11, 20])
+      nextNucl = if (k >= 11 && k <= 20)
                    then stepStellarNucleosynthesis k nucl
                    else nucl
+      -- Tier 2: Atomic recombination (k in [15, 25])
+      nextAtoms = if (k >= 15 && k <= 25)
+                    then stepAtomicRecombination k atoms
+                    else atoms
+      -- Tier 3: Prebiotic volatile aggregation (k in [21, 30])
+      nextMols = if (k >= 21 && k <= 30)
+                   then stepPrebioticVolatiles k mols
+                   else mols
+      -- Tier 4: Macromolecular assembly (k in [26, 37])
       chemRes  = stepChemicalAssembly k chem
       nextChem = fst chemRes
       chemAtp  = snd chemRes
+      -- Tier 5: Observer active inference (k >= 38)
       (nextObs, maybeMotor) =
         if k < 38
           then (DormantObserver, Nothing)
@@ -80,13 +97,18 @@ stepMatterSector k scale hubble (MkMatterSector nucl chem obs) =
                        percept = MkLToken (MkSensoryPercept modality intensity)
                        (nextLiv, MkLToken motor) = stepObserverActiveInference percept liv
                    in (LivingObserver nextLiv, Just motor)
-  in (MkMatterSector nextNucl nextChem nextObs, maybeMotor)
+      -- Tier 6: Systems ecology trophic pyramid (k >= 38)
+      (nextEco, _) =
+        if k < 38
+          then (eco, intToBoxInt 0)
+          else stepTrophicEcosystem eco
+  in (MkMatterSector nextNucl nextAtoms nextMols nextChem nextObs nextEco, maybeMotor)
 
-||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge coupling.
+||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge and Maxwell coupling.
 public export
-stepDynamicsSector : (g4 : SquareMaxel 4) -> (gluons : Vect 8 (SquareMaxel 3)) -> (dt : BoxInt) -> SymplecticDynamicsSector -> SymplecticDynamicsSector
-stepDynamicsSector g4 gluons dt (MkDynamicsSector phase gal halo) =
-  let nextPhase = symplecticGaugeCFLStormerVerletStep4D g4 gluons dt phase
+stepDynamicsSector : (g4 : SquareMaxel 4) -> (gluons : Vect 8 (SquareMaxel 3)) -> (maxwell4D : SquareMaxel 4) -> (dt : BoxInt) -> SymplecticDynamicsSector -> SymplecticDynamicsSector
+stepDynamicsSector g4 gluons maxwell4D dt (MkDynamicsSector phase gal halo) =
+  let nextPhase = symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt phase
       nextHalo = stepGalacticHaloMass (intToBoxInt 1) halo
   in MkDynamicsSector nextPhase gal nextHalo
 
@@ -144,10 +166,11 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
       qRed  = (xk * xk) - (yk * yk)
       -- 1. Step Substrate Thermodynamic Sector
       nextThermo = stepSubstrateSector nextSuperEp nextK xk yk qBlue qRed thermo
-      -- 2. Step Dynamics Sector (4D symplectic leapfrog coupled to leaf metric and DEC gauge gluons)
+      -- 2. Step Dynamics Sector (4D symplectic leapfrog coupled to leaf metric, DEC gauge gluons, and U(1) Maxwell field)
       dt = intToBoxInt 1
-      nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons dt dynamics
-      -- 3. Step Matter Sector (Nuclear -> Chemistry -> Living Observer)
+      maxwell4D = maxwellStateTo4DMaxel gauge.gaugeMaxwellField
+      nextDynamics = stepDynamicsSector spacetime.bulkProjectedLeaf gauge.gaugeGellMannGluons maxwell4D dt dynamics
+      -- 3. Step Matter Sector (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology)
       (nextMatter, maybeMotor) = stepMatterSector nextK nextThermo.subScaleFactor nextThermo.subHubbleRate matter
       -- 4. Closed-Loop Participatory Feedback (Phase 2):
       -- Motor command action energy back-reacts on local curvature defect
@@ -155,12 +178,14 @@ stepUniverseSimulation (MkUniverseSimulationState spacetime gauge matter dynamic
                               Just motor => modBox (divBox motor.actionEnergy (intToBoxInt 137)) (intToBoxInt 137)
                               Nothing    => intToBoxInt 0
       hamiltonianE = modBox (hamiltonianEnergyExact (intToBoxInt 1) nextDynamics.dynPhaseState) (intToBoxInt 137)
-      substrateDiss = modBox (qBlue + qRed) (intToBoxInt 137)
+      -- If rollover (epochIndex >= 136), route the 61 dissipated tokens into the parabolic defect drain:
+      drainTokens = if thermo.subEpochIndex >= 136 then modBox thermo.subDissipatedEntropy (intToBoxInt 55) else intToBoxInt 0
+      substrateDiss = modBox (qBlue + qRed + drainTokens) (intToBoxInt 137)
       totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) (intToBoxInt 137)
       -- 5. Step Spacetime Sector under total defect
       nextSpacetime = stepSpacetimeSector spacetime totalDefect
       -- 6. Step Gauge Sector
-      nextGauge = stepGaugeSector gauge
+      nextGauge = stepGaugeSector dt totalDefect gauge
   in MkUniverseSimulationState nextSpacetime nextGauge nextMatter nextDynamics nextThermo
 
 ||| Advances the simulation by n action steps recursively.

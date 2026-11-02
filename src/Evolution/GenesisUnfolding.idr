@@ -30,8 +30,13 @@ import Stage1.Goh
 import Stage1.Goh.Factor
 import Stage1.Goh.SpreadFactorization
 import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage0.Biology.TrophicEcology
 import Stage0.Hadron.StellarNucleosynthesis
 import Stage0.Chemistry.MacromolecularAssembly
+import Stage0.Chemistry.MolecularAggregation
+import Stage1.ScalePipeline
+import Electromagnetism
+import Stage0.Token
 import Data.Vect
 import Stage0.OnSeq.FusedStream
 
@@ -67,6 +72,14 @@ Show GohPrimeGate where
   show Gate3TriadSpace   = "Gate3(TriadSpace,p=3,φ=2)"
   show Gate5ParabolicDM  = "Gate5(ParabolicDM,p=5,φ=4)"
   show Gate7SpectralROM  = "Gate7(SpectralROM,p=7,φ=6)"
+
+||| Maps the 4 Goh prime gates to their canonical fundamental geometry carrier:
+public export
+gohTokenGeometry : GohPrimeGate -> FundamentalGeometry
+gohTokenGeometry Gate2DyadicBit   = HyperbolicGeom
+gohTokenGeometry Gate3TriadSpace  = EllipticGeom
+gohTokenGeometry Gate5ParabolicDM = ParabolicGeom
+gohTokenGeometry Gate7SpectralROM = HyperbolicGeom
 
 ||| Canonical association mapping each GohPrimeGate to its underlying AnyGohPrime:
 public export
@@ -223,20 +236,26 @@ energyAtN n =
       f = u - (intToBoxInt 2 * s)
   in (u, s, f)
 
-||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1).
-||| Enforces Quantitative Type Theory: substrate states cannot be duplicated or leaked.
+||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1) from an incoming SubstrateActionToken.
+||| Enforces Quantitative Type Theory: substrate states and action quanta cannot be duplicated or leaked.
 public export
-stepGenesisInfluxLinear : (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
-stepGenesisInfluxLinear (MkGenesisUnfoldingState n arrow _ _ _ _ _ _ tokens) =
+stepGenesisInfluxLinearWithToken : (1 tok : LToken SubstrateActionToken) -> (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
+stepGenesisInfluxLinearWithToken (MkLToken (MkActionToken q)) (MkGenesisUnfoldingState n arrow _ _ _ _ _ _ tokens) =
   let nextN = S n
-      nextArrow = arrow + intToBoxInt 1
+      nextArrow = arrow + q
       nextGate = activeGohGate nextN
       nextTriad = epochTriadQuadrance nextN
       (nextU, nextS, nextF) = energyAtN nextN
       condensed = nextN >= fst primorialBudgetDimension
       geom = geometryAtTokenIndex n
-      nextTokens = AddM geom (intToBoxInt 1) tokens
+      nextTokens = AddM geom q tokens
   in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed nextTokens
+
+||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1).
+||| Enforces Quantitative Type Theory: substrate states cannot be duplicated or leaked.
+public export
+stepGenesisInfluxLinear : (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
+stepGenesisInfluxLinear st = stepGenesisInfluxLinearWithToken (MkLToken unitActionToken) st
 
 public export
 stepGenesisInflux : GenesisUnfoldingState -> GenesisUnfoldingState
@@ -260,10 +279,10 @@ condenseGenesisToUniverse st =
         g4  = project10Dto4D g10.metricMaxel
         spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0)
         gluons = synthesizeGellMannFromEllipticCount (boxToNat ellipticCount)
-        gauge = MkGaugeSector gluons
+        gauge = MkGaugeSector gluons vacuumMaxwellState
         nucl = canonicalNuclearState
         chem = canonicalChemistryState
-        matter = MkMatterSector nucl chem DormantObserver
+        matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver canonicalTrophicPyramid
         gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
         halo = canonicalGalacticHalo
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
@@ -385,6 +404,12 @@ public export
 streamUniversalCosmology : FusedStream CosmologicalQuantum
 streamUniversalCosmology =
   unfoldStream (\st => Yield (snapshotCosmosQuantum st) (stepCosmosUnified st)) initCosmosUnified
+
+||| Deforested infinite coinductive stream generator of raw CosmosEvolutionState:
+public export
+streamCosmosFullState : FusedStream CosmosEvolutionState
+streamCosmosFullState =
+  unfoldStream (\st => Yield st (stepCosmosUnified st)) initCosmosUnified
 
 ||| Static compiler proof witness verifying that streaming cosmological evolution
 ||| evaluates continuously from vacuum without deadlock:

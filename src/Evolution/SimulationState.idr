@@ -15,6 +15,10 @@ import Stage0.Biology.ActiveInferenceNeuralNetwork
 import Stage0.Multiset
 import Stage0.Hadron.StellarNucleosynthesis
 import Stage0.Chemistry.MacromolecularAssembly
+import Stage0.Chemistry.MolecularAggregation
+import Stage0.Biology.TrophicEcology
+import Stage1.ScalePipeline
+import Electromagnetism
 import Stage1.Thermodynamics.EntropicArrow
 import Data.Vect
 
@@ -142,28 +146,32 @@ Eq SpacetimeBulkSector where
   (MkSpacetimeSector m1 p1 d1 c1) == (MkSpacetimeSector m2 p2 d2 c2) =
     m1 == m2 && p1 == p2 && d1 == d2 && c1 == c2
 
-||| Sector 2: Non-Abelian gauge field symmetries (SU(3) subset G_2).
+||| Sector 2: Non-Abelian gauge field symmetries (SU(3) subset G_2) and Abelian U(1) Maxwell field.
 public export
 record GaugeFieldSector where
   constructor MkGaugeSector
   gaugeGellMannGluons : Vect 8 (SquareMaxel 3)
+  gaugeMaxwellField   : MaxwellState
 
 public export
 Eq GaugeFieldSector where
-  (MkGaugeSector g1) == (MkGaugeSector g2) = g1 == g2
+  (MkGaugeSector g1 m1) == (MkGaugeSector g2 m2) = g1 == g2 && m1 == m2
 
-||| Sector 3: Internal matter trunk (Nuclear -> Chemistry -> Living Observer).
+||| Sector 3: Internal matter trunk (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
 public export
 record MatterSubstanceSector where
   constructor MkMatterSector
-  matNuclearNuclides : Multiset BoxInt StellarElement
-  matChemicalYield   : Multiset BoxInt MacromoleculeSpec
-  matObserverState   : ObserverBranchState
+  matNuclearNuclides   : Multiset BoxInt StellarElement
+  matAtomicElements    : Multiset BoxInt AtomToken
+  matVolatileMolecules : Multiset BoxInt MoleculeToken
+  matChemicalYield     : Multiset BoxInt MacromoleculeSpec
+  matObserverState     : ObserverBranchState
+  matEcosystemState    : TrophicPyramidState
 
 public export
 Eq MatterSubstanceSector where
-  (MkMatterSector n1 c1 o1) == (MkMatterSector n2 c2 o2) =
-    n1 == n2 && c1 == c2 && o1 == o2
+  (MkMatterSector n1 a1 v1 c1 o1 e1) == (MkMatterSector n2 a2 v2 c2 o2 e2) =
+    n1 == n2 && a1 == a2 && v1 == v2 && c1 == c2 && o1 == o2 && e1 == e2
 
 ||| Sector 4: Hamiltonian phase space dynamics and dark matter halo distribution.
 public export
@@ -228,10 +236,15 @@ public export %inline metricTensor : UniverseSimulationState -> SymmetricMetricT
 public export %inline projectedLeaf : UniverseSimulationState -> SquareMaxel 4; projectedLeaf st = st.spacetimeSector.bulkProjectedLeaf
 public export %inline moduliDOF : UniverseSimulationState -> Nat; moduliDOF st = st.spacetimeSector.bulkModuliDOF
 public export %inline gellMannGluons : UniverseSimulationState -> Vect 8 (SquareMaxel 3); gellMannGluons st = st.gaugeSector.gaugeGellMannGluons
+public export %inline maxwellField : UniverseSimulationState -> MaxwellState; maxwellField st = st.gaugeSector.gaugeMaxwellField
+public export %inline maxwellTensor4D : UniverseSimulationState -> SquareMaxel 4; maxwellTensor4D st = maxwellStateTo4DMaxel st.gaugeSector.gaugeMaxwellField
 public export %inline galacticProfile : UniverseSimulationState -> GalacticProfile; galacticProfile st = st.dynamicsSector.dynGalacticProfile
 public export %inline galacticHalo : UniverseSimulationState -> GalacticHaloMultiset; galacticHalo st = st.dynamicsSector.dynGalacticHalo
 public export %inline nuclearNuclides : UniverseSimulationState -> Multiset BoxInt StellarElement; nuclearNuclides st = st.matterSector.matNuclearNuclides
+public export %inline atomicElements : UniverseSimulationState -> Multiset BoxInt AtomToken; atomicElements st = st.matterSector.matAtomicElements
+public export %inline volatileMolecules : UniverseSimulationState -> Multiset BoxInt MoleculeToken; volatileMolecules st = st.matterSector.matVolatileMolecules
 public export %inline chemicalYield : UniverseSimulationState -> Multiset BoxInt MacromoleculeSpec; chemicalYield st = st.matterSector.matChemicalYield
+public export %inline ecosystemState : UniverseSimulationState -> TrophicPyramidState; ecosystemState st = st.matterSector.matEcosystemState
 public export %inline phaseState : UniverseSimulationState -> PhaseState; phaseState st = st.dynamicsSector.dynPhaseState
 public export %inline curvatureDefect : UniverseSimulationState -> BoxInt; curvatureDefect st = st.spacetimeSector.bulkCurvatureDefect
 public export %inline spreadMatrix : UniverseSimulationState -> SquareMaxel 2; spreadMatrix st = st.thermodynamicSector.subSpreadMatrix
@@ -268,10 +281,10 @@ initUniverseSimulationMode mode =
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
-      gauge = MkGaugeSector gluons
+      gauge = MkGaugeSector gluons vacuumMaxwellState
       nucl = canonicalNuclearState
       chem = canonicalChemistryState
-      matter = MkMatterSector nucl chem DormantObserver
+      matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver canonicalTrophicPyramid
       gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
       halo = canonicalGalacticHalo
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
