@@ -12,6 +12,9 @@ import Stage1.FourGeometries
 import Stage1.Carrier.ChromogeometricMetric
 import Stage1.Carrier.SquareMaxel
 import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage0.Multiset
+import Stage0.Hadron.StellarNucleosynthesis
+import Stage0.Chemistry.MacromolecularAssembly
 import Stage1.Thermodynamics.EntropicArrow
 import Data.Vect
 
@@ -65,6 +68,13 @@ public export
 canonicalHelmholtzGroundState : DiscreteHelmholtzState 27 128 55 2
 canonicalHelmholtzGroundState =
   MkDiscreteHelmholtzState (intToBoxInt 398) (intToBoxInt 859) (intToBoxInt (-1320)) Refl
+
+||| Evaluates dynamic discrete Helmholtz Free Energy state: F = U - 2 * S.
+||| Preserves exact ground state minimum F = -1320 when S = 859, U = 398, T = 2.
+public export
+evaluateDynamicHelmholtzState : (u : BoxInt) -> (s : BoxInt) -> DiscreteHelmholtzState 27 128 55 2
+evaluateDynamicHelmholtzState u s =
+  MkDiscreteHelmholtzState u s (u - (intToBoxInt 2 * s)) Refl
 
 ------------------------------------------------------------------------
 -- 2B. OBSERVER LIVING-MATTER ACTIVE INFERENCE STATE (Rule 03 §5)
@@ -136,6 +146,8 @@ record UniverseSimulationState where
   gellMannGluons      : Vect 8 (SquareMaxel 3)                 -- SU(3) subset G_2 gauge fields
   galacticProfile     : GalacticProfile                        -- Active baryonic core & disk slope
   galacticHalo        : GalacticHaloMultiset                   -- Active dark matter halo phase points
+  nuclearNuclides     : Multiset BoxInt StellarElement         -- Stellar nucleosynthesis nuclide inventory (11 <= k <= 20)
+  chemicalYield       : Multiset BoxInt MacromoleculeSpec      -- Macromolecular assembly & ATP carrier yield (21 <= k < 38)
   phaseState          : PhaseState                             -- Symplectic (q, p) phase space
   curvatureDefect     : BoxInt                                 -- Active G_00 energy-momentum defect
   spreadMatrix        : SquareMaxel 2                          -- Companion spread transfer matrix M(s)^k
@@ -173,6 +185,8 @@ initUniverseSimulationMode mode =
                ]
       gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
       halo = canonicalGalacticHalo
+      nucl = canonicalNuclearState
+      chem = canonicalChemistryState
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
       p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
       phase0 = MkPhaseState q0 p0
@@ -188,6 +202,8 @@ initUniverseSimulationMode mode =
        gluons
        gal
        halo
+       nucl
+       chem
        phase0
        (intToBoxInt 0)
        (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))

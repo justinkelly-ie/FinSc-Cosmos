@@ -34,7 +34,7 @@ public export
 exportSubstrateRotationVelocity : UniverseSimulationState -> (radius : BoxInt) -> BoxInt
 exportSubstrateRotationVelocity st r =
   let (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-  in rotationVelocitySubstrate10D xk yk st.galacticProfile r
+  in rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo r
 
 ||| Standard CSV header for time-series cosmological simulation exports.
 public export
@@ -51,8 +51,8 @@ exportStateCsvRow st =
       v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
       v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
       (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-      v10_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 10)
-      v20_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 20)
+      v10_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 10)
+      v20_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 20)
       fe  = st.freeEnergyState.freeEnergy
       posMag = vexelMagnitudeSquared st.phaseState.position
       momMag = vexelMagnitudeSquared st.phaseState.momentum
@@ -93,8 +93,8 @@ exportStateJson st =
       v10 = rotationVelocity10D st.galacticProfile (intToBoxInt 10)
       v20 = rotationVelocity10D st.galacticProfile (intToBoxInt 20)
       (xk, yk) = epochPythagoreanCoordinateReentrant st.superEpoch st.epochIndex
-      v10_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 10)
-      v20_sub = rotationVelocitySubstrate10D xk yk st.galacticProfile (intToBoxInt 20)
+      v10_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 10)
+      v20_sub = rotationVelocityHaloSubstrate10D xk yk st.galacticProfile st.galacticHalo (intToBoxInt 20)
       fe  = st.freeEnergyState.freeEnergy
       posMag = vexelMagnitudeSquared st.phaseState.position
       momMag = vexelMagnitudeSquared st.phaseState.momentum

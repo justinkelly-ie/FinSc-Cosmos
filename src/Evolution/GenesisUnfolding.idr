@@ -30,6 +30,8 @@ import Stage1.Goh
 import Stage1.Goh.Factor
 import Stage1.Goh.SpreadFactorization
 import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage0.Hadron.StellarNucleosynthesis
+import Stage0.Chemistry.MacromolecularAssembly
 import Data.Vect
 
 %default total
@@ -251,14 +253,18 @@ condenseGenesisToUniverse st =
   if st.substrateTokens < fst primorialBudgetDimension then Nothing
   else
     let parabolicCount = multiplicity ParabolicGeom st.carrierTokens
+        ellipticCount  = multiplicity EllipticGeom st.carrierTokens
+        hyperbolicCount = multiplicity HyperbolicGeom st.carrierTokens
         g10 = synthesize10DMetricFromParabolicCount (boxToNat parabolicCount)
         g4  = project10Dto4D g10.metricMaxel
-        gluons : Vect 8 (SquareMaxel 3) =
-          [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
-          , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
-          ]
+        gluons = synthesizeGellMannFromEllipticCount (boxToNat ellipticCount)
+        initialSpread = if boxToNat hyperbolicCount >= 128
+                          then pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3)
+                          else pythagoreanCompanionSquareMaxel (intToBoxInt 1) (intToBoxInt 0)
         gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
         halo = canonicalGalacticHalo
+        nucl = canonicalNuclearState
+        chem = canonicalChemistryState
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
         p0 = singletonCell (mkCell1 1) (intToBoxInt 0)
         phase0 = MkPhaseState q0 p0
@@ -274,9 +280,11 @@ condenseGenesisToUniverse st =
                gluons
                gal
                halo
+               nucl
+               chem
                phase0
                (intToBoxInt 0)
-               (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
+               initialSpread
                (intToBoxInt 25)
                (intToBoxInt 18)
                (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))

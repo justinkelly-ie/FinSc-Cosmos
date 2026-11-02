@@ -6,6 +6,7 @@ import Stage1.Basis.CoordCell
 import Stage1.MultisetTree
 import Stage1.Carrier.CellMultiset
 import Stage1.Carrier.Vexel
+import Stage1.Carrier.SquareMaxel
 import Compound.LinearEpsilonRouting
 import Stage0.OnSeq.FusedStream
 import Data.Fuel
@@ -85,13 +86,16 @@ symplecticStormerVerletStep1D g dt (MkPhaseState q p) =
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
   in MkPhaseState qTree pTree
 
-||| Discrete total Hamiltonian energy E = p^2 + k * q^2 (un-divided integer quadratic form).
+||| Discrete total Hamiltonian energy E = sum_{mu=0}^3 (p_mu^2 + k * q_mu^2) (un-divided integer quadratic form).
 public export
 hamiltonianEnergyExact : BoxInt -> PhaseState -> BoxInt
 hamiltonianEnergyExact k (MkPhaseState q p) =
-  let q1 = lookupUnixel (MkUnixel 1) q
-      p1 = lookupUnixel (MkUnixel 1) p
-  in (p1 * p1) + (k * q1 * q1)
+  let energyDim : Nat -> BoxInt
+      energyDim mu =
+        let qMu = lookupUnixel (MkUnixel mu) q
+            pMu = lookupUnixel (MkUnixel mu) p
+        in (pMu * pMu) + (k * qMu * qMu)
+  in energyDim 0 + energyDim 1 + energyDim 2 + energyDim 3
 
 ||| Static compiler proof witness verifying that the symplectic transfer matrix has determinant 1:
 public export
@@ -122,6 +126,26 @@ symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p) =
       qTree = if boxIsZero qNext1 then emptyVexel else singletonCell (mkCell1 1) qNext1
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
   in MkPhaseState qTree pTree
+
+||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator:
+||| Integrates all 4 spacetime leaf coordinates (mu = 0, 1, 2, 3) coupled to the 4D metric leaf g4.
+||| Preserves phase-space volume det(M) = 1 identically across each spacetime leaf dimension.
+public export
+symplecticCFLStormerVerletStep4D : (g4 : SquareMaxel 4) -> (dt : BoxInt) -> PhaseState -> PhaseState
+symplecticCFLStormerVerletStep4D g4 dt (MkPhaseState q p) =
+  let stepDim : Nat -> (Vexel, Vexel) -> (Vexel, Vexel)
+      stepDim mu (qAcc, pAcc) =
+        let qMu = lookupUnixel (MkUnixel mu) q
+            pMu = lookupUnixel (MkUnixel mu) p
+            gMu = lookupBoxTree (MkPixel mu mu) g4.entries
+            kappaMu = if boxIsZero gMu then intToBoxInt 1 else (if absBox gMu == intToBoxInt 1 then gMu else intToBoxInt 1)
+            pNextMu = pMu - (dt * kappaMu * qMu)
+            qNextMu = qMu + (dt * pNextMu)
+            qAcc' = if boxIsZero qNextMu then qAcc else setBoxTree (mkCell1 mu) qNextMu qAcc
+            pAcc' = if boxIsZero pNextMu then pAcc else setBoxTree (mkCell1 mu) pNextMu pAcc
+        in (qAcc', pAcc')
+      res = stepDim 3 (stepDim 2 (stepDim 1 (stepDim 0 (emptyVexel, emptyVexel))))
+  in MkPhaseState (fst res) (snd res)
 
 ||| Static compiler proof witness verifying CFL elliptic stability:
 ||| For all kappa in {1, 2, 3}, |Tr| <= 1 < 2, guaranteeing non-hyperbolic periodic orbits.

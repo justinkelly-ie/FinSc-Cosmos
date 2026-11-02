@@ -14,6 +14,9 @@ import Stage1.Multiset.PrimordialUnfolding
 import Stage1.Carrier.ChromogeometricMetric
 import Stage0.OnSeq.FusedStream
 import Stage0.Biology.ActiveInferenceNeuralNetwork
+import Stage0.Multiset
+import Stage0.Hadron.StellarNucleosynthesis
+import Stage0.Chemistry.MacromolecularAssembly
 import Data.Vect
 
 %default total
@@ -38,7 +41,7 @@ stepObserverLivingState k currentScale hubble liv =
 ||| Enforces strict linear QTT consumption of the active state.
 public export
 stepUniverseSimulation : (1 st : UniverseSimulationState) -> UniverseSimulationState
-stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
+stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
   let (nextSuperEp, nextK) : (Nat, Nat) =
         if k >= 136 then (S superEp, Z) else (superEp, S k)
       nextTicks = S ticks
@@ -56,12 +59,10 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
       nextG10 = perturbMetric00 g10 nextDefect
       nextG4  = perturbSquareMaxel00 g4 nextDefect
       nextModuli : Nat = 45
-      -- 4. Metric-Coupled CFL-Stable Symplectic Störmer-Verlet Kick in O(1):
-      -- Preserves phase-space volume in exact SL(2, Z) with |Tr| < 2 elliptic periodic orbits
-      g00Val = projectSquareMaxel00 nextG4
-      metricScalar = if boxIsZero g00Val then intToBoxInt 1 else g00Val
+      -- 4. Metric-Coupled CFL-Stable 4D Symplectic Störmer-Verlet Kick in O(1):
+      -- Preserves phase-space volume across 4D spacetime leaf (mu = 0, 1, 2, 3)
       dt = intToBoxInt 1
-      nextPhase = symplecticCFLStormerVerletStep1D metricScalar dt phase
+      nextPhase = symplecticCFLStormerVerletStep4D nextG4 dt phase
       -- 5. Substrate-Regulated Dynamic Companion Spread Recurrence:
       -- Bounds the companion spread matrix in O(1) registers matching (2 - 4s_k) in [-2, 2]
       nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
@@ -70,22 +71,33 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
                           MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
                           ConformalCyclicBounce  => qBlue
       nextHubbleRate  = intToBoxInt 2 * (yk * yk)
-      -- 7. Dual-Branch Emergence: Persistent Living Observer ignited at k=38 (Rule 03 §5)
+      -- 7. Internal Matter Succession: Stellar Nucleosynthesis (11 <= k <= 20) & Macromolecular Assembly (21 <= k < 38)
+      nextNucl = if (nextK >= 11 && nextK <= 20)
+                   then stepStellarNucleosynthesis nextK nucl
+                   else nucl
+      chemRes = stepChemicalAssembly nextK chem
+      nextChem = fst chemRes
+      chemAtp  = snd chemRes
+      -- 8. Persistent Living Observer ignited at k=38 fueled by chemical ATP carrier yield (Rule 03 §5)
       nextIsObs = nextK >= 38
       nextObsState =
         if nextK < 38
           then DormantObserver
           else case obsState of
-                 DormantObserver => LivingObserver canonicalObserverState38
-                 LivingObserver liv => LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate liv)
-      -- 8. SU(3) Gluon updates (Gell-Mann algebra preserved)
+                 DormantObserver =>
+                   let atp = if boxIsZero chemAtp then intToBoxInt 750 else chemAtp
+                       initLiv = MkObserverLivingState atp (intToBoxInt 0) 39 True canonicalObserverNetwork38
+                   in LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate initLiv)
+                 LivingObserver liv =>
+                   LivingObserver (stepObserverLivingState nextK nextScaleFactor nextHubbleRate liv)
+      -- 9. SU(3) Gluon updates (Gell-Mann algebra preserved)
       nextGluons = gluons
-      -- 9. Baryonic Matter Profile & Dark Matter Halo Symplectic Step
+      -- 10. Baryonic Matter Profile & Dark Matter Halo Symplectic Step
       nextGal = gal
       nextHalo = stepGalacticHaloMass (intToBoxInt 1) halo
-      -- 10. 13-Smoothness Coherence Status for generation n = S nextK
+      -- 11. 13-Smoothness Coherence Status for generation n = S nextK
       nextStatus = evalScaleStepCoherence nextK
-      -- 11. Cumulative Landauer Dissipated Entropy with Conformal Parabolic Flush:
+      -- 12. Cumulative Landauer Dissipated Entropy with Conformal Parabolic Flush:
       -- At eon rollover (k = 136 -> 137 -> 0), the parabolic null metric drain flushes thermal tokens
       nextDissipated =
         if k >= 136
@@ -93,8 +105,9 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
           else case nextStatus of
                  GatePure _   => dissEntropy
                  Decoherent _ => dissEntropy + intToBoxInt 1
-      -- 12. Discrete Helmholtz Free Energy remains at Primorial 210 Ground State F = -1320
-      nextFE = fe
+      -- 13. Dynamic Discrete Helmholtz Free Energy F = U - TS coupled to Landauer dissipation:
+      -- Ground state F = -1320 when nextDissipated = 0; Delta S >= 0 <=> Delta F <= 0
+      nextFE = evaluateDynamicHelmholtzState (intToBoxInt 398) (addBox (intToBoxInt 859) nextDissipated)
   in MkUniverseSimulationState
        nextK
        nextSuperEp
@@ -106,6 +119,8 @@ stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 mod
        nextGluons
        nextGal
        nextHalo
+       nextNucl
+       nextChem
        nextPhase
        nextDefect
        nextSpread
@@ -157,9 +172,9 @@ Show SimulationObservableRecord where
 ||| Linear simulation transition step emitting a SimulationObservableRecord alongside linearly consumed state.
 public export
 stepSimulationObservable : (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState SimulationObservableRecord
-stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
+stepSimulationObservable (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy) =
   let obs = MkSimObsRecord ticks k scaleFactor hubbleRate fe.freeEnergy dissEntropy
-      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
+      st' = stepUniverseSimulation (MkUniverseSimulationState k superEp ticks cap g10 g4 moduli gluons gal halo nucl chem phase defect spread scaleFactor hubbleRate gov mode isObs obsState status fe dissEntropy)
   in MkLStatePair st' obs
 
 ||| Streams universe simulation evolution across N action steps with strict QTT linearity,
