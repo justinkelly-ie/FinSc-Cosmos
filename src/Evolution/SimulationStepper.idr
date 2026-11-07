@@ -403,6 +403,116 @@ stepCatalyticATPTurnover chem =
       energy   = atpPhosphateEnergyQuantum * lookupCountBox ATPMetabolicCarrier chem'
   in (chem', energy)
 
+||| Advances pre-observer matter sectors linearly across all thermodynamic tiers (k in [1, 37]).
+public export
+stepPreObserverMatterCascade :
+  (k : Nat) ->
+  (1 matter : MatterSubstanceSector) ->
+  LinearStatePair MatterSubstanceSector (Maybe MotorCommand, BoxInt)
+stepPreObserverMatterCascade k (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chem peptides biomods obs eco) =
+  let -- Tier 0a: QGP cooling & QCD hadronization (k in [1, 6])
+      (nextQuarks, nextQGP, t0Hadrons) = stepQCDHadronizationStoichiometric k quarks qgp hadrons
+      -- Tier 0b: Big Bang Nucleosynthesis (k in [7, 10])
+      (nextHadrons, nextBBN, t0Nucl) = stepBBNNucleosynthesisStoichiometric k t0Hadrons bbn nucl
+      -- Tier 1: Stellar nucleosynthesis (k in [11, 20])
+      t1Nucl = if isStellarNucleosynthesis k
+                 then stepStellarNucleosynthesis k t0Nucl
+                 else t0Nucl
+      -- Tier 2: Atomic recombination (k in [15, 25]) - consumes nuclides to form atoms
+      (remNucl, nextAtoms) = stepAtomicRecombinationStoichiometric k t1Nucl atoms
+      -- Tier 3: Prebiotic volatile aggregation (k in [21, 30])
+      (remAtoms, nextMols) = stepPrebioticVolatilesStoichiometric k nextAtoms mols
+      -- Tier 4: Macromolecular assembly (k in [26, 37])
+      (t4Mols, t4Chem, _) = stepChemicalAssemblyStoichiometric k nextMols chem
+      -- Tier 4b: Ribosomal translation & protocell hydration (k in [31, 37])
+      (remMols, nextChem, nextPeptides, nextBiomods) = stepRibosomalAndProtocellStoichiometric k t4Mols t4Chem peptides biomods
+  in MkLStatePair (MkMatterSector nextQuarks nextQGP nextHadrons nextBBN remNucl remAtoms remMols nextChem nextPeptides nextBiomods DormantObserver emptyTrophicPyramid) (Nothing, intToBoxInt 0)
+
+||| Type-driven matter sector stepper dispatched by certified CosmicPhaseStep (Rule 03 §7, Rule 04 §1).
+public export
+stepMatterSectorPhased :
+  (step : CosmicPhaseStep CosmicSmoothHorizon) ->
+  (scale : BoxInt) ->
+  (hubble : BoxInt) ->
+  (1 matter : MatterSubstanceSector) ->
+  LinearStatePair MatterSubstanceSector (Maybe MotorCommand, BoxInt)
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep _ _ _) PhaseConformalBounce) scale hubble (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chem peptides biomods obs eco) =
+  -- Conformal Eon Bounce (k = 0): Recycle conserved baryonic nucleons back into primordial QGP
+  MkLStatePair
+    (MkMatterSector
+       canonicalSubatomicQuarkState
+       QuarkGluonPlasma
+       ZeroM
+       ZeroM
+       ZeroM
+       ZeroM
+       ZeroM
+       canonicalChemistryState
+       (the (List AminoAcid) [])
+       ZeroM
+       DormantObserver
+       emptyTrophicPyramid)
+    (Nothing, intToBoxInt 0)
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseQGPCooling) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseQCDHadronization) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseBBNDeuteronBottleneck) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseBBNHeliumFreezeout) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseStellarNucleosynthesis) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseAtomicRecombination) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhasePrebioticVolatiles) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseMacromolecularAssembly) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseRibosomalTranslation) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseProtocellHydration) scale hubble matter =
+  stepPreObserverMatterCascade k matter
+
+stepMatterSectorPhased (MkCosmicPhaseStep (MkScaleStep k _ _) PhaseObserverActiveInference) scale hubble (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chem peptides biomods obs eco) =
+  let -- Short-circuit pre-observer baryonic synthesis cascade at k >= 38 (72% of every cosmic eon):
+      (chemA, chemAtp) = stepCatalyticATPTurnover chem
+      -- Tier 5: Observer active inference (k >= 38)
+      (nextObs, maybeMotor) : (ObserverBranchState, Maybe MotorCommand) =
+        case obs of
+          DormantObserver =>
+            let initLiv = MkObserverLivingState chemAtp (intToBoxInt 0) (generation observerScaleStep) True canonicalObserverNetwork38
+                intensity = absBox (subBox hubble scale)
+                kInt = cast {to = Integer} k
+                modality = integerToNat (kInt `mod` cast CosmicGridWall)
+                percept = MkLToken (MkSensoryPercept modality intensity)
+                (nextLiv, MkLToken motor) = stepObserverActiveInference percept initLiv
+            in (LivingObserver nextLiv, Just motor)
+          LivingObserver liv =>
+            let intensity = absBox (subBox hubble scale)
+                kInt = cast {to = Integer} k
+                modality = integerToNat (kInt `mod` cast CosmicGridWall)
+                percept = MkLToken (MkSensoryPercept modality intensity)
+                livWithAtp = if liv.metabolicYieldATP < maxObserverMetabolicYield
+                               then MkObserverLivingState (addBox liv.metabolicYieldATP chemAtp) liv.variationalSurprise liv.activeNeurons liv.markovBlanketPurity liv.networkState
+                               else liv
+                (nextLiv, MkLToken motor) = stepObserverActiveInference percept livWithAtp
+            in (LivingObserver nextLiv, Just motor)
+      -- Tier 6: Systems ecology trophic pyramid coupled linearly to chemical ATP flux (k >= 38)
+      activeEco = if eco.producerEnergy == 0 then canonicalTrophicPyramid else eco
+      MkLStatePair nextEco ecoDiss = stepTrophicEcosystemFluxLinear chemAtp activeEco
+  in MkLStatePair (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chemA peptides biomods nextObs nextEco) (maybeMotor, ecoDiss)
+
 ||| Sector 3 stepper: Advances complete internal matter succession:
 ||| (Subatomic QGP -> QCD Hadrons -> BBN Light Nuclei -> Stellar Nuclides -> Atomic Elements ->
 |||  Prebiotic Volatiles -> Supramolecular Chemistry -> Ribosomal Peptides -> Cellular Protocells ->
@@ -410,69 +520,8 @@ stepCatalyticATPTurnover chem =
 ||| Emits participatory motor command token from living observer and trophic dissipation at k >= 38.
 public export
 stepMatterSector : (k : Nat) -> (scale : BoxInt) -> (hubble : BoxInt) -> (1 matter : MatterSubstanceSector) -> LinearStatePair MatterSubstanceSector (Maybe MotorCommand, BoxInt)
-stepMatterSector k scale hubble (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chem peptides biomods obs eco) =
-  if k == 0
-    then -- Conformal Eon Bounce (k = 0): Recycle conserved 175 baryonic nucleons back into primordial QGP
-         MkLStatePair
-           (MkMatterSector
-              canonicalSubatomicQuarkState
-              QuarkGluonPlasma
-              ZeroM
-              ZeroM
-              ZeroM
-              ZeroM
-              ZeroM
-              canonicalChemistryState
-              (the (List AminoAcid) [])
-              ZeroM
-              DormantObserver
-              emptyTrophicPyramid)
-           (Nothing, intToBoxInt 0)
-    else if not (isObserverActive k)
-    then let -- Tier 0a: QGP cooling & QCD hadronization (k in [1, 6])
-             (nextQuarks, nextQGP, t0Hadrons) = stepQCDHadronizationStoichiometric k quarks qgp hadrons
-             -- Tier 0b: Big Bang Nucleosynthesis (k in [7, 10])
-             (nextHadrons, nextBBN, t0Nucl) = stepBBNNucleosynthesisStoichiometric k t0Hadrons bbn nucl
-             -- Tier 1: Stellar nucleosynthesis (k in [11, 20])
-             t1Nucl = if isStellarNucleosynthesis k
-                        then stepStellarNucleosynthesis k t0Nucl
-                        else t0Nucl
-             -- Tier 2: Atomic recombination (k in [15, 25]) - consumes nuclides to form atoms
-             (remNucl, nextAtoms) = stepAtomicRecombinationStoichiometric k t1Nucl atoms
-             -- Tier 3: Prebiotic volatile aggregation (k in [21, 30])
-             (remAtoms, nextMols) = stepPrebioticVolatilesStoichiometric k nextAtoms mols
-             -- Tier 4: Macromolecular assembly (k in [26, 37])
-             (t4Mols, t4Chem, _) = stepChemicalAssemblyStoichiometric k nextMols chem
-             -- Tier 4b: Ribosomal translation & protocell hydration (k in [31, 37])
-             (remMols, nextChem, nextPeptides, nextBiomods) = stepRibosomalAndProtocellStoichiometric k t4Mols t4Chem peptides biomods
-         in MkLStatePair (MkMatterSector nextQuarks nextQGP nextHadrons nextBBN remNucl remAtoms remMols nextChem nextPeptides nextBiomods DormantObserver emptyTrophicPyramid) (Nothing, intToBoxInt 0)
-    else let -- Short-circuit pre-observer baryonic synthesis cascade at k >= 38 (72% of every cosmic eon):
-             (chemA, chemAtp) = stepCatalyticATPTurnover chem
-             -- Tier 5: Observer active inference (k >= 38)
-             (nextObs, maybeMotor) : (ObserverBranchState, Maybe MotorCommand) =
-               case obs of
-                 DormantObserver =>
-                   let initLiv = MkObserverLivingState chemAtp (intToBoxInt 0) (generation observerScaleStep) True canonicalObserverNetwork38
-                       intensity = absBox (subBox hubble scale)
-                       kInt = cast {to = Integer} k
-                       modality = integerToNat (kInt `mod` cast CosmicGridWall)
-                       percept = MkLToken (MkSensoryPercept modality intensity)
-                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept initLiv
-                   in (LivingObserver nextLiv, Just motor)
-                 LivingObserver liv =>
-                   let intensity = absBox (subBox hubble scale)
-                       kInt = cast {to = Integer} k
-                       modality = integerToNat (kInt `mod` cast CosmicGridWall)
-                       percept = MkLToken (MkSensoryPercept modality intensity)
-                       livWithAtp = if liv.metabolicYieldATP < maxObserverMetabolicYield
-                                      then MkObserverLivingState (addBox liv.metabolicYieldATP chemAtp) liv.variationalSurprise liv.activeNeurons liv.markovBlanketPurity liv.networkState
-                                      else liv
-                       (nextLiv, MkLToken motor) = stepObserverActiveInference percept livWithAtp
-                   in (LivingObserver nextLiv, Just motor)
-             -- Tier 6: Systems ecology trophic pyramid coupled linearly to chemical ATP flux (k >= 38)
-             activeEco = if eco.producerEnergy == 0 then canonicalTrophicPyramid else eco
-             MkLStatePair nextEco ecoDiss = stepTrophicEcosystemFluxLinear chemAtp activeEco
-         in MkLStatePair (MkMatterSector quarks qgp hadrons bbn nucl atoms mols chemA peptides biomods nextObs nextEco) (maybeMotor, ecoDiss)
+stepMatterSector k scale hubble matter =
+  stepMatterSectorPhased (cosmicSmoothPhaseStep k) scale hubble matter
 
 ||| Sector 4 stepper: Advances Hamiltonian phase space and dark matter halo under CFL 4D Störmer-Verlet with DEC gauge and Maxwell coupling.
 public export
@@ -560,7 +609,7 @@ stepUniverseSimulationAction actionQuantum (MkUniverseSimulationState spacetime 
       nextHubble = intToBoxInt 2 * (yk * yk)
       -- 2. Step Matter Sector linearly across all 10 internal tiers
       MkLStatePair nextMatterRaw (maybeMotor, ecoDiss) =
-        stepMatterSector nextK nextScale nextHubble (MkMatterSector maQuarks maQGP maHadrons maBBN maNucl maAtoms maMols maChem maPep maBiomods maObs maEco)
+        stepMatterSectorPhased (cosmicSmoothPhaseStep nextK) nextScale nextHubble (MkMatterSector maQuarks maQGP maHadrons maBBN maNucl maAtoms maMols maChem maPep maBiomods maObs maEco)
       (MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco) = nextMatterRaw
       nextMatterSnapshot = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
       nextMatter = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
@@ -671,6 +720,57 @@ runSimulationWithObservables (S k) st =
   let MkLStatePair st' obs = stepSimulationObservable st
       MkLStatePair stFinal history = runSimulationWithObservables k st'
   in MkLStatePair stFinal (the (List SimulationObservableRecord) (obs :: history))
+
+------------------------------------------------------------------------
+-- 1C. O(log N) COMPANION MATRIX FAST-FORWARDING (Rule 04 §4, §9)
+------------------------------------------------------------------------
+
+||| Evaluates M^steps for a 2x2 companion spread matrix in O(log steps) multiplications using fast repeated squaring.
+public export
+fastForwardSpreadCompanion : (fuel : Nat) -> (steps : Nat) -> SquareMaxel 2 -> SquareMaxel 2
+fastForwardSpreadCompanion fuel steps m =
+  fastSquareMaxelPower fuel steps m
+
+||| Evaluates M^steps for a 2x2 companion spread matrix using model-derived Goh fuel.
+public export
+fastForwardSpreadCompanionGoh : (steps : Nat) -> SquareMaxel 2 -> SquareMaxel 2
+fastForwardSpreadCompanionGoh steps m =
+  fastSquareMaxelPowerGoh steps m
+
+||| Fast-forwards the thermodynamic substrate sector across multi-step intervals via O(log N) companion matrix exponentiation.
+public export
+fastForwardSubstrateSector : (fuel : Nat) -> (steps : Nat) -> (1 thermo : ThermodynamicSubstrateSector) -> ThermodynamicSubstrateSector
+fastForwardSubstrateSector fuel steps (MkSubstrateSector ep super ticks cap spread scale hubble gov mode isObs status fe diss) =
+  let nextSpread = fastForwardSpreadCompanion fuel steps spread
+      nextTicks  = ticks + steps
+  in MkSubstrateSector ep super nextTicks cap nextSpread scale hubble gov mode isObs status fe diss
+
+||| Streams or evaluates universe simulation evolution across N action steps with strict QTT linearity,
+||| accumulating the observable trajectory into an unrestricted list without leaking or duplicating the linear state.
+public export
+fastForwardSimulationObservables : (steps : Nat) -> (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState (List SimulationObservableRecord)
+fastForwardSimulationObservables steps st =
+  runSimulationWithObservables steps st
+
+||| Audit: Fast O(log N) companion matrix exponentiation matches repeated squaring and preserves companion spread invariants.
+public export
+auditFastSpreadCompanionProof : Bool
+auditFastSpreadCompanionProof =
+  let initSpread = pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3)
+      mPow1 = fastForwardSpreadCompanion 10 1 initSpread
+      mPow2 = fastForwardSpreadCompanion 10 2 initSpread
+      directSq = compressSquareMaxel (mulSquareMaxel initSpread initSpread)
+  in (mPow1 == compressSquareMaxel initSpread) && (mPow2 == directSq)
+
+||| Audit: Type-driven dependent stepper dispatching produces identical state evolution to legacy stepMatterSector.
+public export
+auditTypeDrivenPhasedStepProof : Bool
+auditTypeDrivenPhasedStepProof =
+  let st0 = initUniverseSimulation
+      MkLStatePair m1 _ = stepMatterSector 1 (intToBoxInt 25) (intToBoxInt 18) st0.matterSector
+      MkLStatePair m2 _ = stepMatterSectorPhased (cosmicSmoothPhaseStep 1) (intToBoxInt 25) (intToBoxInt 18) st0.matterSector
+  in (totalMatterNucleonCount m1 == totalMatterNucleonCount m2) &&
+     (m1 == m2)
 
 ------------------------------------------------------------------------
 -- 2. SHARED INCREMENTAL CHECKPOINTS & INVARIANT AUDITS

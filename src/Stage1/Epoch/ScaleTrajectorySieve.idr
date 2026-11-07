@@ -202,6 +202,36 @@ classifyCosmicPhase k =
   else if isObserverActive k then PhaseObserverActiveInference
   else PhaseMacromolecularAssembly
 
+||| A dependent cosmological phase step bundling the 13-smooth scale step with its verified phase (Rule 03 §7):
+public export
+record CosmicPhaseStep (bound : Nat) where
+  constructor MkCosmicPhaseStep
+  phaseScaleStep : ScaleStep bound
+  cosmicPhase    : CosmologicalPhase
+
+public export
+{bound : Nat} -> Eq (CosmicPhaseStep bound) where
+  (MkCosmicPhaseStep s1 p1) == (MkCosmicPhaseStep s2 p2) =
+    s1 == s2 && p1 == p2
+
+public export
+{bound : Nat} -> Show (CosmicPhaseStep bound) where
+  show (MkCosmicPhaseStep s p) =
+    "CosmicPhaseStep(k=" ++ show s.scaleIndex ++ ", " ++ show p ++ ")"
+
+||| Smart constructor building a CosmicPhaseStep from epoch index k:
+public export
+cosmicPhaseStep : (bound : Nat) -> Nat -> CosmicPhaseStep bound
+cosmicPhaseStep bound k =
+  let st = MkScaleStep k (epochTriadQuadrance k) (evalScaleStepCoherenceBounded bound k)
+      ph = classifyCosmicPhase k
+  in MkCosmicPhaseStep st ph
+
+||| Canonical 13-smooth cosmic phase step at epoch k:
+public export
+cosmicSmoothPhaseStep : Nat -> CosmicPhaseStep CosmicSmoothHorizon
+cosmicSmoothPhaseStep = cosmicPhaseStep CosmicSmoothHorizon
+
 --------------------------------------------------------------------------------
 -- 2. DEFORESTED SCALE TRAJECTORY STREAM TRANSDUCERS (O(1) AUXILIARY MEMORY)
 --------------------------------------------------------------------------------
