@@ -386,14 +386,14 @@ condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condense
 public export
 dissolveUniverseToGenesis : UniverseSimulationState -> GenesisUnfoldingState
 dissolveUniverseToGenesis st =
-  let n = 210
-      arrow = intToBoxInt 210
+  let n = fst primorialBudgetDimension
+      arrow = natToBoxInt (fst primorialBudgetDimension)
       gate = Gate7SpectralROM
       triad = epochTriadQuadrance 0
       u = (freeEnergyState st).internalEnergy
       s = (freeEnergyState st).entropy
       f = (freeEnergyState st).freeEnergy
-      tokens = canonicalTokensAtN 210
+      tokens = canonicalTokensAtN (fst primorialBudgetDimension)
       bit = Bit2Zero
       tritReg = [Bit3Zero, Bit3Zero, Bit3Zero]
   in MkGenesisUnfoldingState n arrow gate triad u s f True tokens bit tritReg
@@ -404,9 +404,9 @@ auditDissolutionCondensationRoundTripProof : Bool
 auditDissolutionCondensationRoundTripProof =
   let st0 = initUniverseSimulation
       gState = dissolveUniverseToGenesis st0
-  in gState.isCondensed && (gState.substrateTokens == 210) &&
+  in gState.isCondensed && (gState.substrateTokens == fst primorialBudgetDimension) &&
      case condenseGenesisToUniverse gState of
-       Just simSt => (freeEnergyState simSt).freeEnergy == intToBoxInt (-1320)
+       Just simSt => (freeEnergyState simSt).freeEnergy == groundStateFreeEnergy
        Nothing    => False
 
 --------------------------------------------------------------------------------
@@ -587,9 +587,9 @@ public export
 auditCapacityGapMitigationProof : Bool
 auditCapacityGapMitigationProof =
   let (_, _, f0) = energyAtN 0
-      (_, _, f210) = energyAtN 210
+      (_, _, f210) = energyAtN (fst primorialBudgetDimension)
   in boxEq f0 (intToBoxInt 0) &&
-     boxEq f210 (intToBoxInt (-1320))
+     boxEq f210 groundStateFreeEnergy
 
 ||| Audit 4: Type-Level Smoothness Failure Mitigation Witness.
 ||| Proves the Totient Horizon Theorem: the sum of totients across the 4 Goh prime gates
@@ -600,7 +600,7 @@ auditTotientHorizonMitigationProof =
   (gohGateTotient Gate2DyadicBit +
    gohGateTotient Gate3TriadSpace +
    gohGateTotient Gate5ParabolicDM +
-   gohGateTotient Gate7SpectralROM) == 13
+   gohGateTotient Gate7SpectralROM) == Stage1.TypeTheory.Smoothness.CosmicSmoothHorizon
 
 ||| Audit 4b: Binary & Ternary Radix Gate Unfolding Witness (Gate 2 p=2 & Gate 3 p=3).
 ||| Verifies that pre-geometric unfolding evolves the dyadic Bit2 parity state and
@@ -633,12 +633,12 @@ auditGenesisUnfoldingEndToEndProof =
                                       boxEq g.freeEnergy (intToBoxInt 0)
                     PostGeometric _ => False
       -- Step to 210 (condensation boundary)
-      st210 = runCosmosUnifiedStepsLinear 210 st0
+      st210 = runCosmosUnifiedStepsLinear (fst primorialBudgetDimension) st0
       isCondensedPost = case st210 of
                           PreGeometric _ => False
-                          PostGeometric sim => substrateTicks sim == 210 &&
-                                               boxEq (freeEnergyState sim).freeEnergy (intToBoxInt (-1320)) &&
-                                               moduliDOF sim == 45
+                          PostGeometric sim => substrateTicks sim == fst primorialBudgetDimension &&
+                                               boxEq (freeEnergyState sim).freeEnergy groundStateFreeEnergy &&
+                                               moduliDOF sim == triangularNat 9
       -- Step 40 ticks further (N = 250, k = 40 >= 38)
       st250 = runCosmosUnifiedStepsLinear 40 st210
       isObserverActive = case st250 of

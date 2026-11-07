@@ -29,6 +29,7 @@ import Stage0.Biology.RibosomalTranslation
 import Stage1.Cosmology.MacroEnvelope
 import Compound.AstrophysicalAggregation
 import Stage1.Carrier.Vexel
+import Stage1.FourGeometries
 import Data.Vect
 import Stage0.Token
 
@@ -64,12 +65,14 @@ stepSpacetimeSector : (k : Nat) -> (1 sp : SpacetimeBulkSector) -> (energyDefect
 stepSpacetimeSector k (MkSpacetimeSector g10 g4 moduli _ env rem) defect scale =
   let nextG10 = perturbMetric00 g10 defect
       g00_p   = perturbSquareMaxel00 g4 defect
-      aNorm   = if scale < intToBoxInt 25 then intToBoxInt 1 else divBox scale (intToBoxInt 25)
+      initScale = (epochTriadQuadrance 0).blueQ
+      aNorm   = if scale < initScale then intToBoxInt 1 else divBox scale initScale
       nextG4  = setSpatialDiagonalMetric g00_p aNorm
-      nextEnv = macroCosmicVexel scale (intToBoxInt 27) (intToBoxInt 55) (intToBoxInt 128)
-      nextRem = if k < 84 then WhiteDwarf
-                else if k <= 108 then NeutronStar
-                else BlackHole
+      nextEnv = macroCosmicVexel scale
+                  (natToBoxInt Stage1.FourGeometries.ellipticLatticeCapacity)
+                  (natToBoxInt Stage1.FourGeometries.darkMatterTriangularResidue)
+                  (natToBoxInt Stage1.FourGeometries.hyperbolicRomCapacity)
+      nextRem = classifyStellarRemnantMass k
   in MkSpacetimeSector nextG10 nextG4 moduli defect nextEnv nextRem
 
 ||| Computes discrete matter current J and charge density rho from PhaseState.
@@ -326,9 +329,9 @@ stepQCDHadronizationStoichiometric :
   Multiset BoxInt HadronToken ->
   (Multiset BoxInt SubatomicParticle, QGPPhase, Multiset BoxInt HadronToken)
 stepQCDHadronizationStoichiometric k quarks qgp hadrons =
-  if k >= 1 && k <= 3
+  if isQGPCooling k
     then (quarks, HadronGasTransition, hadrons)
-    else if k >= 4 && k <= 6
+    else if isQCDHadronization k
       then let u = lookupCountBox (QuarkToken UpQuark) quarks
                d = lookupCountBox (QuarkToken DownQuark) quarks
            in if u > intToBoxInt 0 && d > intToBoxInt 0
@@ -357,23 +360,36 @@ stepBBNNucleosynthesisStoichiometric :
   Multiset BoxInt StellarElement ->
   (Multiset BoxInt HadronToken, Multiset BoxInt LightNucleusSpec, Multiset BoxInt StellarElement)
 stepBBNNucleosynthesisStoichiometric k hadrons bbn nucl =
-  if k >= 7 && k <= 8
-    then let (h1, b1, _) = transmuteMultisetBox (intToBoxInt 1000)
+  if isBBNDeuteronBottleneck k
+    then let (h1, b1, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
                              (bbnNucleusTokenToHadrons (MkToken Deuteron2H))
                              (AddM Deuteron2H (intToBoxInt 1) ZeroM)
                              hadrons bbn
          in (h1, b1, nucl)
-    else if k >= 9 && k <= 10
-      then let (b1, n1, _) = transmuteMultisetBox (intToBoxInt 1000)
+    else if isBBNHeliumFreezeout k
+      then let (b1, n1, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
                                (AddM Deuteron2H (intToBoxInt 2) ZeroM)
                                (AddM ElemHe (intToBoxInt 1) ZeroM)
                                bbn nucl
-               (h1, n2, _) = transmuteMultisetBox (intToBoxInt 1000)
+               (h1, n2, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
                                (AddM ProtonToken (intToBoxInt 1) ZeroM)
                                (AddM ElemH (intToBoxInt 1) ZeroM)
                                hadrons n1
            in (h1, b1, n2)
       else (hadrons, bbn, nucl)
+
+||| Cosmological elemental recombination stoichiometric batch rates.
+public export
+record RecombinationStoichiometricRate where
+  constructor MkRecombinationRate
+  hydrogenBatchRate : BoxInt
+  heliumBatchRate   : BoxInt
+  carbonBatchRate   : BoxInt
+  oxygenBatchRate   : BoxInt
+
+public export
+canonicalRecombinationRate : RecombinationStoichiometricRate
+canonicalRecombinationRate = MkRecombinationRate (intToBoxInt 10) (intToBoxInt 2) (intToBoxInt 1) (intToBoxInt 1)
 
 ||| Stoichiometric atomic recombination at epochs k in [15, 25]:
 ||| Consumes bare stellar nuclides to form neutral AtomTokens while strictly conserving nucleon count.
@@ -384,20 +400,20 @@ stepAtomicRecombinationStoichiometric :
   Multiset BoxInt AtomToken ->
   (Multiset BoxInt StellarElement, Multiset BoxInt AtomToken)
 stepAtomicRecombinationStoichiometric k nucl atoms =
-  if k >= 15 && k <= 25
-    then let (n1, at1, _) = transmuteMultisetBox (intToBoxInt 10)
+  if isAtomicRecombination k
+    then let (n1, at1, _) = transmuteMultisetBox canonicalRecombinationRate.hydrogenBatchRate
                               (atomTokenToElements (MkToken HydrogenToken))
                               (AddM HydrogenToken (intToBoxInt 1) ZeroM)
                               nucl atoms
-             (n2, at2, _) = transmuteMultisetBox (intToBoxInt 2)
+             (n2, at2, _) = transmuteMultisetBox canonicalRecombinationRate.heliumBatchRate
                               (atomTokenToElements (MkToken HeliumToken))
                               (AddM HeliumToken (intToBoxInt 1) ZeroM)
                               n1 at1
-             (n3, at3, _) = transmuteMultisetBox (intToBoxInt 1)
+             (n3, at3, _) = transmuteMultisetBox canonicalRecombinationRate.carbonBatchRate
                               (atomTokenToElements (MkToken CarbonToken))
                               (AddM CarbonToken (intToBoxInt 1) ZeroM)
                               n2 at2
-             (n4, at4, _) = transmuteMultisetBox (intToBoxInt 1)
+             (n4, at4, _) = transmuteMultisetBox canonicalRecombinationRate.oxygenBatchRate
                               (atomTokenToElements (MkToken OxygenToken))
                               (AddM OxygenToken (intToBoxInt 1) ZeroM)
                               n3 at3
@@ -417,12 +433,12 @@ stepRibosomalAndProtocellStoichiometric :
   Multiset BoxInt BiomoduleToken ->
   (Multiset BoxInt MoleculeToken, Multiset BoxInt MacromoleculeSpec, List AminoAcid, Multiset BoxInt BiomoduleToken)
 stepRibosomalAndProtocellStoichiometric k mols chem peptides biomods =
-  if k >= 31 && k <= 34
+  if isRibosomalTranslation k
     then let nextPep = case peptides of
-                         [] => fusedTranslateRNABasesNat 9 [A, U, G, U, U, U, G, G, G]
+                         [] => fusedTranslateRNABasesNat (length primordialMRNAPrecursor) primordialMRNAPrecursor
                          _  => peptides
          in (mols, chem, nextPep, biomods)
-    else if k >= 35 && k <= 37
+    else if isProtocellHydration k
       then if lookupCountBox HydratedCellToken biomods == intToBoxInt 0
              then let (remMols, b1, wUsed) =
                         transmuteMultisetBox (intToBoxInt 1)
@@ -448,10 +464,10 @@ stepCatalyticATPTurnover : Multiset BoxInt MacromoleculeSpec -> (Multiset BoxInt
 stepCatalyticATPTurnover chem =
   let enzymes  = lookupCountBox CatalyticEnzymeComplex chem
       carriers = lookupCountBox ATPMetabolicCarrier chem
-      target   = intToBoxInt 30 * enzymes
+      target   = atpTurnoverRatioPerEnzyme * enzymes
       topUp    = if target > carriers then subBox target carriers else intToBoxInt 0
       chem'    = if boxIsNonZero topUp then insertItemBox ATPMetabolicCarrier topUp chem else chem
-      energy   = intToBoxInt 25 * lookupCountBox ATPMetabolicCarrier chem'
+      energy   = atpPhosphateEnergyQuantum * lookupCountBox ATPMetabolicCarrier chem'
   in (chem', energy)
 
 ||| Sector 3 stepper: Advances complete internal matter succession:
@@ -479,13 +495,13 @@ stepMatterSector k scale hubble (MkMatterSector quarks qgp hadrons bbn nucl atom
               DormantObserver
               emptyTrophicPyramid)
            (Nothing, intToBoxInt 0)
-    else if k < 38
+    else if not (isObserverActive k)
     then let -- Tier 0a: QGP cooling & QCD hadronization (k in [1, 6])
              (nextQuarks, nextQGP, t0Hadrons) = stepQCDHadronizationStoichiometric k quarks qgp hadrons
              -- Tier 0b: Big Bang Nucleosynthesis (k in [7, 10])
              (nextHadrons, nextBBN, t0Nucl) = stepBBNNucleosynthesisStoichiometric k t0Hadrons bbn nucl
              -- Tier 1: Stellar nucleosynthesis (k in [11, 20])
-             t1Nucl = if (k >= 11 && k <= 20)
+             t1Nucl = if isStellarNucleosynthesis k
                         then stepStellarNucleosynthesis k t0Nucl
                         else t0Nucl
              -- Tier 2: Atomic recombination (k in [15, 25]) - consumes nuclides to form atoms
@@ -503,19 +519,19 @@ stepMatterSector k scale hubble (MkMatterSector quarks qgp hadrons bbn nucl atom
              (nextObs, maybeMotor) : (ObserverBranchState, Maybe MotorCommand) =
                case obs of
                  DormantObserver =>
-                   let initLiv = MkObserverLivingState chemAtp (intToBoxInt 0) 39 True canonicalObserverNetwork38
+                   let initLiv = MkObserverLivingState chemAtp (intToBoxInt 0) (generation observerScaleStep) True canonicalObserverNetwork38
                        intensity = absBox (subBox hubble scale)
                        kInt = cast {to = Integer} k
-                       modality = integerToNat (kInt `mod` 137)
+                       modality = integerToNat (kInt `mod` cast CosmicGridWall)
                        percept = MkLToken (MkSensoryPercept modality intensity)
                        (nextLiv, MkLToken motor) = stepObserverActiveInference percept initLiv
                    in (LivingObserver nextLiv, Just motor)
                  LivingObserver liv =>
                    let intensity = absBox (subBox hubble scale)
                        kInt = cast {to = Integer} k
-                       modality = integerToNat (kInt `mod` 137)
+                       modality = integerToNat (kInt `mod` cast CosmicGridWall)
                        percept = MkLToken (MkSensoryPercept modality intensity)
-                       livWithAtp = if liv.metabolicYieldATP < intToBoxInt 750
+                       livWithAtp = if liv.metabolicYieldATP < maxObserverMetabolicYield
                                       then MkObserverLivingState (addBox liv.metabolicYieldATP chemAtp) liv.variationalSurprise liv.activeNeurons liv.markovBlanketPurity liv.networkState
                                       else liv
                        (nextLiv, MkLToken motor) = stepObserverActiveInference percept livWithAtp
@@ -532,7 +548,7 @@ stepDynamicsSector g4 gluons maxwell4D dt baryonMass diskSlope (MkDynamicsSector
   let nextPhase = symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt phase
       nextGal = MkGalacticProfile baryonMass diskSlope
       nextHalo = stepGalacticHaloMass dt halo
-      hamE = modBox (hamiltonianEnergyExact (intToBoxInt 1) nextPhase) (intToBoxInt 137)
+      hamE = modBox (hamiltonianEnergyExact (intToBoxInt 1) nextPhase) scaleSievePeriod
       emSrc = computeMatterElectromagneticSources nextPhase
   in MkLStatePair (MkDynamicsSector nextPhase nextGal nextHalo) (hamE, emSrc)
 
@@ -553,22 +569,23 @@ stepSubstrateSector dt nextSuperEp nextK xk yk qBlue qRed (MkSubstrateSector epo
   let tickDelta = let d = boxToNat dt in if d == 0 then 1 else d
       nextTicks = ticks + tickDelta
       nextSpread = stepDynamicPythagoreanCompanionSpreadSubstrate xk yk spread
+      initScale = (epochTriadQuadrance 0).blueQ
       nextScaleFactor = case mode of
-                          MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
+                          MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * initScale) + qBlue
                           ConformalCyclicBounce  => qBlue
       nextHubbleRate = intToBoxInt 2 * (yk * yk)
       nextGov = parameterizedSubstrateSquareMaxel xk yk
-      nextIsObs = nextK >= 38
+      nextIsObs = isObserverActive nextK
       nextStatus = evalScaleStepCoherence nextK
       qStep = if dt <= intToBoxInt 0 then intToBoxInt 1 else dt
       nextDissipated =
-        if epochIndex >= 136
+        if epochIndex >= scaleWallIndex
           then intToBoxInt 0
           else case nextStatus of
                  GatePure _   => dissEntropy
                  Decoherent _ => dissEntropy + qStep
-      nextU  = addBox (intToBoxInt 398) (mulBox (intToBoxInt 2) nextDissipated)
-      nextS  = addBox (intToBoxInt 859) nextDissipated
+      nextU  = addBox groundStateInternalEnergy (mulBox (intToBoxInt 2) nextDissipated)
+      nextS  = addBox groundStateEntropy nextDissipated
       nextFE = evaluateDynamicHelmholtzState nextU nextS
   in MkSubstrateSector
        nextK
@@ -605,7 +622,7 @@ stepUniverseSimulationAction actionQuantum (MkUniverseSimulationState spacetime 
       nextThermo = stepSubstrateSector dt nextSuperEp nextK xk yk qBlue qRed
                      (MkSubstrateSector thEp thSuper thTicks thCap thSpread thScale thHubble thGov thMode thIsObs thStatus thFE thDiss)
       nextScale  = case thMode of
-                     MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * intToBoxInt 25) + qBlue
+                     MonotonicOpenExpansion => (intToBoxInt (cast nextSuperEp) * (epochTriadQuadrance 0).blueQ) + qBlue
                      ConformalCyclicBounce  => qBlue
       nextHubble = intToBoxInt 2 * (yk * yk)
       -- 2. Step Matter Sector linearly across all 10 internal tiers
@@ -614,8 +631,8 @@ stepUniverseSimulationAction actionQuantum (MkUniverseSimulationState spacetime 
       (MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco) = nextMatterRaw
       nextMatterSnapshot = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
       nextMatter = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
-      baryonMass = divBox (totalMatterNucleonCount nextMatterSnapshot * intToBoxInt 100) (intToBoxInt 175)
-      diskSlope  = divBox (condensedDiskNucleonCount nextMatterSnapshot) (intToBoxInt 25)
+      baryonMass = divBox (totalMatterNucleonCount nextMatterSnapshot * intToBoxInt 100) (natToBoxInt canonicalBaryonNucleonCount)
+      diskSlope  = divBox (condensedDiskNucleonCount nextMatterSnapshot) (epochTriadQuadrance 0).blueQ
       -- 3. Step Dynamics Sector linearly (4D symplectic leapfrog coupled to leaf metric, DEC gauge gluons, and U(1) Maxwell field)
       maxwell4D = maxwellStateTo4DMaxel gaMaxwell
       MkLStatePair nextDynamics (hamiltonianE, emSources) =
@@ -623,13 +640,13 @@ stepUniverseSimulationAction actionQuantum (MkUniverseSimulationState spacetime 
       -- 4. Closed-Loop Participatory Feedback (Phase 2):
       -- Motor command action energy back-reacts on local curvature defect
       participatoryDefect = case maybeMotor of
-                              Just motor => modBox (divBox motor.actionEnergy (intToBoxInt 137)) (intToBoxInt 137)
+                              Just motor => modBox (divBox motor.actionEnergy scaleSievePeriod) scaleSievePeriod
                               Nothing    => intToBoxInt 0
-      -- If rollover (epochIndex >= 136), route the 61 dissipated tokens into the parabolic defect drain:
-      drainTokens = if thEp >= 136 then modBox thDiss (intToBoxInt 55) else intToBoxInt 0
-      ecoEntropy = divBox ecoDiss (intToBoxInt 137)
-      substrateDiss = modBox (qBlue + qRed + drainTokens + ecoEntropy) (intToBoxInt 137)
-      totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) (intToBoxInt 137)
+      -- If rollover (epochIndex >= scaleWallIndex), route the 61 dissipated tokens into the parabolic defect drain:
+      drainTokens = if thEp >= scaleWallIndex then modBox thDiss (natToBoxInt darkMatterTriangularResidue) else intToBoxInt 0
+      ecoEntropy = divBox ecoDiss scaleSievePeriod
+      substrateDiss = modBox (qBlue + qRed + drainTokens + ecoEntropy) scaleSievePeriod
+      totalDefect = modBox (hamiltonianE + substrateDiss + participatoryDefect) scaleSievePeriod
       -- 5. Step Spacetime Sector linearly under total defect, scale factor, holographic evaporation, and remnant collapse
       nextSpacetime = stepSpacetimeSector nextK (MkSpacetimeSector spG10 spG4 spMod spDef spEnv spRem) totalDefect nextScale
       -- 6. Step Gauge Sector linearly with dynamic matter current, charge sources, Dirac spinor, and Toric anyons
@@ -896,19 +913,19 @@ auditObserverBranchPersistenceProof =
 export
 auditLandauerSieveDissipationProof : Bool
 auditLandauerSieveDissipationProof =
-  dissipatedEntropy canonicalState136 == intToBoxInt 61
+  dissipatedEntropy canonicalState136 == intToBoxInt (cast cosmic137Sieve.decoherentCount)
 
 ||| Audit: Conformal cyclic parabolic flush resets dissipated entropy and recycles QGP at eon bounce (step 136 -> step 137),
 ||| while preserving the Primorial 210 ground state free energy minimum F = -1320.
 export
 auditConformalParabolicFlushProof : Bool
 auditConformalParabolicFlushProof =
-  dissipatedEntropy canonicalState136 == intToBoxInt 61 &&
+  dissipatedEntropy canonicalState136 == intToBoxInt (cast cosmic137Sieve.decoherentCount) &&
   dissipatedEntropy canonicalState137 == intToBoxInt 0 &&
-  (freeEnergyState canonicalState136).freeEnergy == intToBoxInt (-1320) &&
-  (freeEnergyState canonicalState137).freeEnergy == intToBoxInt (-1320) &&
+  (freeEnergyState canonicalState136).freeEnergy == groundStateFreeEnergy &&
+  (freeEnergyState canonicalState137).freeEnergy == groundStateFreeEnergy &&
   qgpPhaseState canonicalState137 == QuarkGluonPlasma &&
-  totalSubatomicBaryonCount (subatomicQuarks canonicalState137) == intToBoxInt 175 &&
+  totalSubatomicBaryonCount (subatomicQuarks canonicalState137) == natToBoxInt canonicalBaryonNucleonCount &&
   superEpoch canonicalState137 == 1
 
 ||| Audit: Active inference predictive coding filter maintains bounded internal free energy (F_int <= 887).
@@ -919,8 +936,8 @@ auditActiveInferencePredictiveMinimizationProof =
     DormantObserver => False
     LivingObserver liv =>
       liv.markovBlanketPurity == True &&
-      liv.metabolicYieldATP >= intToBoxInt 750 &&
-      liv.metabolicYieldATP <= intToBoxInt 887
+      liv.metabolicYieldATP >= maxObserverMetabolicYield &&
+      liv.metabolicYieldATP <= addBox maxObserverMetabolicYield scaleSievePeriod
 
 ||| Audit: CFL-stable symplectic Störmer-Verlet map maintains bounded phase-space coordinates (|q| <= 4, |p| <= 4).
 export
@@ -945,7 +962,7 @@ auditParticipatoryObserverCurvatureFeedbackProof : Bool
 auditParticipatoryObserverCurvatureFeedbackProof =
   observerEpochActive canonicalState38 == True &&
   observerEpochActive canonicalState39 == True &&
-  absBox (curvatureDefect canonicalState39) <= intToBoxInt 137
+  absBox (curvatureDefect canonicalState39) <= scaleSievePeriod
 
 ||| Audit: Total baryonic nucleon count (175 nucleons) is strictly conserved across all 8 matter tiers
 ||| (Subatomic Quarks -> Hadron Nucleons -> BBN Light Nuclei -> Stellar Nuclides ->
@@ -955,11 +972,11 @@ export
 auditMatterSectorBaryonConservationProof : Bool
 auditMatterSectorBaryonConservationProof =
   let st0 = initUniverseSimulation
-  in totalMatterNucleonCount st0.matterSector               == intToBoxInt 175 &&
-     totalMatterNucleonCount canonicalState15.matterSector  == intToBoxInt 175 &&
-     totalMatterNucleonCount canonicalState25.matterSector  == intToBoxInt 175 &&
-     totalMatterNucleonCount canonicalState35.matterSector  == intToBoxInt 175 &&
-     totalMatterNucleonCount canonicalState137.matterSector == intToBoxInt 175
+  in totalMatterNucleonCount st0.matterSector               == natToBoxInt canonicalBaryonNucleonCount &&
+     totalMatterNucleonCount canonicalState15.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
+     totalMatterNucleonCount canonicalState25.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
+     totalMatterNucleonCount canonicalState35.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
+     totalMatterNucleonCount canonicalState137.matterSector == natToBoxInt canonicalBaryonNucleonCount
 
 ||| Audit: Verifies all newly integrated physical sub-levels across the 137-epoch trajectory:
 ||| - QGP cooling (k=2: HadronGasTransition) & QCD confinement (k=5: ConfinementHadronGas, 175 hadrons)
@@ -972,21 +989,21 @@ auditFullHierarchyLevelsSimulationProof : Bool
 auditFullHierarchyLevelsSimulationProof =
   let st0 = initUniverseSimulation
   in qgpPhaseState st0 == QuarkGluonPlasma &&
-     totalSubatomicBaryonCount (subatomicQuarks st0) == intToBoxInt 175 &&
+     totalSubatomicBaryonCount (subatomicQuarks st0) == natToBoxInt canonicalBaryonNucleonCount &&
      qgpPhaseState canonicalState2 == HadronGasTransition &&
      qgpPhaseState canonicalState5 == ConfinementHadronGas &&
-     totalHadronNucleonCount (hadronNucleons canonicalState5) == intToBoxInt 175 &&
+     totalHadronNucleonCount (hadronNucleons canonicalState5) == natToBoxInt canonicalBaryonNucleonCount &&
      lookupCountBox Deuteron2H (bbnNuclei canonicalState8) == intToBoxInt 50 &&
-     totalMatterNucleonCount canonicalState8.matterSector == intToBoxInt 175 &&
+     totalMatterNucleonCount canonicalState8.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
      lookupCountBox ElemHe (nuclearNuclides canonicalState10) == intToBoxInt 25 &&
      lookupCountBox ElemH (nuclearNuclides canonicalState10) == intToBoxInt 75 &&
-     totalMatterNucleonCount canonicalState10.matterSector == intToBoxInt 175 &&
-     translatedPeptides canonicalState33 == [Met, Phe, Gly] &&
+     totalMatterNucleonCount canonicalState10.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
+     translatedPeptides canonicalState33 == canonicalPeptideYield &&
      lookupCountBox HydratedCellToken (cellularBiomodules canonicalState36) > intToBoxInt 0 &&
-     totalMatterNucleonCount canonicalState36.matterSector == intToBoxInt 175 &&
+     totalMatterNucleonCount canonicalState36.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
      remnantPhase canonicalState90 == NeutronStar &&
      remnantPhase canonicalState120 == BlackHole &&
-     computeTotalCosmicMass (holographicEnvelope canonicalState10) == intToBoxInt 210 &&
+     computeTotalCosmicMass (holographicEnvelope canonicalState10) == natToBoxInt Stage1.FourGeometries.primorial210Budget &&
      diracSpinor canonicalState1 == MkDiracSpinor (intToBoxInt 0) (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) &&
      spinorQuadrance (diracSpinor canonicalState10) == intToBoxInt 1 &&
      lookupCountBox FermionDyonic (toricAnyons canonicalState10) == intToBoxInt 1
@@ -1001,10 +1018,10 @@ stepInvariantFlags : UniverseSimulationState -> (Bool, Bool, Bool, Bool, Bool)
 stepInvariantFlags st =
   let q1 = lookupUnixel (MkUnixel 1) (phaseState st).position
       p1 = lookupUnixel (MkUnixel 1) (phaseState st).momentum
-  in ( totalMatterNucleonCount st.matterSector == intToBoxInt 175
+  in ( totalMatterNucleonCount st.matterSector == natToBoxInt canonicalBaryonNucleonCount
      , spinorQuadrance (diracSpinor st) == intToBoxInt 1
      , absBox q1 <= intToBoxInt 4 && absBox p1 <= intToBoxInt 4
-     , (freeEnergyState st).freeEnergy >= intToBoxInt (-1320)
+     , (freeEnergyState st).freeEnergy >= groundStateFreeEnergy
      , liftConstituentConsistency st.matterSector )
 
 ||| Single-state invariant audit: every physical invariant must hold at this tick.

@@ -7,6 +7,7 @@ import Stage1.Fields.OctonionGaugeUnification
 import Stage1.Math.GalacticRotationCurve
 import Compound.SymplecticIntegrator
 import Stage1.Epoch.ScaleTrajectorySieve
+import Stage1.Multiset.PrimordialUnfolding
 import Stage1.Epoch.ObserverPredictions
 import Stage1.FourGeometries
 import Stage1.Carrier.ChromogeometricMetric
@@ -83,10 +84,23 @@ public export
     u1 == u2 && s1 == s2 && f1 == f2
 
 
+||| Certified ground-state thermodynamic values at temperature T = 2 (Rule 03 §2):
+public export
+groundStateInternalEnergy : BoxInt
+groundStateInternalEnergy = intToBoxInt 398
+
+public export
+groundStateEntropy : BoxInt
+groundStateEntropy = intToBoxInt 859
+
+public export
+groundStateFreeEnergy : BoxInt
+groundStateFreeEnergy = intToBoxInt (-1320)
+
 public export
 canonicalHelmholtzGroundState : DiscreteHelmholtzState 27 128 55 2
 canonicalHelmholtzGroundState =
-  MkDiscreteHelmholtzState (intToBoxInt 398) (intToBoxInt 859) (intToBoxInt (-1320)) Refl
+  MkDiscreteHelmholtzState groundStateInternalEnergy groundStateEntropy groundStateFreeEnergy Refl
 
 ||| Evaluates dynamic discrete Helmholtz Free Energy state: F = U - 2 * S.
 ||| Preserves exact ground state minimum F = -1320 when S = 859, U = 398, T = 2.
@@ -292,13 +306,43 @@ public export %inline coherenceStatus : (st : UniverseSimulationState) -> Cohere
 public export %inline freeEnergyState : UniverseSimulationState -> DiscreteHelmholtzState 27 128 55 2; freeEnergyState st = st.thermodynamicSector.subFreeEnergyState
 public export %inline dissipatedEntropy : UniverseSimulationState -> BoxInt; dissipatedEntropy st = st.thermodynamicSector.subDissipatedEntropy
 
+||| Canonical proton count in the primordial baryonic nucleon budget:
+public export
+canonicalProtonCount : Nat
+canonicalProtonCount = 125
+
+||| Canonical neutron count in the primordial baryonic nucleon budget:
+public export
+canonicalNeutronCount : Nat
+canonicalNeutronCount = 50
+
+||| Conserved baryonic nucleon budget (125 Protons + 50 Neutrons = 175 nucleons):
+public export
+canonicalBaryonNucleonCount : Nat
+canonicalBaryonNucleonCount = canonicalProtonCount + canonicalNeutronCount
+
+||| Conserved up-quark count (2 per proton + 1 per neutron = 2 * 125 + 50 = 300):
+public export
+canonicalUpQuarkCount : Nat
+canonicalUpQuarkCount = (2 * canonicalProtonCount) + canonicalNeutronCount
+
+||| Conserved down-quark count (1 per proton + 2 per neutron = 125 + 2 * 50 = 225):
+public export
+canonicalDownQuarkCount : Nat
+canonicalDownQuarkCount = canonicalProtonCount + (2 * canonicalNeutronCount)
+
+||| Conserved total valence quark count (300 + 225 = 525 = 3 * 175):
+public export
+canonicalTotalValenceQuarks : Nat
+canonicalTotalValenceQuarks = canonicalUpQuarkCount + canonicalDownQuarkCount
+
 ||| Canonical deconfined Subatomic Quark-Gluon Plasma carrier (300 UpQuark + 225 DownQuark = 525 quarks = 175 baryons):
 ||| Conserves exact baryon count for 125 Protons (2u+d) + 50 Neutrons (u+2d) = 175 nucleons.
 public export
 canonicalSubatomicQuarkState : Multiset BoxInt SubatomicParticle
 canonicalSubatomicQuarkState =
-  AddM (QuarkToken UpQuark) (intToBoxInt 300)
-    (AddM (QuarkToken DownQuark) (intToBoxInt 225) ZeroM)
+  AddM (QuarkToken UpQuark) (natToBoxInt canonicalUpQuarkCount)
+    (AddM (QuarkToken DownQuark) (natToBoxInt canonicalDownQuarkCount) ZeroM)
 
 ||| Synthesizes initial subatomic quark plasma from condensed elliptic VM token count (27 tokens -> 300 u + 225 d = 175 baryons).
 public export
@@ -307,8 +351,8 @@ synthesizeQuarksFromEllipticCount ellCount =
   if ellCount >= 27
     then canonicalSubatomicQuarkState
     else let scale  = intToBoxInt (cast ellCount)
-             uCount = divBox (scale * intToBoxInt 300) (intToBoxInt 27)
-             dCount = divBox (scale * intToBoxInt 225) (intToBoxInt 27)
+             uCount = divBox (scale * natToBoxInt canonicalUpQuarkCount) (intToBoxInt 27)
+             dCount = divBox (scale * natToBoxInt canonicalDownQuarkCount) (intToBoxInt 27)
          in AddM (QuarkToken UpQuark) uCount (AddM (QuarkToken DownQuark) dCount ZeroM)
 
 ||| Canonical initial Dirac bispinor state (norm = 1^2 + 0 + 0 - 0 = 1).
@@ -341,7 +385,7 @@ initUniverseSimulationMode : ExpansionParadigm -> UniverseSimulationState
 initUniverseSimulationMode mode =
   let g10 = spacetime10DMetric
       g4  = project10Dto4D g10.metricMaxel
-      spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
+      spacetime = MkSpacetimeSector g10 g4 (triangularNat 9) (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
@@ -368,14 +412,16 @@ initUniverseSimulationMode mode =
       phase0 = mkPhaseState q0 p0
       dynamics = MkDynamicsSector phase0 gal halo
       status0 = evalScaleStepCoherence Z
+      initCoord = epochPythagoreanCoordinate 0
+      initTriad = epochTriadQuadrance 0
       thermo = MkSubstrateSector
                  0
                  0
                  0
                  canonicalCapacityBudget
-                 (pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3))
-                 (intToBoxInt 25)
-                 (intToBoxInt 18)
+                 (pythagoreanCompanionSquareMaxel (fst initCoord) (snd initCoord))
+                 initTriad.blueQ
+                 (intToBoxInt 2 * (snd initCoord * snd initCoord))
                  (parameterizedSubstrateSquareMaxel (intToBoxInt 1) (intToBoxInt 1))
                  mode
                  False

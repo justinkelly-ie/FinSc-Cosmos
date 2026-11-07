@@ -91,6 +91,118 @@ gridWallScaleStep =
   MkScaleStep 136 (epochTriadQuadrance 136) (Decoherent contraSmooth137)
 
 --------------------------------------------------------------------------------
+-- 1B. COSMOLOGICAL PHASES OF MATTER & EPOCH SCHEDULE (Rule 03 §4 & §5)
+--------------------------------------------------------------------------------
+
+||| Cosmological phase classification across the 137-scale trajectory.
+public export
+data CosmologicalPhase =
+    PhaseConformalBounce         -- k = 0
+  | PhaseQGPCooling              -- k in [1, 3]
+  | PhaseQCDHadronization        -- k in [4, 6]
+  | PhaseBBNDeuteronBottleneck   -- k in [7, 8]
+  | PhaseBBNHeliumFreezeout      -- k in [9, 10]
+  | PhaseStellarNucleosynthesis  -- k in [11, 20]
+  | PhaseAtomicRecombination     -- k in [15, 25]
+  | PhasePrebioticVolatiles      -- k in [21, 30]
+  | PhaseMacromolecularAssembly  -- k in [26, 30]
+  | PhaseRibosomalTranslation    -- k in [31, 34]
+  | PhaseProtocellHydration      -- k in [35, 37]
+  | PhaseObserverActiveInference -- k >= 38
+
+public export
+Eq CosmologicalPhase where
+  PhaseConformalBounce         == PhaseConformalBounce         = True
+  PhaseQGPCooling              == PhaseQGPCooling              = True
+  PhaseQCDHadronization        == PhaseQCDHadronization        = True
+  PhaseBBNDeuteronBottleneck   == PhaseBBNDeuteronBottleneck   = True
+  PhaseBBNHeliumFreezeout      == PhaseBBNHeliumFreezeout      = True
+  PhaseStellarNucleosynthesis  == PhaseStellarNucleosynthesis  = True
+  PhaseAtomicRecombination     == PhaseAtomicRecombination     = True
+  PhasePrebioticVolatiles      == PhasePrebioticVolatiles      = True
+  PhaseMacromolecularAssembly  == PhaseMacromolecularAssembly  = True
+  PhaseRibosomalTranslation    == PhaseRibosomalTranslation    = True
+  PhaseProtocellHydration      == PhaseProtocellHydration      = True
+  PhaseObserverActiveInference == PhaseObserverActiveInference = True
+  _                            == _                            = False
+
+public export
+Show CosmologicalPhase where
+  show PhaseConformalBounce         = "Phase: Conformal Bounce (k=0)"
+  show PhaseQGPCooling              = "Phase: QGP Cooling (k in [1, 3])"
+  show PhaseQCDHadronization        = "Phase: QCD Hadronization (k in [4, 6])"
+  show PhaseBBNDeuteronBottleneck   = "Phase: BBN Deuteron Bottleneck (k in [7, 8])"
+  show PhaseBBNHeliumFreezeout      = "Phase: BBN Helium-4 Freeze-out (k in [9, 10])"
+  show PhaseStellarNucleosynthesis  = "Phase: Stellar Nucleosynthesis (k in [11, 20])"
+  show PhaseAtomicRecombination     = "Phase: Atomic Recombination (k in [15, 25])"
+  show PhasePrebioticVolatiles      = "Phase: Prebiotic Volatiles (k in [21, 30])"
+  show PhaseMacromolecularAssembly  = "Phase: Macromolecular Assembly (k in [26, 30])"
+  show PhaseRibosomalTranslation    = "Phase: Ribosomal Translation (k in [31, 34])"
+  show PhaseProtocellHydration      = "Phase: Protocell Hydration (k in [35, 37])"
+  show PhaseObserverActiveInference = "Phase: Observer Active Inference (k >= 38)"
+
+public export
+isQGPCooling : Nat -> Bool
+isQGPCooling k = k >= 1 && k <= 3
+
+public export
+isQCDHadronization : Nat -> Bool
+isQCDHadronization k = k >= 4 && k <= 6
+
+public export
+isBBNDeuteronBottleneck : Nat -> Bool
+isBBNDeuteronBottleneck k = k >= 7 && k <= 8
+
+public export
+isBBNHeliumFreezeout : Nat -> Bool
+isBBNHeliumFreezeout k = k >= 9 && k <= 10
+
+public export
+isStellarNucleosynthesis : Nat -> Bool
+isStellarNucleosynthesis k = k >= 11 && k <= 20
+
+public export
+isAtomicRecombination : Nat -> Bool
+isAtomicRecombination k = k >= 15 && k <= 25
+
+public export
+isPrebioticVolatiles : Nat -> Bool
+isPrebioticVolatiles k = k >= 21 && k <= 30
+
+public export
+isMacromolecularAssembly : Nat -> Bool
+isMacromolecularAssembly k = k >= 26 && k < 38
+
+public export
+isRibosomalTranslation : Nat -> Bool
+isRibosomalTranslation k = k >= 31 && k <= 34
+
+public export
+isProtocellHydration : Nat -> Bool
+isProtocellHydration k = k >= 35 && k <= 37
+
+public export
+isObserverActive : Nat -> Bool
+isObserverActive k = k >= observerScaleStep.scaleIndex
+
+||| Classifies the primary cosmological phase of matter at epoch k (Rule 03 §4).
+public export
+classifyCosmicPhase : Nat -> CosmologicalPhase
+classifyCosmicPhase k =
+  if k == 0 then PhaseConformalBounce
+  else if isQGPCooling k then PhaseQGPCooling
+  else if isQCDHadronization k then PhaseQCDHadronization
+  else if isBBNDeuteronBottleneck k then PhaseBBNDeuteronBottleneck
+  else if isBBNHeliumFreezeout k then PhaseBBNHeliumFreezeout
+  else if isStellarNucleosynthesis k then PhaseStellarNucleosynthesis
+  else if isAtomicRecombination k then PhaseAtomicRecombination
+  else if isPrebioticVolatiles k then PhasePrebioticVolatiles
+  else if isRibosomalTranslation k then PhaseRibosomalTranslation
+  else if isProtocellHydration k then PhaseProtocellHydration
+  else if isObserverActive k then PhaseObserverActiveInference
+  else PhaseMacromolecularAssembly
+
+--------------------------------------------------------------------------------
 -- 2. DEFORESTED SCALE TRAJECTORY STREAM TRANSDUCERS (O(1) AUXILIARY MEMORY)
 --------------------------------------------------------------------------------
 
@@ -187,6 +299,16 @@ cosmic137Sieve = MkTrajectorySieve 76 61 Refl
 public export
 CosmicGridWall : Nat
 CosmicGridWall = 137
+
+||| Penultimate scale index before the cosmological grid wall (k = 136).
+public export
+scaleWallIndex : Nat
+scaleWallIndex = minus CosmicGridWall 1
+
+||| Fundamental period of the 137-scale trajectory sieve (137).
+public export
+scaleSievePeriod : BoxInt
+scaleSievePeriod = intToBoxInt (cast CosmicGridWall)
 
 ||| Total count of gate-pure scales across the entire 137-step cosmic trajectory (k = 0 to 136).
 ||| Evaluated by single-pass coinductive stream fold.
