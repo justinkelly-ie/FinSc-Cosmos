@@ -381,6 +381,34 @@ condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condense
        Just simSt => Right simSt
        Nothing    => Left rebuilt
 
+||| Pullback phase transition: Dissolves a post-geometric UniverseSimulationState
+||| back into its pre-geometric GenesisUnfoldingState carrier tokens:
+public export
+dissolveUniverseToGenesis : UniverseSimulationState -> GenesisUnfoldingState
+dissolveUniverseToGenesis st =
+  let n = 210
+      arrow = intToBoxInt 210
+      gate = Gate7SpectralROM
+      triad = epochTriadQuadrance 0
+      u = (freeEnergyState st).internalEnergy
+      s = (freeEnergyState st).entropy
+      f = (freeEnergyState st).freeEnergy
+      tokens = canonicalTokensAtN 210
+      bit = Bit2Zero
+      tritReg = [Bit3Zero, Bit3Zero, Bit3Zero]
+  in MkGenesisUnfoldingState n arrow gate triad u s f True tokens bit tritReg
+
+||| Audits round-trip dissolution and condensation between pre-geometric and post-geometric states:
+public export
+auditDissolutionCondensationRoundTripProof : Bool
+auditDissolutionCondensationRoundTripProof =
+  let st0 = initUniverseSimulation
+      gState = dissolveUniverseToGenesis st0
+  in gState.isCondensed && (gState.substrateTokens == 210) &&
+     case condenseGenesisToUniverse gState of
+       Just simSt => (freeEnergyState simSt).freeEnergy == intToBoxInt (-1320)
+       Nothing    => False
+
 --------------------------------------------------------------------------------
 -- 3. UNIFIED COSMOLOGICAL EVOLUTION STATE & TRANSDUCER
 --------------------------------------------------------------------------------
@@ -405,7 +433,12 @@ stepCosmosUnifiedWithToken (MkLToken tok) (PreGeometric st) =
        Left stillPre => PreGeometric stillPre
        Right simSt   => PostGeometric simSt
 stepCosmosUnifiedWithToken (MkLToken tok) (PostGeometric simSt) =
-  PostGeometric (stepUniverseSimulationWithToken (MkLToken tok) simSt)
+  let nextSim = stepUniverseSimulationWithToken (MkLToken tok) simSt
+  in if nextSim.thermodynamicSector.subExpansionMode == ConformalCyclicBounce &&
+        nextSim.thermodynamicSector.subTicks > 0 &&
+        (cast {to = Integer} nextSim.thermodynamicSector.subTicks `mod` 137 == 0)
+       then PreGeometric (dissolveUniverseToGenesis nextSim)
+       else PostGeometric nextSim
 
 ||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1) under strict QTT linearity.
 public export

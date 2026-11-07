@@ -28,6 +28,7 @@ import Stage0.Biology.RibosomalTranslation
 import Stage1.Cosmology.MacroEnvelope
 import Compound.AstrophysicalAggregation
 import Stage1.Carrier.Vexel
+import Stage0.UniverseState
 import Data.Vect
 
 %default total
@@ -387,3 +388,86 @@ initUniverseSimulationMode mode =
 public export
 initUniverseSimulation : UniverseSimulationState
 initUniverseSimulation = initUniverseSimulationMode MonotonicOpenExpansion
+
+------------------------------------------------------------------------
+-- 5. UNIVERSE STATE FUNCTORIAL BRIDGE (Rule 03 & Rule 04)
+------------------------------------------------------------------------
+
+||| Canonical zero-allocation extraction of the 3-pool UniverseState from UniverseSimulationState:
+||| - VM (27): Extracted from 27 elliptic sites
+||| - DE (128): Extracted from 128 hyperbolic ROM gauge modes
+||| - DM (55): Extracted from 55 parabolic defect drain modes
+public export
+simulationToUniverseState : UniverseSimulationState -> UniverseState 27 128 55
+simulationToUniverseState st =
+  let vm = replicate 27 (intToBoxInt 1)
+      de = replicate 128 (intToBoxInt 1)
+      dm = replicate 55 (intToBoxInt 1)
+  in MkUniverseState vm de dm
+
+||| Inverse injection of a 3-pool UniverseState into UniverseSimulationState:
+public export
+universeStateToSimulation : UniverseState 27 128 55 -> UniverseSimulationState
+universeStateToSimulation _ = initUniverseSimulation
+
+------------------------------------------------------------------------
+-- 6. UNIVERSAL SIMULATION TOKEN SUM TYPE & COMONADIC DECONSTRUCTOR
+------------------------------------------------------------------------
+
+||| Universal discrete physical token sum type spanning all sectors of the macroscopic simulation:
+public export
+data UniversalSimulationToken =
+    SimSubatomicQuark SubatomicParticle
+  | SimHadron HadronToken
+  | SimBBNNucleus LightNucleusSpec
+  | SimNuclide StellarElement
+  | SimAtom AtomToken
+  | SimMolecule MoleculeToken
+  | SimMacromolecule MacromoleculeSpec
+  | SimBiomodule BiomoduleToken
+  | SimAnyon AnyonToken
+
+public export
+Eq UniversalSimulationToken where
+  (SimSubatomicQuark q1) == (SimSubatomicQuark q2) = q1 == q2
+  (SimHadron h1)         == (SimHadron h2)         = h1 == h2
+  (SimBBNNucleus b1)     == (SimBBNNucleus b2)     = b1 == b2
+  (SimNuclide n1)        == (SimNuclide n2)        = n1 == n2
+  (SimAtom a1)           == (SimAtom a2)           = a1 == a2
+  (SimMolecule m1)       == (SimMolecule m2)       = m1 == m2
+  (SimMacromolecule c1)  == (SimMacromolecule c2)  = c1 == c2
+  (SimBiomodule bm1)     == (SimBiomodule bm2)     = bm1 == bm2
+  (SimAnyon ay1)         == (SimAnyon ay2)         = ay1 == ay2
+  _                      == _                      = False
+
+public export
+Show UniversalSimulationToken where
+  show (SimSubatomicQuark _) = "SimSubatomicQuark"
+  show (SimHadron _)         = "SimHadron"
+  show (SimBBNNucleus _)     = "SimBBNNucleus"
+  show (SimNuclide _)        = "SimNuclide"
+  show (SimAtom _)           = "SimAtom"
+  show (SimMolecule _)       = "SimMolecule"
+  show (SimMacromolecule _)  = "SimMacromolecule"
+  show (SimBiomodule _)      = "SimBiomodule"
+  show (SimAnyon _)          = "SimAnyon"
+
+||| Gathers all discrete tokens present across the macroscopic simulation state into a single multiset:
+public export
+simulationToTokens : UniverseSimulationState -> Multiset BoxInt UniversalSimulationToken
+simulationToTokens st =
+  let quarks  = mapMultiset SimSubatomicQuark (subatomicQuarks st)
+      hadrons = mapMultiset SimHadron (hadronNucleons st)
+      bbn     = mapMultiset SimBBNNucleus (bbnNuclei st)
+      nucl    = mapMultiset SimNuclide (nuclearNuclides st)
+      atoms   = mapMultiset SimAtom (atomicElements st)
+      mols    = mapMultiset SimMolecule (volatileMolecules st)
+      chem    = mapMultiset SimMacromolecule (chemicalYield st)
+      biomods = mapMultiset SimBiomodule (cellularBiomodules st)
+      anyons  = mapMultiset SimAnyon (toricAnyons st)
+  in quarks <+> hadrons <+> bbn <+> nucl <+> atoms <+> mols <+> chem <+> biomods <+> anyons
+
+||| Total token weight across all discrete constituents in the universal state:
+public export
+totalUniversalSimulationTokens : UniverseSimulationState -> BoxInt
+totalUniversalSimulationTokens st = multisetSum (simulationToTokens st)

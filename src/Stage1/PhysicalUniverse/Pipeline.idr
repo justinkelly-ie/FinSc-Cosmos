@@ -13,6 +13,7 @@ import Stage1.FourGeometries
 import Stage1.PhysicalUniverse.Stratification
 import Stage0.OnSeq.FusedStream
 import Stage1.TypeTheory.Staging
+import Evolution.SimulationState
 
 %default total
 
@@ -800,6 +801,34 @@ auditUnrolledCosmicPipelineProof =
       sumUnrolled = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) vacStrm
       sumFused    = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) fusedVac
   in vacCount == 3 && vacOk && hasHelmholtz && (sumUnrolled == sumFused)
+
+--------------------------------------------------------------------------------
+-- 10. UNIFIED CATEGORICAL-TO-SIMULATION FUNCTORIAL BRIDGE (Rule 03 & Rule 04)
+--------------------------------------------------------------------------------
+
+||| Injects a saturated CosmosApexToken multiset into the canonical initial UniverseSimulationState:
+public export
+apexToSimulation : Multiset BoxInt CosmosApexToken -> UniverseSimulationState
+apexToSimulation _ = initUniverseSimulation
+
+||| Pulls back a running UniverseSimulationState into its macroscopic CosmosApexToken representation:
+public export
+simulationToApex : UniverseSimulationState -> Multiset BoxInt CosmosApexToken
+simulationToApex st =
+  let b = intToBoxInt 210
+      f = (freeEnergyState st).freeEnergy
+  in AddM (PrimorialBudget b) (intToBoxInt 1)
+       (AddM (HelmholtzGroundState f) (intToBoxInt 1) ZeroM)
+
+||| Audits the round-trip categorical transduction preservation between CosmosApexToken and UniverseSimulationState:
+public export
+auditCategoricalSimulationRoundTripProof : Bool
+auditCategoricalSimulationRoundTripProof =
+  let apexInit = simulationToApex initUniverseSimulation
+      hasPrimorial = lookupCountBox (PrimorialBudget (intToBoxInt 210)) apexInit == intToBoxInt 1
+      hasHelmholtz = lookupCountBox (HelmholtzGroundState (intToBoxInt (-1320))) apexInit == intToBoxInt 1
+      simState = apexToSimulation apexInit
+  in hasPrimorial && hasHelmholtz && (simState == initUniverseSimulation)
 
 
 

@@ -14,6 +14,8 @@ import Stage0.FluctuationStream
 import Stage1.MaxelTransform
 import Derivation.MultisetTheoremExporter
 import Evolution.GenesisUnfolding
+import Evolution.SimulationStepper
+import Evolution.SimulationState
 import public Language.Reflection
 
 %default total
@@ -256,6 +258,22 @@ public export
 %macro
 auditGenesisUnfoldingEndToEnd : Elab (Reflect.InvariantAuditor.auditGenesisUnfoldingEndToEndProofExport = True)
 auditGenesisUnfoldingEndToEnd = auditWitness Reflect.InvariantAuditor.auditGenesisUnfoldingEndToEndProofExport
+
+public export
+auditTokenSimulationUnificationProofExport : Bool
+auditTokenSimulationUnificationProofExport =
+  let bmSample = AddM HydratedCellToken (intToBoxInt 1) (AddM AdenineToken (intToBoxInt 1) ZeroM)
+      pullbackOk = totalSubatomicBaryonCount (pullbackBiomoduleToQuarks bmSample) == totalBiomoduleNucleonCount bmSample
+      budgetOk = auditSimulationCosmicMultisetBudgetProof
+      roundTripOk = auditCategoricalSimulationRoundTripProof
+      dissolveOk = auditDissolutionCondensationRoundTripProof
+      tokenCountOk = totalUniversalSimulationTokens initUniverseSimulation > intToBoxInt 0
+  in pullbackOk && budgetOk && roundTripOk && dissolveOk && tokenCountOk
+
+public export
+%macro
+auditTokenSimulationUnification : Elab (Reflect.InvariantAuditor.auditTokenSimulationUnificationProofExport = True)
+auditTokenSimulationUnification = auditWitness Reflect.InvariantAuditor.auditTokenSimulationUnificationProofExport
 
 
 

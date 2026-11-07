@@ -11,6 +11,7 @@ import Evolution.SimulationState
 import Evolution.SimulationStepper
 import Compound.SymplecticIntegrator
 import Stage0.OnSeq.FusedStream
+import Stage0.Token
 import Data.List
 import Data.String
 
@@ -153,6 +154,29 @@ public export
 streamUniverseSimulation : UniverseSimulationState -> FusedStream UniverseSimulationState
 streamUniverseSimulation initSt =
   unfoldStream (\st => Yield st (stepUniverseSimulation st)) initSt
+
+||| Streams universe simulation states consuming from a linear action token stream under strict QTT linearity:
+public export
+streamUniverseWithActionTokens :
+  FusedStream (LToken SubstrateActionToken) ->
+  UniverseSimulationState ->
+  FusedStream UniverseSimulationState
+streamUniverseWithActionTokens (MkStream {s = sIn} step s0) st0 =
+  MkStream {s = (sIn, UniverseSimulationState)}
+    (\(s, st) =>
+      case step s of
+        Done => Done
+        Skip s' => Skip (s', st)
+        Yield tok s' =>
+          let st' = stepUniverseSimulationWithToken tok st
+          in Yield st' (s', st'))
+    (s0, st0)
+
+||| Formats a summary of discrete tokens contained within the macroscopic universe state:
+public export
+exportSimulationTokensSummary : UniverseSimulationState -> String
+exportSimulationTokensSummary st =
+  "TotalTokens=" ++ show (unwrapBox (totalUniversalSimulationTokens st))
 
 ------------------------------------------------------------------------
 -- 6. COMPILE-TIME AUDIT FOR SIMULATION EXPORTER

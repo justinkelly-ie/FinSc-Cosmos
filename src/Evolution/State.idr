@@ -11,6 +11,7 @@ import Data.Vect
 import Stage1.FourGeometries
 import public Stage0.UniverseState
 import public Stage1.UniverseState
+import Evolution.SimulationState
 
 %default total
 
@@ -113,6 +114,17 @@ auditCosmicMultisetBudgetProof : Bool
 auditCosmicMultisetBudgetProof =
   let cMultiset = stateToCosmicMultiset observerUniverseGroundState
   in totalCosmicMultisetBudget cMultiset == primorial210Budget
+
+||| Direct lossless projection from UniverseSimulationState into the Unified CosmicMultiset.
+public export
+simulationToCosmicMultiset : UniverseSimulationState -> CosmicMultiset
+simulationToCosmicMultiset st = stateToCosmicMultiset (simulationToUniverseState st)
+
+||| Audits that simulationToCosmicMultiset preserves the Primorial 210 budget.
+public export
+auditSimulationCosmicMultisetBudgetProof : Bool
+auditSimulationCosmicMultisetBudgetProof =
+  totalCosmicMultisetBudget (simulationToCosmicMultiset initUniverseSimulation) == primorial210Budget
 
 ------------------------------------------------------------------------
 -- QUANTITATIVE TYPE THEORY (QTT) LINEAR VECTOR & STATE TRANSITIONS

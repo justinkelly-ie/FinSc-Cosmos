@@ -231,6 +231,65 @@ public export
 liftAtomToElements : Multiset BoxInt AtomToken -> Multiset BoxInt StellarElement
 liftAtomToElements = liftToken atomTokenToElements
 
+||| Constituent mapping from a stellar nucleosynthesis element to its constituent hadron nucleons (protons and neutrons).
+public export
+elementTokenToHadrons : Token StellarElement -> Multiset BoxInt HadronToken
+elementTokenToHadrons (MkToken elem) =
+  let z = cast (stellarAtomicNumber elem)
+      a = cast (stellarNucleonCount elem)
+      n = a - z
+  in if n > 0
+       then AddM ProtonToken (MkBoxInt z) (AddM NeutronToken (MkBoxInt n) ZeroM)
+       else AddM ProtonToken (MkBoxInt z) ZeroM
+
+||| Free monoid homomorphism lifting stellar element multisets into constituent hadron nucleon multisets.
+public export
+liftElementToHadrons : Multiset BoxInt StellarElement -> Multiset BoxInt HadronToken
+liftElementToHadrons = liftToken elementTokenToHadrons
+
+||| Constituent mapping from a cellular biomodule to its constituent atom token multiset:
+||| - AdenineToken   (C5 H5 N5)    : 5 C (60) + 5 H (5)  + 5 N (70)           = 135 nucleons
+||| - ThymineToken   (C5 H6 N2 O2) : 5 C (60) + 6 H (6)  + 2 N (28) + 2 O (32) = 126 nucleons
+||| - GuanineToken   (C5 H5 N5 O)  : 5 C (60) + 5 H (5)  + 5 N (70) + 1 O (16) = 151 nucleons
+||| - CytosineToken  (C4 H5 N3 O)  : 4 C (48) + 5 H (5)  + 3 N (42) + 1 O (16) = 111 nucleons
+||| - HydratedCellToken (H2 O)     : 2 H (2)  + 1 O (16)                      = 18 nucleons
+public export
+biomoduleTokenToAtoms : Token BiomoduleToken -> Multiset BoxInt AtomToken
+biomoduleTokenToAtoms (MkToken AdenineToken) =
+  AddM CarbonToken (intToBoxInt 5)
+    (AddM HydrogenToken (intToBoxInt 5)
+    (AddM NitrogenToken (intToBoxInt 5) ZeroM))
+biomoduleTokenToAtoms (MkToken ThymineToken) =
+  AddM CarbonToken (intToBoxInt 5)
+    (AddM HydrogenToken (intToBoxInt 6)
+    (AddM NitrogenToken (intToBoxInt 2)
+    (AddM OxygenToken (intToBoxInt 2) ZeroM)))
+biomoduleTokenToAtoms (MkToken GuanineToken) =
+  AddM CarbonToken (intToBoxInt 5)
+    (AddM HydrogenToken (intToBoxInt 5)
+    (AddM NitrogenToken (intToBoxInt 5)
+    (AddM OxygenToken (intToBoxInt 1) ZeroM)))
+biomoduleTokenToAtoms (MkToken CytosineToken) =
+  AddM CarbonToken (intToBoxInt 4)
+    (AddM HydrogenToken (intToBoxInt 5)
+    (AddM NitrogenToken (intToBoxInt 3)
+    (AddM OxygenToken (intToBoxInt 1) ZeroM)))
+biomoduleTokenToAtoms (MkToken HydratedCellToken) =
+  AddM HydrogenToken (intToBoxInt 2)
+    (AddM OxygenToken (intToBoxInt 1) ZeroM)
+
+||| Free monoid homomorphism lifting cellular biomodule multisets into constituent atom multisets.
+public export
+liftBiomoduleToAtoms : Multiset BoxInt BiomoduleToken -> Multiset BoxInt AtomToken
+liftBiomoduleToAtoms = liftToken biomoduleTokenToAtoms
+
+||| Composite pullback homomorphism pulling back cellular biomodules across all 8 tiers down to quarks:
+||| Biomodules -> Atoms -> Elements -> Hadrons -> Quarks.
+public export
+pullbackBiomoduleToQuarks : Multiset BoxInt BiomoduleToken -> Multiset BoxInt SubatomicParticle
+pullbackBiomoduleToQuarks =
+  liftHadronToQuarks . liftElementToHadrons . liftAtomToElements . liftBiomoduleToAtoms
+
 ||| Constituent mapping from a cellular biomodule to its precursor volatile molecule multiset.
 public export
 biomoduleTokenToMolecules : Token BiomoduleToken -> Multiset BoxInt MoleculeToken
@@ -243,14 +302,19 @@ liftBiomoduleToMolecules : Multiset BoxInt BiomoduleToken -> Multiset BoxInt Mol
 liftBiomoduleToMolecules = liftToken biomoduleTokenToMolecules
 
 ||| Verifies exact round-trip nucleon conservation across all liftToken homomorphisms:
-||| (Hadrons -> Quarks, BBN -> Hadrons, Atoms -> Stellar Elements, Biomodules -> Volatile Molecules).
+||| (Hadrons -> Quarks, BBN -> Hadrons, Elements -> Hadrons, Atoms -> Stellar Elements,
+|||  Molecules -> Atoms, Macromolecules -> Molecules, Biomodules -> Atoms, Biomodules -> Quarks).
 public export
 liftConstituentConsistency : MatterSubstanceSector -> Bool
-liftConstituentConsistency (MkMatterSector _ _ hadrons bbn _ atoms _ chem _ biomods _ _) =
+liftConstituentConsistency (MkMatterSector _ _ hadrons bbn nucl atoms mols chem _ biomods _ _) =
   totalSubatomicBaryonCount (liftHadronToQuarks hadrons) == totalHadronNucleonCount hadrons &&
   totalHadronNucleonCount (liftBBNToHadrons bbn) == totalBBNNucleonCount bbn &&
+  totalHadronNucleonCount (liftElementToHadrons nucl) == totalNucleonCount nucl &&
   totalNucleonCount (liftAtomToElements atoms) == totalAtomNucleonCount atoms &&
-  totalMoleculeNucleonCount (liftBiomoduleToMolecules biomods) == totalBiomoduleNucleonCount biomods
+  totalAtomNucleonCount (liftMoleculeToAtoms mols) == totalMoleculeNucleonCount mols &&
+  totalMoleculeNucleonCount (liftMacromoleculeToMolecules chem) == totalMacromoleculeNucleonCount chem &&
+  totalAtomNucleonCount (liftBiomoduleToAtoms biomods) == totalBiomoduleNucleonCount biomods &&
+  totalSubatomicBaryonCount (pullbackBiomoduleToQuarks biomods) == totalBiomoduleNucleonCount biomods
 
 ||| Stoichiometric QGP cooling (k in [1, 3]) and QCD hadronization confinement (k in [4, 6]):
 ||| Confines 300 UpQuark + 225 DownQuark (525 quarks = 175 baryons) into 125 ProtonToken (2u+d) + 50 NeutronToken (u+2d) = 175 nucleons.
