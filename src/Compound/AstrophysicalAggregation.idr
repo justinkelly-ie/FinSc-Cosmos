@@ -49,6 +49,19 @@ public export
 astrophysicalRemnantTransform : MaxelTransform MassToken MassToken
 astrophysicalRemnantTransform = mkTransformBox EllipticSector unitUnixelFraction [((MkMassToken 1, MkMassToken 1), intToBoxInt 1)]
 
+||| Classifies stellar remnant phase from accreted mass token count:
+||| • Mass < 84 tokens (1.44 M_sun)  ==> White Dwarf (Law 43)
+||| • 84 <= Mass <= 108 tokens       ==> Neutron Star
+||| • Mass > 108 tokens              ==> Black Hole Horizon (Law 24)
+public export
+classifyStellarRemnantMass : Nat -> RemnantType
+classifyStellarRemnantMass numTokens =
+  if numTokens < 84
+     then WhiteDwarf
+     else if numTokens <= 108
+          then NeutronStar
+          else BlackHole
+
 ||| Aggregates stellar mass tokens into a Stellar Remnant.
 ||| Pushes Law 43 (Chandrasekhar Limit M=84) and Law 24 (TOV Limit M=108) forward:
 ||| • Mass < 84 tokens (1.44 M_sun)  ==> White Dwarf
@@ -60,11 +73,7 @@ aggregateStellarRemnant numTokens =
   let tokensList = map MkMassToken [1..numTokens]
       tokensBox = foldl (\acc, t => insertBox t (intToBoxInt 1) acc) emptyBox tokensList
       pushedBox = applyPushforwardContraction astrophysicalRemnantTransform tokensBox
-      remClass = if numTokens < 84
-                    then WhiteDwarf
-                    else if numTokens <= 108
-                         then NeutronStar
-                         else BlackHole
+      remClass = classifyStellarRemnantMass numTokens
   in MkStellarRemnant pushedBox numTokens remClass
 
 ------------------------------------------------------------------------
@@ -74,7 +83,13 @@ aggregateStellarRemnant numTokens =
 ||| Audits Astrophysical Aggregation Pushforward:
 ||| 1. Accretion of 80 tokens yields a stable White Dwarf (Law 43).
 ||| 2. Accretion of 120 tokens triggers Black Hole collapse (Law 24).
-%inline
 public export
 auditAstrophysicalAggregationProof : Bool
-auditAstrophysicalAggregationProof = True
+auditAstrophysicalAggregationProof =
+  let rem2 = aggregateStellarRemnant 2
+  in rem2.remnantClass == WhiteDwarf &&
+     rem2.totalTokens == 2 &&
+     boxEq (lookupBox (MkMassToken 1) rem2.massMultiset) (intToBoxInt 1) &&
+     classifyStellarRemnantMass 80 == WhiteDwarf &&
+     classifyStellarRemnantMass 95 == NeutronStar &&
+     classifyStellarRemnantMass 120 == BlackHole

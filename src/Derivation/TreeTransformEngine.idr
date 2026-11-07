@@ -69,42 +69,19 @@ applyFusedTreeTransform t1 t2 tree = applyPushforwardTreeContraction (composeMax
 -- 3. COMPILE-TIME MACRO REFLECTION INVARIANT AUDIT
 ------------------------------------------------------------------------
 
-||| Ord instance for ColorCharge for MultisetTree insertion
-public export
-Ord ColorCharge where
-  compare RedColor RedColor = EQ
-  compare RedColor _ = LT
-  compare GreenColor RedColor = GT
-  compare GreenColor GreenColor = EQ
-  compare GreenColor BlueColor = LT
-  compare BlueColor _ = GT
-
-||| Helper mapping HadronToken to Nat for total Ord comparison
-public export
-hadronToNat : HadronToken -> Nat
-hadronToNat ProtonToken = 0
-hadronToNat NeutronToken = 1
-hadronToNat LambdaBaryonToken = 2
-hadronToNat SigmaBaryonToken = 3
-hadronToNat XiBaryonToken = 4
-hadronToNat OmegaBaryonToken = 5
-hadronToNat PionPlusToken = 6
-hadronToNat PionMinusToken = 7
-hadronToNat NeutralPionToken = 8
-hadronToNat KaonPlusToken = 9
-hadronToNat KaonMinusToken = 10
-hadronToNat NeutralKaonToken = 11
-hadronToNat RhoMesonToken = 12
-hadronToNat JPsiMesonToken = 13
-hadronToNat UpsilonMesonToken = 14
-
-||| Ord instance for HadronToken for MultisetTree insertion
-public export
-Ord HadronToken where
-  compare h1 h2 = compare (hadronToNat h1) (hadronToNat h2)
-
-
 ||| Audits O(log N) MultisetTree Transform Application and Tree-Box Equivalence.
 public export
 auditTreeTransformEngineProof : Bool
-auditTreeTransformEngineProof = True
+auditTreeTransformEngineProof =
+  let b0 : Box Nat = insertBox 1 (intToBoxInt 3) (insertBox 2 (intToBoxInt 5) emptyBox)
+      t0 : MultisetTree Nat = boxToTree b0
+      bRound : Box Nat = treeToBox t0
+      tr1 : MaxelTransform Nat Nat =
+        mkMaxelTransform EllipticSector unitUnixelFraction [((1, 10), intToBoxInt 2), ((2, 20), intToBoxInt 1)]
+      tr2 : MaxelTransform Nat Nat =
+        mkMaxelTransform EllipticSector unitUnixelFraction [((10, 100), intToBoxInt 1), ((20, 100), intToBoxInt 1)]
+      pushed = applyFusedTreeTransform tr1 tr2 t0
+  in lookupTokenTree 1 t0 == 3 &&
+     lookupTokenTree 2 t0 == 5 &&
+     boxEq (lookupBox 1 bRound) (intToBoxInt 3) &&
+     lookupTokenTree 100 pushed == 11

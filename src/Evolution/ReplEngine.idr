@@ -199,7 +199,7 @@ printSimStatus st = do
   putStrLn $ "  Galactic Rotation v^2(r=10)  : " ++ show v10
   putStrLn $ "  Hamiltonian Phase State      : " ++ show (phaseState st)
   putStrLn $ "  Curvature Defect (G_00)      : " ++ show (curvatureDefect st)
-  putStrLn $ "  Companion Spread M(s)^k c_11 : " ++ show (lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries)
+  putStrLn $ "  Companion Spread M(s)^k c_11 : " ++ show (lookupCellMultiset (MkPixel 0 0) (spreadMatrix st).entries)
   putStrLn $ "  Observer Branch (k=38)       : " ++ (if observerEpochActive st then "ACTIVE (Living Matter & Active Inference)" else "Inactive (Cosmological Trunk)")
   putStrLn $ "  Helmholtz Free Energy (F)    : " ++ show (freeEnergyState st).freeEnergy ++ " (Minimum: F = -1320)"
   putStrLn "========================================================"

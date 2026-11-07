@@ -12,10 +12,6 @@ import public Stage1.ScaleHierarchy
 
 %default total
 
-public export
-auditFunctorialPipelineProof : Bool
-auditFunctorialPipelineProof = True
-
 ||| Type-level ScaleTransition pipeline derivation witness verifying that
 ||| the staged condensed scale path compilation evaluates identically to the composite transition:
 public export
@@ -114,6 +110,19 @@ streamActiveInferencePerception sensoryStrm =
   let predictions = streamMaxelAction tTotalFunctorialPipeline sensoryStrm
       surprise = foldStreamFuel substrateFuel (\acc, (_, w) => addBox acc w) (intToBoxInt 0) sensoryStrm
   in (predictions, surprise)
+
+public export
+auditFunctorialPipelineProof : Bool
+auditFunctorialPipelineProof =
+  let qBox = insertBox RedColor (intToBoxInt 1)
+               (insertBox GreenColor (intToBoxInt 1)
+                 (insertBox BlueColor (intToBoxInt 1) emptyBox))
+      hBox = cosmicHadronPushforward qBox
+      cellBox = pipelinePushforward qBox
+      stepSt = evaluateActiveInferenceStep qBox
+  in lookupBox ProtonToken hBox > intToBoxInt 0 &&
+     lookupBox HydratedCellToken cellBox > intToBoxInt 0 &&
+     boxEq stepSt.variationalSurprise (intToBoxInt 0)
 
 
 

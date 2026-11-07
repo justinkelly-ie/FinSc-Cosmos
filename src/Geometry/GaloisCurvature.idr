@@ -38,4 +38,15 @@ requiresGaloisExpansion st =
 ||| 2. Metric shear vanishes on symmetric ground-state vacuum (vmCap = dmCap => G_00 = 0).
 public export
 auditGaloisEinsteinCurvatureProof : Bool
-auditGaloisEinsteinCurvatureProof = True
+auditGaloisEinsteinCurvatureProof =
+  let symVacuum : UniverseState 2 2 2 =
+        MkUniverseState [intToBoxInt 1, intToBoxInt 1]
+                        [intToBoxInt 1, intToBoxInt 1]
+                        [intToBoxInt 1, intToBoxInt 1]
+      shearedState : UniverseState 12 2 1 =
+        MkUniverseState (replicate 12 (intToBoxInt 1))
+                        [intToBoxInt 1, intToBoxInt 1]
+                        [intToBoxInt 1]
+  in boxEq (galoisEinsteinTensor symVacuum) (intToBoxInt 0) &&
+     not (requiresGaloisExpansion symVacuum) &&
+     requiresGaloisExpansion shearedState

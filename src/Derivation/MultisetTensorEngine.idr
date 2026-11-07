@@ -37,4 +37,13 @@ solveStationaryGroundState t steps initBox = computeStationaryDistribution t ste
 ||| Audits Multiset Tensor Engine Invariants (2-morphisms, Bra-Ket inner product, trace, adjunction kernels, spectral convergence).
 public export
 auditMultisetTensorEngineProof : Bool
-auditMultisetTensorEngineProof = True
+auditMultisetTensorEngineProof =
+  let psi : Box Nat = insertBox 1 (intToBoxInt 2) (insertBox 2 (intToBoxInt 3) emptyBox)
+      phi : Box Nat = insertBox 1 (intToBoxInt 4) (insertBox 2 (intToBoxInt 5) emptyBox)
+      overlap = evaluateStateOverlap psi phi
+      idT : MaxelTransform Nat Nat =
+        mkMaxelTransform EllipticSector unitUnixelFraction [((1, 1), intToBoxInt 1), ((2, 2), intToBoxInt 1)]
+      stat = solveStationaryGroundState idT 2 psi
+  in boxEq overlap (intToBoxInt 23) &&
+     boxEq (lookupBox 1 stat) (intToBoxInt 2) &&
+     boxEq (lookupBox 2 stat) (intToBoxInt 3)

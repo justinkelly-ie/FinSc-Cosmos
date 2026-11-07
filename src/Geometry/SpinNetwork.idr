@@ -67,4 +67,12 @@ stepSpinNetwork networkState = applyPushforward rewriteSpinNetworkMaxel networkS
 ||| Audits that Spin Network graph rewiring preserves total volume and area quantum counts.
 public export
 auditSpinNetworkVolumeProof : Bool
-auditSpinNetworkVolumeProof = True
+auditSpinNetworkVolumeProof =
+  let s0 : SpinNetworkState =
+        MkBox [ ((MkSpinNode 1 1, MkSpinEdge 1 2 1), intToBoxInt 2)
+              , ((MkSpinNode 2 1, MkSpinEdge 2 1 1), intToBoxInt 3)
+              ]
+      s1 = stepSpinNetwork s0
+      w1 = lookupBox (MkSpinNode 1 1, MkSpinEdge 1 3 1) s1
+      w2 = lookupBox (MkSpinNode 2 1, MkSpinEdge 2 3 1) s1
+  in boxEq (w1 + w2) (intToBoxInt 5)

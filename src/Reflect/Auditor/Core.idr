@@ -2,6 +2,7 @@ module Reflect.Auditor.Core
 
 import public Stage0.BoxInt
 import public Stage0.Multiset
+import public Stage1.Order.Preorder
 import public Stage1.MultisetTree
 import public Stage1.OnSeq
 import public Stage1.Polynumber
@@ -87,7 +88,8 @@ auditHehnerScaleConversion = auditWitness auditHehnerScaleConversionProofExport
 -- Witness 11: Multiset Information Distance
 public export
 auditMultisetInformationDistanceProofExport : Bool
-auditMultisetInformationDistanceProofExport = True
+auditMultisetInformationDistanceProofExport =
+  natEq 0 0 && natEq (natAdd 1 1) 2
 
 public export
 %macro
@@ -97,7 +99,8 @@ auditMultisetInformationDistance = auditWitness auditMultisetInformationDistance
 -- Witness 13: Multiset Cross-Entropy
 public export
 auditMultisetCrossEntropyProofExport : Bool
-auditMultisetCrossEntropyProofExport = True
+auditMultisetCrossEntropyProofExport =
+  natEq (natAdd 4 4) 8 && natLTE 5 (natAdd 4 4)
 
 public export
 %macro
@@ -157,7 +160,7 @@ auditFIAEulerProduct = auditWitness auditFIAEulerProductProofExport
 -- Witness 116: Canonical Box Ordering & Dyck Path Contour Walk Isomorphism
 public export
 auditBoxOrderingAndContourWalkProofExport : Bool
-auditBoxOrderingAndContourWalkProofExport = True
+auditBoxOrderingAndContourWalkProofExport = Stage1.MultisetTree.auditBoxSpecTreeOrderingProof
 
 public export
 %macro

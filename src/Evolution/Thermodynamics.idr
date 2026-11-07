@@ -47,4 +47,14 @@ crooksFluctuationRatio forwardWork reverseWork =
 ||| 2. Jarzynski ratio bounds over discrete work vectors.
 public export
 auditJarzynskiThermalProof : Bool
-auditJarzynskiThermalProof = True
+auditJarzynskiThermalProof =
+  let st : UniverseState 2 2 3 =
+        MkUniverseState [intToBoxInt 1, intToBoxInt 1]
+                        [intToBoxInt 1, intToBoxInt 1]
+                        [intToBoxInt 1, intToBoxInt 1, intToBoxInt 1]
+      ds = computeEntropyProduction st
+      jEq = jarzynskiEquality (intToBoxInt 10) (intToBoxInt 10)
+      cRat = crooksFluctuationRatio (intToBoxInt 5) (intToBoxInt 2)
+  in boxEq ds (intToBoxInt 3) &&
+     rationalEquiv jEq (mkUnixelFraction (intToBoxInt 1) 1) &&
+     rationalEquiv cRat (mkUnixelFraction (intToBoxInt 4) 1)

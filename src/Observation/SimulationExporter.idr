@@ -57,7 +57,7 @@ exportStateCsvRow st =
       posMag = vexelMagnitudeSquared (phaseState st).position
       momMag = vexelMagnitudeSquared (phaseState st).momentum
       defect = curvatureDefect st
-      c11 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries
+      c11 = lookupCellMultiset (MkPixel 0 0) (spreadMatrix st).entries
       obsStr = if observerEpochActive st then "True" else "False"
   in show (substrateTicks st) ++ "," ++
      show (superEpoch st) ++ "," ++
@@ -99,7 +99,7 @@ exportStateJson st =
       posMag = vexelMagnitudeSquared (phaseState st).position
       momMag = vexelMagnitudeSquared (phaseState st).momentum
       defect = curvatureDefect st
-      c11 = lookupBoxTree (MkPixel 0 0) (spreadMatrix st).entries
+      c11 = lookupCellMultiset (MkPixel 0 0) (spreadMatrix st).entries
       obsStr = if observerEpochActive st then "true" else "false"
   in "{\"tick\":" ++ show (substrateTicks st) ++
      ",\"superepoch\":" ++ show (superEpoch st) ++

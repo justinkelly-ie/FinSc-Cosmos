@@ -36,6 +36,16 @@ import Stage0.Chemistry.MacromolecularAssembly
 import Stage0.Chemistry.MolecularAggregation
 import Stage1.ScalePipeline
 import Electromagnetism
+import Stage1.RadixRepIso
+import Stage1.PhysicalUniverse.Stratification
+import Stage0.NarayAlphabet
+import Stage1.DiracSpinor
+import Stage1.Quantum.ToricCode
+import Stage0.Hadron.HadronizationEngine
+import Stage0.Hadron.CosmicNucleosynthesis
+import Stage0.Biology.RibosomalTranslation
+import Stage1.Cosmology.MacroEnvelope
+import Compound.AstrophysicalAggregation
 import Stage0.Token
 import Data.Vect
 import Stage0.OnSeq.FusedStream
@@ -178,31 +188,45 @@ prfHorizonGohFuelSteps = Refl
 public export
 record GenesisUnfoldingState where
   constructor MkGenesisUnfoldingState
-  substrateTokens : Nat
-  entropyArrow    : BoxInt
-  activeGate      : GohPrimeGate
-  activeTriad     : TriadQuadrance
-  internalEnergy  : BoxInt
-  entropy         : BoxInt
-  freeEnergy      : BoxInt
-  isCondensed     : Bool
-  carrierTokens   : Multiset BoxInt FundamentalGeometry
+  substrateTokens  : Nat
+  entropyArrow     : BoxInt
+  activeGate       : GohPrimeGate
+  activeTriad      : TriadQuadrance
+  internalEnergy   : BoxInt
+  entropy          : BoxInt
+  freeEnergy       : BoxInt
+  isCondensed      : Bool
+  carrierTokens    : Multiset BoxInt FundamentalGeometry
+  activeRadixBit   : Bit2
+  activeTernaryReg : Vect 3 Bit3
 
 public export
 Show GenesisUnfoldingState where
   show st =
     "GenesisUnfolding(N=" ++ show st.substrateTokens ++
     ", Gate=" ++ show st.activeGate ++
+    ", Bit2=" ++ show st.activeRadixBit ++
     ", ΔS=" ++ show (unwrapBox st.entropyArrow) ++
     ", F=" ++ show (unwrapBox st.freeEnergy) ++
     ", condensed=" ++ show st.isCondensed ++ ")"
 
-||| Initial vacuum state at ∅_Sub (N = 0, ΔS = 0, F = 0, no metric, no matter).
+||| Initial vacuum state at ∅_Sub (N = 0, ΔS = 0, F = 0, no metric, no matter, zero binary bit & ternary register).
 public export
 initGenesisUnfolding : GenesisUnfoldingState
 initGenesisUnfolding =
   let t0 = epochTriadQuadrance 0
-  in MkGenesisUnfoldingState 0 (intToBoxInt 0) Gate2DyadicBit t0 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) False ZeroM
+  in MkGenesisUnfoldingState
+       0
+       (intToBoxInt 0)
+       Gate2DyadicBit
+       t0
+       (intToBoxInt 0)
+       (intToBoxInt 0)
+       (intToBoxInt 0)
+       False
+       ZeroM
+       Bit2Zero
+       [Bit3Zero, Bit3Zero, Bit3Zero]
 
 ||| Computes exact matter partition via the 4 Goh prime gates using model capacity dimensions:
 public export
@@ -233,19 +257,24 @@ partitionAtN n = gohPrimePartition n cosmicSmoothHorizonGohFuel
 public export
 energyFromTokens : Multiset BoxInt FundamentalGeometry -> (BoxInt, BoxInt, BoxInt)
 energyFromTokens tokens =
-  let vm = multiplicity EllipticGeom tokens
-      de = multiplicity HyperbolicGeom tokens
-      dm = multiplicity ParabolicGeom tokens
+  let (vm, de, dm) = foldMultiset (\g, w, (vAcc, hAcc, pAcc) =>
+                       case g of
+                         EllipticGeom   => (vAcc + w, hAcc, pAcc)
+                         HyperbolicGeom => (vAcc, hAcc + w, pAcc)
+                         ParabolicGeom  => (vAcc, hAcc, pAcc + w)
+                         SubstrateGeom  => (vAcc, hAcc, pAcc))
+                       (intToBoxInt 0, intToBoxInt 0, intToBoxInt 0)
+                       tokens
       u = (intToBoxInt 10 * vm) + (intToBoxInt 1 * de)
       s = (intToBoxInt 2 * vm) + (intToBoxInt 5 * de) + (intToBoxInt 3 * dm)
       f = u - (intToBoxInt 2 * s)
   in (u, s, f)
 
-||| Canonical sequence of fundamental geometry tokens up to count N:
+||| Canonical sequence of fundamental geometry tokens up to count N (consolidated into <= 3 RLE nodes):
 public export
 canonicalTokensAtN : (n : Nat) -> Multiset BoxInt FundamentalGeometry
 canonicalTokensAtN Z = ZeroM
-canonicalTokensAtN (S k) = AddM (geometryAtTokenIndex k) (intToBoxInt 1) (canonicalTokensAtN k)
+canonicalTokensAtN (S k) = insertItemBox (geometryAtTokenIndex k) (intToBoxInt 1) (canonicalTokensAtN k)
 
 ||| Computes non-equilibrium thermodynamic energies (U, S, F) for token count N grounded in discrete carrier multiset:
 public export
@@ -253,19 +282,23 @@ energyAtN : Nat -> (BoxInt, BoxInt, BoxInt)
 energyAtN n = energyFromTokens (canonicalTokensAtN n)
 
 ||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1) from an incoming SubstrateActionToken.
+||| Bridges the action token into a located SubstrateToken and unfolds its 1 ➔ 3 chromogeometric triad via bifurcateActionTokenLinear.
 ||| Enforces Quantitative Type Theory: substrate states and action quanta cannot be duplicated or leaked.
 public export
 stepGenesisInfluxLinearWithToken : (1 tok : LToken SubstrateActionToken) -> (1 st : GenesisUnfoldingState) -> GenesisUnfoldingState
-stepGenesisInfluxLinearWithToken (MkLToken (MkActionToken q)) (MkGenesisUnfoldingState n arrow _ _ _ _ _ _ tokens) =
+stepGenesisInfluxLinearWithToken tok (MkGenesisUnfoldingState n arrow _ _ _ _ _ _ tokens _ _) =
   let nextN = S n
+      (nextTriad, q) = bifurcateActionTokenLinear 0 nextN tok
       nextArrow = arrow + q
       nextGate = activeGohGate nextN
-      nextTriad = epochTriadQuadrance nextN
       geom = geometryAtTokenIndex n
-      nextTokens = AddM geom q tokens
+      nextTokens = insertItemBox geom q tokens
       (nextU, nextS, nextF) = energyFromTokens nextTokens
       condensed = nextN >= fst primorialBudgetDimension
-  in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed nextTokens
+      nextNInt = cast {to = Integer} nextN
+      nextBit = if (nextNInt `mod` 2) == 1 then Bit2One else Bit2Zero
+      nextTritReg = boxIntToVect3Trits (intToBoxInt (nextNInt `mod` 13))
+  in MkGenesisUnfoldingState nextN nextArrow nextGate nextTriad nextU nextS nextF condensed nextTokens nextBit nextTritReg
 
 ||| Strictly linear causal action influx advancing pre-geometric token count (ΔS = 1).
 ||| Enforces Quantitative Type Theory: substrate states cannot be duplicated or leaked.
@@ -293,12 +326,24 @@ condenseGenesisToUniverse st =
         hyperbolicCount = multiplicity HyperbolicGeom st.carrierTokens
         g10 = synthesize10DMetricFromParabolicCount (boxToNat parabolicCount)
         g4  = project10Dto4D g10.metricMaxel
-        spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0)
+        spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
         gluons = synthesizeGellMannFromEllipticCount (boxToNat ellipticCount)
-        gauge = MkGaugeSector gluons vacuumMaxwellState
-        nucl = canonicalNuclearState
+        gauge = MkGaugeSector gluons vacuumMaxwellState canonicalDiracSpinorState canonicalToricAnyonState
+        quarks = synthesizeQuarksFromEllipticCount (boxToNat ellipticCount)
         chem = canonicalChemistryState
-        matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver emptyTrophicPyramid
+        matter = MkMatterSector
+                   quarks
+                   QuarkGluonPlasma
+                   ZeroM
+                   ZeroM
+                   ZeroM
+                   ZeroM
+                   ZeroM
+                   chem
+                   (the (List AminoAcid) [])
+                   ZeroM
+                   DormantObserver
+                   emptyTrophicPyramid
         gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
         halo = canonicalGalacticHalo
         q0 = singletonCell (mkCell1 1) (intToBoxInt 1)
@@ -309,6 +354,7 @@ condenseGenesisToUniverse st =
         initialSpread = if boxToNat hyperbolicCount >= 128
                           then pythagoreanCompanionSquareMaxel (intToBoxInt 4) (intToBoxInt 3)
                           else pythagoreanCompanionSquareMaxel (intToBoxInt 1) (intToBoxInt 0)
+        condensedFE = evaluateDynamicHelmholtzState st.internalEnergy st.entropy
         thermo = MkSubstrateSector
                    0
                    0
@@ -321,7 +367,7 @@ condenseGenesisToUniverse st =
                    MonotonicOpenExpansion
                    False
                    status0
-                   canonicalHelmholtzGroundState
+                   condensedFE
                    (intToBoxInt 0)
     in Just (MkUniverseSimulationState spacetime gauge matter dynamics thermo)
 
@@ -329,12 +375,11 @@ condenseGenesisToUniverse st =
 ||| or transforms it into macroscopic UniverseSimulationState without dropping tokens.
 public export
 condenseGenesisLinear : (1 st : GenesisUnfoldingState) -> Either GenesisUnfoldingState UniverseSimulationState
-condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens) =
-  if n < fst primorialBudgetDimension
-    then Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens)
-    else case condenseGenesisToUniverse (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens) of
-           Just simSt => Right simSt
-           Nothing    => Left (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens)
+condenseGenesisLinear (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens bit tritReg) =
+  let rebuilt = MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens bit tritReg
+  in case condenseGenesisToUniverse rebuilt of
+       Just simSt => Right simSt
+       Nothing    => Left rebuilt
 
 --------------------------------------------------------------------------------
 -- 3. UNIFIED COSMOLOGICAL EVOLUTION STATE & TRANSDUCER
@@ -351,16 +396,21 @@ Show CosmosEvolutionState where
   show (PreGeometric g)   = "PreGeometric(" ++ show g ++ ")"
   show (PostGeometric st) = "PostGeometric(ticks=" ++ show (substrateTicks st) ++ ", epoch=" ++ show (epochIndex st) ++ ")"
 
-||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1) under strict QTT linearity.
+||| Advances the unified cosmological state by consuming a linear SubstrateActionToken (ΔS = 1) under strict QTT linearity.
 public export
-stepCosmosUnifiedLinear : (1 st : CosmosEvolutionState) -> CosmosEvolutionState
-stepCosmosUnifiedLinear (PreGeometric st) =
-  let nextSt = stepGenesisInfluxLinear st
+stepCosmosUnifiedWithToken : (1 tok : LToken SubstrateActionToken) -> (1 st : CosmosEvolutionState) -> CosmosEvolutionState
+stepCosmosUnifiedWithToken (MkLToken tok) (PreGeometric st) =
+  let nextSt = stepGenesisInfluxLinearWithToken (MkLToken tok) st
   in case condenseGenesisLinear nextSt of
        Left stillPre => PreGeometric stillPre
        Right simSt   => PostGeometric simSt
-stepCosmosUnifiedLinear (PostGeometric simSt) =
-  PostGeometric (stepUniverseSimulation simSt)
+stepCosmosUnifiedWithToken (MkLToken tok) (PostGeometric simSt) =
+  PostGeometric (stepUniverseSimulationWithToken (MkLToken tok) simSt)
+
+||| Advances the unified cosmological state by exactly 1 action quantum (ΔS = 1) under strict QTT linearity.
+public export
+stepCosmosUnifiedLinear : (1 st : CosmosEvolutionState) -> CosmosEvolutionState
+stepCosmosUnifiedLinear st = stepCosmosUnifiedWithToken (MkLToken unitActionToken) st
 
 public export
 stepCosmosUnified : CosmosEvolutionState -> CosmosEvolutionState
@@ -413,19 +463,52 @@ snapshotCosmosQuantum (PreGeometric g) =
 snapshotCosmosQuantum (PostGeometric sim) =
   MkCosmologicalQuantum (epochIndex sim) (superEpoch sim) (scaleFactor sim) (curvatureDefect sim) (observerState sim) (freeEnergyState sim).freeEnergy (dissipatedEntropy sim)
 
+||| Linear unified step transducer consuming an LToken SubstrateActionToken and emitting a CosmologicalQuantum
+||| alongside the linearly updated CosmosEvolutionState (Rule 04 §1).
+public export
+stepCosmosUnifiedObservableWithToken :
+  (1 tok : LToken SubstrateActionToken) ->
+  (1 st : CosmosEvolutionState) ->
+  LinearStatePair CosmosEvolutionState CosmologicalQuantum
+stepCosmosUnifiedObservableWithToken (MkLToken tok) (PreGeometric g) =
+  let (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens bit tritReg) = g
+      obs = MkCosmologicalQuantum n 0 (intToBoxInt 1) (intToBoxInt 0) DormantObserver f (intToBoxInt 0)
+      nextSt = stepCosmosUnifiedWithToken (MkLToken tok) (PreGeometric (MkGenesisUnfoldingState n arrow gate triad u s f condensed tokens bit tritReg))
+  in MkLStatePair nextSt obs
+stepCosmosUnifiedObservableWithToken (MkLToken tok) (PostGeometric sim) =
+  let (MkUniverseSimulationState sp ga ma dy th) = sim
+      obs = MkCosmologicalQuantum th.subEpochIndex th.subSuperEpoch th.subScaleFactor sp.bulkCurvatureDefect ma.matObserverState th.subFreeEnergyState.freeEnergy th.subDissipatedEntropy
+      nextSt = stepCosmosUnifiedWithToken (MkLToken tok) (PostGeometric (MkUniverseSimulationState sp ga ma dy th))
+  in MkLStatePair nextSt obs
+
+||| Runs N unified cosmological steps under strict QTT linearity, accumulating CosmologicalQuantum observables.
+public export
+runCosmosUnifiedWithObservablesLinear :
+  (steps : Nat) ->
+  (1 st : CosmosEvolutionState) ->
+  LinearStatePair CosmosEvolutionState (List CosmologicalQuantum)
+runCosmosUnifiedWithObservablesLinear Z st =
+  MkLStatePair st (the (List CosmologicalQuantum) [])
+runCosmosUnifiedWithObservablesLinear (S k) st =
+  let MkLStatePair st' obs = stepCosmosUnifiedObservableWithToken (MkLToken unitActionToken) st
+      MkLStatePair stFinal history = runCosmosUnifiedWithObservablesLinear k st'
+  in MkLStatePair stFinal (the (List CosmologicalQuantum) (obs :: history))
+
 ||| Deforested infinite coinductive stream generator of universal cosmological evolution:
 ||| Spans from the initial empty multiset carrier ∅_Sub, through the 4 Goh prime gates,
 ||| condensation at Primorial 210 ground state (F = -1320), into continuous 137-epoch simulation.
 public export
 streamUniversalCosmology : FusedStream CosmologicalQuantum
 streamUniversalCosmology =
-  unfoldStream (\st => Yield (snapshotCosmosQuantum st) (stepCosmosUnified st)) initCosmosUnified
+  unfoldStream (\st =>
+    let MkLStatePair nextSt obs = stepCosmosUnifiedObservableWithToken (MkLToken unitActionToken) st
+    in Yield obs nextSt) initCosmosUnified
 
 ||| Deforested infinite coinductive stream generator of raw CosmosEvolutionState:
 public export
 streamCosmosFullState : FusedStream CosmosEvolutionState
 streamCosmosFullState =
-  unfoldStream (\st => Yield st (stepCosmosUnified st)) initCosmosUnified
+  unfoldStream (\st => Yield st (stepCosmosUnifiedWithToken (MkLToken unitActionToken) st)) initCosmosUnified
 
 ||| Static compiler proof witness verifying that streaming cosmological evolution
 ||| evaluates continuously from vacuum without deadlock:
@@ -485,6 +568,24 @@ auditTotientHorizonMitigationProof =
    gohGateTotient Gate3TriadSpace +
    gohGateTotient Gate5ParabolicDM +
    gohGateTotient Gate7SpectralROM) == 13
+
+||| Audit 4b: Binary & Ternary Radix Gate Unfolding Witness (Gate 2 p=2 & Gate 3 p=3).
+||| Verifies that pre-geometric unfolding evolves the dyadic Bit2 parity state and
+||| the 3-trit Naray balanced ternary register (27 = 3^3 elliptic state space).
+public export
+auditGenesisRadixUnfoldingProof : Bool
+auditGenesisRadixUnfoldingProof =
+  let st0 = initGenesisUnfolding
+      st1 = stepGenesisInfluxLinear st0
+      st2 = stepGenesisInfluxLinear st1
+      st3 = stepGenesisInfluxLinear st2
+  in st0.activeRadixBit == Bit2Zero &&
+     st1.activeRadixBit == Bit2One &&
+     st2.activeRadixBit == Bit2Zero &&
+     st3.activeRadixBit == Bit2One &&
+     vect3TritsToBoxInt st3.activeTernaryReg == intToBoxInt 3 &&
+     verifyRoundTrip radixBinaryRepIso (bit2ToBit st0.activeRadixBit) &&
+     verifyRoundTrip radixBinaryRepIso (bit2ToBit st1.activeRadixBit)
 
 ||| Master End-to-End Genesis Unfolding & Condensation Transition Proof:
 ||| Traces full evolution from ∅_Sub, through 4 Goh gates, condensation at N = 210 (F = -1320),

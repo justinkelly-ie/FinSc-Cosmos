@@ -20,6 +20,14 @@ import Stage0.Biology.TrophicEcology
 import Stage1.ScalePipeline
 import Electromagnetism
 import Stage1.Thermodynamics.EntropicArrow
+import Stage1.DiracSpinor
+import Stage1.Quantum.ToricCode
+import Stage0.Hadron.HadronizationEngine
+import Stage0.Hadron.CosmicNucleosynthesis
+import Stage0.Biology.RibosomalTranslation
+import Stage1.Cosmology.MacroEnvelope
+import Compound.AstrophysicalAggregation
+import Stage1.Carrier.Vexel
 import Data.Vect
 
 %default total
@@ -132,46 +140,61 @@ Show ExpansionParadigm where
 -- 3. UNIFIED UNIVERSE SIMULATION SECTORS (Rule 03 §5)
 ------------------------------------------------------------------------
 
-||| Sector 1: Spacetime bulk geometry and metric perturbations (55 + 10 DoF).
+||| Sector 1: Spacetime bulk geometry, metric perturbations (55 + 10 DoF), holographic horizon envelope, and astrophysical remnant phase.
 public export
 record SpacetimeBulkSector where
   constructor MkSpacetimeSector
-  bulkMetricTensor    : SymmetricMetricTensor 10
-  bulkProjectedLeaf   : SquareMaxel 4
-  bulkModuliDOF       : Nat
-  bulkCurvatureDefect : BoxInt
+  bulkMetricTensor        : SymmetricMetricTensor 10
+  bulkProjectedLeaf       : SquareMaxel 4
+  bulkModuliDOF           : Nat
+  bulkCurvatureDefect     : BoxInt
+  bulkHolographicEnvelope : Vexel
+  bulkRemnantPhase        : RemnantType
 
 public export
 Eq SpacetimeBulkSector where
-  (MkSpacetimeSector m1 p1 d1 c1) == (MkSpacetimeSector m2 p2 d2 c2) =
-    m1 == m2 && p1 == p2 && d1 == d2 && c1 == c2
+  (MkSpacetimeSector m1 p1 d1 c1 h1 r1) == (MkSpacetimeSector m2 p2 d2 c2 h2 r2) =
+    m1 == m2 && p1 == p2 && d1 == d2 && c1 == c2 && h1 == h2 && r1 == r2
 
-||| Sector 2: Non-Abelian gauge field symmetries (SU(3) subset G_2) and Abelian U(1) Maxwell field.
+||| Sector 2: Non-Abelian gauge field symmetries (SU(3) subset G_2), Abelian U(1) Maxwell field, Dirac spinor, and Toric anyons.
 public export
 record GaugeFieldSector where
   constructor MkGaugeSector
   gaugeGellMannGluons : Vect 8 (SquareMaxel 3)
   gaugeMaxwellField   : MaxwellState
+  gaugeDiracSpinor    : DiracSpinor
+  gaugeToricAnyons    : Multiset BoxInt AnyonToken
 
 public export
 Eq GaugeFieldSector where
-  (MkGaugeSector g1 m1) == (MkGaugeSector g2 m2) = g1 == g2 && m1 == m2
+  (MkGaugeSector g1 m1 d1 t1) == (MkGaugeSector g2 m2 d2 t2) =
+    g1 == g2 && m1 == m2 && d1 == d2 && t1 == t2
 
-||| Sector 3: Internal matter trunk (Nuclear -> Atomic -> Prebiotic -> Chemistry -> Living Observer -> Systems Ecology).
+||| Sector 3: Complete internal matter trunk:
+||| (QGP Subatomic Quarks -> QCD Hadron Nucleons -> BBN Light Nuclei -> Stellar Nuclides ->
+|||  Atomic Elements -> Prebiotic Volatiles -> Supramolecular Chemistry -> Ribosomal Peptides ->
+|||  Cellular Protocell Biomodules -> Living Observer -> Systems Ecology).
 public export
 record MatterSubstanceSector where
   constructor MkMatterSector
-  matNuclearNuclides   : Multiset BoxInt StellarElement
-  matAtomicElements    : Multiset BoxInt AtomToken
-  matVolatileMolecules : Multiset BoxInt MoleculeToken
-  matChemicalYield     : Multiset BoxInt MacromoleculeSpec
-  matObserverState     : ObserverBranchState
-  matEcosystemState    : TrophicPyramidState
+  matSubatomicQuarks    : Multiset BoxInt SubatomicParticle
+  matQGPPhase           : QGPPhase
+  matHadronNucleons     : Multiset BoxInt HadronToken
+  matBBNNuclei          : Multiset BoxInt LightNucleusSpec
+  matNuclearNuclides    : Multiset BoxInt StellarElement
+  matAtomicElements     : Multiset BoxInt AtomToken
+  matVolatileMolecules  : Multiset BoxInt MoleculeToken
+  matChemicalYield      : Multiset BoxInt MacromoleculeSpec
+  matTranslatedPeptides : List AminoAcid
+  matCellularBiomodules : Multiset BoxInt BiomoduleToken
+  matObserverState      : ObserverBranchState
+  matEcosystemState     : TrophicPyramidState
 
 public export
 Eq MatterSubstanceSector where
-  (MkMatterSector n1 a1 v1 c1 o1 e1) == (MkMatterSector n2 a2 v2 c2 o2 e2) =
-    n1 == n2 && a1 == a2 && v1 == v2 && c1 == c2 && o1 == o2 && e1 == e2
+  (MkMatterSector q1 ph1 h1 b1 n1 a1 v1 c1 p1 bm1 o1 e1) == (MkMatterSector q2 ph2 h2 b2 n2 a2 v2 c2 p2 bm2 o2 e2) =
+    q1 == q2 && ph1 == ph2 && h1 == h2 && b1 == b2 && n1 == n2 && a1 == a2 &&
+    v1 == v2 && c1 == c2 && p1 == p2 && bm1 == bm2 && o1 == o2 && e1 == e2
 
 ||| Sector 4: Hamiltonian phase space dynamics and dark matter halo distribution.
 public export
@@ -235,15 +258,25 @@ public export %inline capacityBudget : UniverseSimulationState -> DiscreteCapaci
 public export %inline metricTensor : UniverseSimulationState -> SymmetricMetricTensor 10; metricTensor st = st.spacetimeSector.bulkMetricTensor
 public export %inline projectedLeaf : UniverseSimulationState -> SquareMaxel 4; projectedLeaf st = st.spacetimeSector.bulkProjectedLeaf
 public export %inline moduliDOF : UniverseSimulationState -> Nat; moduliDOF st = st.spacetimeSector.bulkModuliDOF
+public export %inline holographicEnvelope : UniverseSimulationState -> Vexel; holographicEnvelope st = st.spacetimeSector.bulkHolographicEnvelope
+public export %inline remnantPhase : UniverseSimulationState -> RemnantType; remnantPhase st = st.spacetimeSector.bulkRemnantPhase
 public export %inline gellMannGluons : UniverseSimulationState -> Vect 8 (SquareMaxel 3); gellMannGluons st = st.gaugeSector.gaugeGellMannGluons
 public export %inline maxwellField : UniverseSimulationState -> MaxwellState; maxwellField st = st.gaugeSector.gaugeMaxwellField
 public export %inline maxwellTensor4D : UniverseSimulationState -> SquareMaxel 4; maxwellTensor4D st = maxwellStateTo4DMaxel st.gaugeSector.gaugeMaxwellField
+public export %inline diracSpinor : UniverseSimulationState -> DiracSpinor; diracSpinor st = st.gaugeSector.gaugeDiracSpinor
+public export %inline toricAnyons : UniverseSimulationState -> Multiset BoxInt AnyonToken; toricAnyons st = st.gaugeSector.gaugeToricAnyons
 public export %inline galacticProfile : UniverseSimulationState -> GalacticProfile; galacticProfile st = st.dynamicsSector.dynGalacticProfile
 public export %inline galacticHalo : UniverseSimulationState -> GalacticHaloMultiset; galacticHalo st = st.dynamicsSector.dynGalacticHalo
+public export %inline subatomicQuarks : UniverseSimulationState -> Multiset BoxInt SubatomicParticle; subatomicQuarks st = st.matterSector.matSubatomicQuarks
+public export %inline qgpPhaseState : UniverseSimulationState -> QGPPhase; qgpPhaseState st = st.matterSector.matQGPPhase
+public export %inline hadronNucleons : UniverseSimulationState -> Multiset BoxInt HadronToken; hadronNucleons st = st.matterSector.matHadronNucleons
+public export %inline bbnNuclei : UniverseSimulationState -> Multiset BoxInt LightNucleusSpec; bbnNuclei st = st.matterSector.matBBNNuclei
 public export %inline nuclearNuclides : UniverseSimulationState -> Multiset BoxInt StellarElement; nuclearNuclides st = st.matterSector.matNuclearNuclides
 public export %inline atomicElements : UniverseSimulationState -> Multiset BoxInt AtomToken; atomicElements st = st.matterSector.matAtomicElements
 public export %inline volatileMolecules : UniverseSimulationState -> Multiset BoxInt MoleculeToken; volatileMolecules st = st.matterSector.matVolatileMolecules
 public export %inline chemicalYield : UniverseSimulationState -> Multiset BoxInt MacromoleculeSpec; chemicalYield st = st.matterSector.matChemicalYield
+public export %inline translatedPeptides : UniverseSimulationState -> List AminoAcid; translatedPeptides st = st.matterSector.matTranslatedPeptides
+public export %inline cellularBiomodules : UniverseSimulationState -> Multiset BoxInt BiomoduleToken; cellularBiomodules st = st.matterSector.matCellularBiomodules
 public export %inline ecosystemState : UniverseSimulationState -> TrophicPyramidState; ecosystemState st = st.matterSector.matEcosystemState
 public export %inline phaseState : UniverseSimulationState -> PhaseState; phaseState st = st.dynamicsSector.dynPhaseState
 public export %inline curvatureDefect : UniverseSimulationState -> BoxInt; curvatureDefect st = st.spacetimeSector.bulkCurvatureDefect
@@ -258,6 +291,36 @@ public export %inline coherenceStatus : (st : UniverseSimulationState) -> Cohere
 public export %inline freeEnergyState : UniverseSimulationState -> DiscreteHelmholtzState 27 128 55 2; freeEnergyState st = st.thermodynamicSector.subFreeEnergyState
 public export %inline dissipatedEntropy : UniverseSimulationState -> BoxInt; dissipatedEntropy st = st.thermodynamicSector.subDissipatedEntropy
 
+||| Canonical deconfined Subatomic Quark-Gluon Plasma carrier (300 UpQuark + 225 DownQuark = 525 quarks = 175 baryons):
+||| Conserves exact baryon count for 125 Protons (2u+d) + 50 Neutrons (u+2d) = 175 nucleons.
+public export
+canonicalSubatomicQuarkState : Multiset BoxInt SubatomicParticle
+canonicalSubatomicQuarkState =
+  AddM (QuarkToken UpQuark) (intToBoxInt 300)
+    (AddM (QuarkToken DownQuark) (intToBoxInt 225) ZeroM)
+
+||| Synthesizes initial subatomic quark plasma from condensed elliptic VM token count (27 tokens -> 300 u + 225 d = 175 baryons).
+public export
+synthesizeQuarksFromEllipticCount : Nat -> Multiset BoxInt SubatomicParticle
+synthesizeQuarksFromEllipticCount ellCount =
+  if ellCount >= 27
+    then canonicalSubatomicQuarkState
+    else let scale  = intToBoxInt (cast ellCount)
+             uCount = divBox (scale * intToBoxInt 300) (intToBoxInt 27)
+             dCount = divBox (scale * intToBoxInt 225) (intToBoxInt 27)
+         in AddM (QuarkToken UpQuark) uCount (AddM (QuarkToken DownQuark) dCount ZeroM)
+
+||| Canonical initial Dirac bispinor state (norm = 1^2 + 0 + 0 - 0 = 1).
+public export
+canonicalDiracSpinorState : DiracSpinor
+canonicalDiracSpinorState = MkDiracSpinor (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0)
+
+||| Canonical initial Toric code anyon pair (e x m -> epsilon dyad).
+public export
+canonicalToricAnyonState : Multiset BoxInt AnyonToken
+canonicalToricAnyonState =
+  AddM ElectricCharge (intToBoxInt 1) (AddM MagneticFlux (intToBoxInt 1) ZeroM)
+
 ||| Canonical 2x2 companion spread transfer matrix for multiple spread recurrence:
 ||| M(s) = [[2 - 4s, -1], [1, 0]]. For s = 0, [[2, -1], [1, 0]].
 public export
@@ -267,8 +330,8 @@ pythagoreanCompanionMaxel =
       c12 = intToBoxInt (-1)
       c21 = intToBoxInt 1
       t0 = singletonCell (mkCell2 0 0) c11
-      t1 = setBoxTree (mkCell2 0 1) c12 t0
-      t2 = setBoxTree (mkCell2 1 0) c21 t1
+      t1 = setCellMultiset (mkCell2 0 1) c12 t0
+      t2 = setCellMultiset (mkCell2 1 0) c21 t1
   in MkSquareMaxel t2
 
 ||| Genesis / Vacuum Initial Universe Simulation State parameterized by ExpansionParadigm.
@@ -277,14 +340,26 @@ initUniverseSimulationMode : ExpansionParadigm -> UniverseSimulationState
 initUniverseSimulationMode mode =
   let g10 = spacetime10DMetric
       g4  = project10Dto4D g10.metricMaxel
-      spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0)
+      spacetime = MkSpacetimeSector g10 g4 45 (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
-      gauge = MkGaugeSector gluons vacuumMaxwellState
-      nucl = canonicalNuclearState
+      gauge = MkGaugeSector gluons vacuumMaxwellState canonicalDiracSpinorState canonicalToricAnyonState
+      quarks = canonicalSubatomicQuarkState
       chem = canonicalChemistryState
-      matter = MkMatterSector nucl ZeroM ZeroM chem DormantObserver emptyTrophicPyramid
+      matter = MkMatterSector
+                 quarks
+                 QuarkGluonPlasma
+                 ZeroM
+                 ZeroM
+                 ZeroM
+                 ZeroM
+                 ZeroM
+                 chem
+                 (the (List AminoAcid) [])
+                 ZeroM
+                 DormantObserver
+                 emptyTrophicPyramid
       gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
       halo = canonicalGalacticHalo
       q0 = singletonCell (mkCell1 1) (intToBoxInt 1)

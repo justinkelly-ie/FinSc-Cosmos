@@ -103,11 +103,6 @@ fusedContractHyperTensors f items1 items2 =
                                 else Skip (h1s, rest2))
       (items1, items2)
 
-||| Audits Advanced Multiset Tensor Invariants (Unitary Isomorphism, Lie Commutator, Partial Trace, Hyper-Tensors, 2-Category Cat_Cosmic).
-public export
-auditMultisetAdvancedTensorEngineProof : Bool
-auditMultisetAdvancedTensorEngineProof = True
-
 ||| Audit witness verifying equivalence of fusedContractHyperTensors and contractMultisetHyperTensors.
 public export
 auditFusedHyperTensorContractionProof : Bool
@@ -118,4 +113,19 @@ auditFusedHyperTensorContractionProof =
       fuel = limit (length (items ht1) + length (items ht2) + 2)
       c2 = fusedContractHyperTensors fuel (items ht1) (items ht2)
   in length (items c1) == length c2
+
+||| Audits Advanced Multiset Tensor Invariants (Unitary Isomorphism, Lie Commutator, Partial Trace, Hyper-Tensors, 2-Category Cat_Cosmic).
+public export
+auditMultisetAdvancedTensorEngineProof : Bool
+auditMultisetAdvancedTensorEngineProof =
+  let idT : MaxelTransform Nat Nat =
+        mkMaxelTransform EllipticSector unitUnixelFraction [((1, 1), intToBoxInt 1), ((2, 2), intToBoxInt 1)]
+      unitaryOk = auditUnitaryIsomorphism [1, 2] [1, 2] idT
+      comm = computeLieCommutator idT idT
+      compBox : Box (Nat, Nat) = MkBox [((1, 10), intToBoxInt 3), ((1, 20), intToBoxInt 4)]
+      ptrace = computeSubsystemPartialTrace compBox
+  in unitaryOk &&
+     boxEq (traceTransform comm) (intToBoxInt 0) &&
+     boxEq (lookupBox 1 ptrace) (intToBoxInt 7) &&
+     auditFusedHyperTensorContractionProof
 

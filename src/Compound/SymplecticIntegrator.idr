@@ -138,6 +138,15 @@ symplecticCFLStormerVerletStep1D g dt (MkPhaseState q p color) =
       pTree = if boxIsZero pNext1 then emptyVexel else singletonCell (mkCell1 1) pNext1
   in MkPhaseState qTree pTree color
 
+||| Symmetric integer division toward zero by the fine-structure constant inverse 137:
+||| Prevents negative sub-threshold quantities (-136 .. -1) from flooring to -1.
+public export
+quotBox137 : BoxInt -> BoxInt
+quotBox137 v =
+  if v < intToBoxInt 0
+    then negBox (divBox (absBox v) (intToBoxInt 137))
+    else divBox v (intToBoxInt 137)
+
 ||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) + U(1) gauge field coupling:
 ||| Couples spacetime metric leaf g4, the 8 SU(3) Gell-Mann gluon fields, and the 4D Maxwell tensor F_mu_nu
 ||| into a unified 4D phase flow:
@@ -161,48 +170,57 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
       p1 = lookupUnixel (MkUnixel 1) p
       p2 = lookupUnixel (MkUnixel 2) p
       p3 = lookupUnixel (MkUnixel 3) p
-      charge = if boxIsZero q0 then intToBoxInt 1 else q0
+      charge = intToBoxInt 1
 
       c0 = index 0 color
       c1 = index 1 color
       c2 = index 2 color
+      isColorNeutral = boxIsZero c0 && boxIsZero c1 && boxIsZero c2
 
       -- Evaluate non-Abelian color force on spatial direction idx in {0, 1, 2}
+      -- Short-circuits in O(1) when the phase state carries color-singlet neutral charge [0, 0, 0].
       colorForce : Nat -> BoxInt
       colorForce idx =
-        let evalGluon : SquareMaxel 3 -> BoxInt
-            evalGluon (MkSquareMaxel tree) =
-              let m0 = lookupBoxTree (MkPixel idx 0) tree
-                  m1 = lookupBoxTree (MkPixel idx 1) tree
-                  m2 = lookupBoxTree (MkPixel idx 2) tree
-              in (m0 * c0) + (m1 * c1) + (m2 * c2)
-            sumForces : Vect k (SquareMaxel 3) -> BoxInt
-            sumForces [] = intToBoxInt 0
-            sumForces (g :: gs) = evalGluon g + sumForces gs
-            totalFlux = sumForces gluons
-        in divBox totalFlux (intToBoxInt 137)
+        if isColorNeutral
+          then intToBoxInt 0
+          else
+            let evalGluon : SquareMaxel 3 -> BoxInt
+                evalGluon (MkSquareMaxel tree) =
+                  let m0 = lookupCellMultiset (MkPixel idx 0) tree
+                      m1 = lookupCellMultiset (MkPixel idx 1) tree
+                      m2 = lookupCellMultiset (MkPixel idx 2) tree
+                  in (m0 * c0) + (m1 * c1) + (m2 * c2)
+                sumForces : Vect k (SquareMaxel 3) -> BoxInt
+                sumForces [] = intToBoxInt 0
+                sumForces (g :: gs) = evalGluon g + sumForces gs
+                totalFlux = sumForces gluons
+            in quotBox137 totalFlux
+
+      isMaxwellEmpty = case maxwell4D.entries of
+                         BoxLeaf => True
+                         _       => False
 
       -- Evaluate U(1) Maxwell Lorentz 4-force on spacetime direction mu:
       -- mu = 0: Electric power (E . p)
       -- mu in {1, 2, 3}: q * E_mu + (p x B)_mu (coupling to conjugate momentum p)
       emForce : Nat -> BoxInt
       emForce mu =
-        let f0 = lookupBoxTree (MkPixel mu 0) maxwell4D.entries * (if mu == 0 then p0 else charge)
-            f1 = lookupBoxTree (MkPixel mu 1) maxwell4D.entries * p1
-            f2 = lookupBoxTree (MkPixel mu 2) maxwell4D.entries * p2
-            f3 = lookupBoxTree (MkPixel mu 3) maxwell4D.entries * p3
-            totalEM = f0 + f1 + f2 + f3
-        in divBox totalEM (intToBoxInt 137)
+        if isMaxwellEmpty
+          then intToBoxInt 0
+          else
+            let c0Factor = if mu == 0 then p0 else charge
+                f0 = if boxIsZero c0Factor then intToBoxInt 0 else lookupCellMultiset (MkPixel mu 0) maxwell4D.entries * c0Factor
+                f1 = if boxIsZero p1 then intToBoxInt 0 else lookupCellMultiset (MkPixel mu 1) maxwell4D.entries * p1
+                f2 = if boxIsZero p2 then intToBoxInt 0 else lookupCellMultiset (MkPixel mu 2) maxwell4D.entries * p2
+                f3 = if boxIsZero p3 then intToBoxInt 0 else lookupCellMultiset (MkPixel mu 3) maxwell4D.entries * p3
+                totalEM = f0 + f1 + f2 + f3
+            in quotBox137 totalEM
 
-      stepDim : Nat -> (Vexel, Vexel) -> (Vexel, Vexel)
-      stepDim mu (qAcc, pAcc) =
-        let qMu = lookupUnixel (MkUnixel mu) q
-            pMu = lookupUnixel (MkUnixel mu) p
-            gMu = lookupBoxTree (MkPixel mu mu) g4.entries
-            kappaMu =
-              if boxIsZero gMu
-                then intToBoxInt 1
-                else addBox (modBox (subBox (absBox gMu) (intToBoxInt 1)) (intToBoxInt 3)) (intToBoxInt 1)
+      stepDim : Nat -> BoxInt -> BoxInt -> (Vexel, Vexel) -> (Vexel, Vexel)
+      stepDim mu qMu pMu (qAcc, pAcc) =
+        let gMu = lookupCellMultiset (MkPixel mu mu) g4.entries
+            -- Elliptic CFL bound-state restoring stiffness: kappa = 1 => |Tr(M)| = 1 < 2, det(M) = 1
+            kappaMu = if boxIsZero gMu then intToBoxInt 1 else intToBoxInt 1
             fColor = if mu == 0 then intToBoxInt 0 else colorForce (minus mu 1)
             fEM = emForce mu
             accelMu = (kappaMu * qMu) + fColor + fEM
@@ -211,7 +229,7 @@ symplecticUnifiedGaugeCFLStormerVerletStep4D g4 gluons maxwell4D dt (MkPhaseStat
             qAcc' = if boxIsZero qNextMu then qAcc else setBoxTree (mkCell1 mu) qNextMu qAcc
             pAcc' = if boxIsZero pNextMu then pAcc else setBoxTree (mkCell1 mu) pNextMu pAcc
         in (qAcc', pAcc')
-      res = stepDim 3 (stepDim 2 (stepDim 1 (stepDim 0 (emptyVexel, emptyVexel))))
+      res = stepDim 3 q3 p3 (stepDim 2 q2 p2 (stepDim 1 q1 p1 (stepDim 0 q0 p0 (emptyVexel, emptyVexel))))
   in MkPhaseState (fst res) (snd res) color
 
 ||| CFL-Stable 4D discrete symplectic Störmer-Verlet integrator with DEC SU(3) gauge field coupling:

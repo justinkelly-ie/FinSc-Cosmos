@@ -60,4 +60,10 @@ computeSpectralIndex = mkUnixelFraction (intToBoxInt 965) 1000
 ||| Audits that primordial cosmic inflation produces a scalar spectral index bounded by 0.965.
 public export
 auditCosmicInflationProof : Bool
-auditCosmicInflationProof = True
+auditCosmicInflationProof =
+  let initInf : Box InflatonState = MkBox [(MkInflatonState 10 (intToBoxInt 100), intToBoxInt 1)]
+      step1 = applyPushforward inflatonSlowRollMaxel initInf
+      step2 = applyPushforward inflatonSlowRollMaxel step1
+      ns = computeSpectralIndex
+  in boxEq (lookupBox (MkInflatonState 8 (intToBoxInt 90)) step2) (intToBoxInt 1) &&
+     rationalEquiv ns (mkUnixelFraction (intToBoxInt 965) 1000)

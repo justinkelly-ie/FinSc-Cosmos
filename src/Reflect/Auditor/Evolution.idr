@@ -55,7 +55,8 @@ auditLinearQTTConservationProofExport = Evolution.State.auditLinearQTTConservati
 -- Witness 48: Zero-Temperature Ground State Collapse
 public export
 auditZeroTemperatureGroundStateCollapseProofExport : Bool
-auditZeroTemperatureGroundStateCollapseProofExport = True
+auditZeroTemperatureGroundStateCollapseProofExport =
+  Derivation.FreeEnergyMinimizer.auditFreeEnergyMinimizerProof
 
 
 -- Witness 81: Linear Cosmic Cycle Token Conservation

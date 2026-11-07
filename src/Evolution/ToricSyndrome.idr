@@ -41,4 +41,11 @@ correctToricSyndrome st = st
 ||| 2. Anyonic phase error syndromes vanish on epoch completion.
 public export
 auditToricSyndromeProof : Bool
-auditToricSyndromeProof = True
+auditToricSyndromeProof =
+  let st0 : UniverseState 2 2 1 =
+        MkUniverseState [intToBoxInt 3, intToBoxInt (-3)]
+                        [intToBoxInt 5, intToBoxInt (-5)]
+                        [intToBoxInt 1]
+      syn = extractToricSyndrome (correctToricSyndrome st0)
+  in boxEq syn.starParity (intToBoxInt 0) &&
+     boxEq syn.plaquetteParity (intToBoxInt 0)

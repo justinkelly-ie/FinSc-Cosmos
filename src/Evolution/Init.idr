@@ -1,6 +1,7 @@
 module Evolution.Init
 
 import Stage0.BoxInt
+import public Stage0.StructuralFuel
 import Evolution.State
 import Data.Vect
 import Data.Nat
@@ -10,24 +11,6 @@ import Data.Nat
 ------------------------------------------------------------------------
 -- 1. MODEL GENERATORS & RELATIONAL SCALING FUNCTIONS
 ------------------------------------------------------------------------
-
-||| Relational scaling function for 3D spatial field lattice cells.
-||| Grid dimension k produces k^3 active spatial slots (1 -> 1, 2 -> 8, 3 -> 27).
-public export
-computeVMSize : (gridDim : Nat) -> Nat
-computeVMSize dim = dim * (dim * dim)
-
-||| Helper to calculate 2^n for Nat buffer depth.
-public export
-fastNatPower2 : Nat -> Nat
-fastNatPower2 Z = 1
-fastNatPower2 (S k) = 2 * fastNatPower2 k
-
-||| Relational scaling function for Dark Energy binary ROM buffer depth.
-||| Binary depth b produces 2^b conserved archival capacity slots (e.g. 7 -> 128).
-public export
-computeDESize : (deDepth : Nat) -> Nat
-computeDESize depth = fastNatPower2 depth
 
 ||| Relational scaling function for Dark Matter historical log length.
 ||| The ledger records exactly the number of elapsed evolutionary epochs.
@@ -63,12 +46,6 @@ baryonicTokenCapacity = computeVMSize spatialGridDim
 public export
 darkEnergyModeCapacity : Nat
 darkEnergyModeCapacity = computeDESize vacuumBinaryDepth
-
-||| Computes triangular number T_n via structural induction without typeclass division.
-public export
-triangularSum : Nat -> Nat
-triangularSum Z = Z
-triangularSum (S k) = S k + triangularSum k
 
 ||| Model-Derived Substrate Law Channels: T_10 = 10×11/2 = 55.
 public export

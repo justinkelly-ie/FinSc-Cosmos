@@ -2,6 +2,8 @@ module Reflect.Auditor.Geometry
 
 import public Stage0.BoxInt
 import public Stage1.Order.Preorder
+import public Stage1.InformationGeometry
+import public Stage1.ExclusionPrinciple
 import public Derivation.PureGeometricClassifier
 import public Stage1.Math.LatticeFluidTransport
 import public Geometry.GaloisCurvature
@@ -17,7 +19,7 @@ import Language.Reflection
 -- Witness 15: Hyperbolic Bit Duality
 public export
 auditHyperbolicBitDualityProofExport : Bool
-auditHyperbolicBitDualityProofExport = True
+auditHyperbolicBitDualityProofExport = Stage1.InformationGeometry.auditHyperbolicBitDualityProof
 
 public export
 %macro
@@ -27,7 +29,7 @@ auditHyperbolicBitDuality = auditWitness auditHyperbolicBitDualityProofExport
 -- Witness 16: Clifford Compactness Duality
 public export
 auditCliffordCompactnessDualityProofExport : Bool
-auditCliffordCompactnessDualityProofExport = True
+auditCliffordCompactnessDualityProofExport = Stage1.InformationGeometry.auditCliffordCompactnessDualityProof
 
 public export
 %macro
@@ -37,7 +39,7 @@ auditCliffordCompactnessDuality = auditWitness auditCliffordCompactnessDualityPr
 -- Witness 18: Holographic Boundary Duality
 public export
 auditHolographicBoundaryDualityProofExport : Bool
-auditHolographicBoundaryDualityProofExport = True
+auditHolographicBoundaryDualityProofExport = Stage1.InformationGeometry.auditHolographicBoundaryDualityProof
 
 public export
 %macro
@@ -47,7 +49,7 @@ auditHolographicBoundaryDuality = auditWitness auditHolographicBoundaryDualityPr
 -- Witness 19: Yang-Mills Plaquette Cross-Entropy
 public export
 auditYangMillsPlaquetteCrossEntropyProofExport : Bool
-auditYangMillsPlaquetteCrossEntropyProofExport = True
+auditYangMillsPlaquetteCrossEntropyProofExport = Stage1.InformationGeometry.auditYangMillsPlaquetteCrossEntropyProof
 
 public export
 %macro
@@ -57,7 +59,7 @@ auditYangMillsPlaquetteCrossEntropy = auditWitness auditYangMillsPlaquetteCrossE
 -- Witness 21: Multi-Scale Renormalization Group
 public export
 auditRenormalizationInvarianceProofExport : Bool
-auditRenormalizationInvarianceProofExport = True
+auditRenormalizationInvarianceProofExport = Stage1.InformationGeometry.auditRenormalizationInvarianceProof
 
 public export
 %macro
@@ -77,7 +79,7 @@ auditCosmologicalInferences = auditWitness auditCosmologicalInferencesProofExpor
 -- Witness 64: Grassmann Blade Nilpotency (Law 9)
 public export
 auditGrassmannNilpotencyProofExport : Bool
-auditGrassmannNilpotencyProofExport = True
+auditGrassmannNilpotencyProofExport = Stage1.ExclusionPrinciple.auditGrassmannNilpotencyProof
 
 public export
 %macro
@@ -97,7 +99,7 @@ auditPureGeometricClassification = auditWitness auditPureGeometricClassification
 -- Witness 125: Constructive Wasserstein Optimal Transport Metric Axioms
 public export
 auditWassersteinMetricAxiomsProofExport : Bool
-auditWassersteinMetricAxiomsProofExport = True
+auditWassersteinMetricAxiomsProofExport = Stage1.InformationGeometry.auditWassersteinMetricAxiomsProof
 
 public export
 %macro
@@ -107,7 +109,7 @@ auditWassersteinMetricAxioms = auditWitness auditWassersteinMetricAxiomsProofExp
 -- Witness 126: Exact Quantum Relative Entropy & Klein's Inequality
 public export
 auditRelativeEntropyKleinsInequalityProofExport : Bool
-auditRelativeEntropyKleinsInequalityProofExport = True
+auditRelativeEntropyKleinsInequalityProofExport = Stage1.InformationGeometry.auditRelativeEntropyKleinsInequalityProof
 
 public export
 %macro
@@ -117,7 +119,7 @@ auditRelativeEntropyKleinsInequality = auditWitness auditRelativeEntropyKleinsIn
 -- Witness 127: Discrete Amari Dually Flat Geometry & Pythagorean Theorem
 public export
 auditAmariPythagoreanTheoremProofExport : Bool
-auditAmariPythagoreanTheoremProofExport = True
+auditAmariPythagoreanTheoremProofExport = Stage1.InformationGeometry.auditAmariPythagoreanTheoremProof
 
 public export
 %macro

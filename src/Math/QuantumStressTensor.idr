@@ -55,4 +55,14 @@ traceStressTensor (MkBox items) =
 ||| Audits that vacuum stress-energy tensor trace anomaly is finite and conserved.
 public export
 auditQuantumStressTensorProof : Bool
-auditQuantumStressTensorProof = True
+auditQuantumStressTensorProof =
+  let t0 : StressEnergyTensor =
+        MkBox [ ((MkSpacetimeIndex 0 0, intToBoxInt 4), intToBoxInt 1)
+              , ((MkSpacetimeIndex 1 1, intToBoxInt (-1)), intToBoxInt 1)
+              , ((MkSpacetimeIndex 0 1, intToBoxInt 7), intToBoxInt 1)
+              ]
+      tr = traceStressTensor t0
+      idxBox : Box SpacetimeIndex = MkBox [(MkSpacetimeIndex 0 0, intToBoxInt 1)]
+      pushedIdx = applyPushforward horizonVacuumRenormalizationMaxel idxBox
+  in boxEq tr (intToBoxInt 3) &&
+     boxEq (lookupBox (MkSpacetimeIndex 0 0) pushedIdx) (intToBoxInt 1)

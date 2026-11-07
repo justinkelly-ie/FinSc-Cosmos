@@ -65,7 +65,7 @@ vectToBoxel xs = go 1 xs BoxLeaf
     go _ [] acc = acc
     go i (w :: ws) acc =
       if boxIsZero w then go (S i) ws acc
-      else go (S i) ws (setBoxTree (MkVoxel i 1 1) w acc)
+      else go (S i) ws (setCellMultiset (MkVoxel i 1 1) w acc)
 
 ||| Zero-allocation direct conversion of a vector of weights into a 2D Maxel.
 public export
@@ -76,7 +76,7 @@ vectToMaxel xs = go 1 xs BoxLeaf
     go _ [] acc = acc
     go i (w :: ws) acc =
       if boxIsZero w then go (S i) ws acc
-      else go (S i) ws (setBoxTree (MkPixel i 1) w acc)
+      else go (S i) ws (setCellMultiset (MkPixel i 1) w acc)
 
 ||| Zero-allocation direct conversion of a vector of weights into a 1D Vexel.
 public export
