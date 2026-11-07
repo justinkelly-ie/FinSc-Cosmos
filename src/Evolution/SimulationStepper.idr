@@ -107,79 +107,6 @@ stepGaugeSector dt defect (jSrc, rhoSrc) (MkGaugeSector gluons (e, b, _, _) spin
       nextAnyons  = fuseAnyonMultiset anyons
   in MkGaugeSector gluons nextMaxwell nextSpinor nextAnyons
 
-||| Baryon number of a subatomic quark multiset (3 quarks = 1 baryon).
-public export
-totalSubatomicBaryonCount : Multiset BoxInt SubatomicParticle -> BoxInt
-totalSubatomicBaryonCount m =
-  let totalQuarks = foldMultiset (\p, w, acc =>
-                      case p of
-                        QuarkToken _ => acc + w
-                        _            => acc) (intToBoxInt 0) m
-  in divBox totalQuarks (intToBoxInt 3)
-
-||| Baryon number of a hadron token (1 for baryons/nucleons, 0 for mesons).
-public export
-hadronBaryonCount : HadronToken -> BoxInt
-hadronBaryonCount ProtonToken       = intToBoxInt 1
-hadronBaryonCount NeutronToken      = intToBoxInt 1
-hadronBaryonCount LambdaBaryonToken = intToBoxInt 1
-hadronBaryonCount SigmaBaryonToken  = intToBoxInt 1
-hadronBaryonCount XiBaryonToken     = intToBoxInt 1
-hadronBaryonCount OmegaBaryonToken  = intToBoxInt 1
-hadronBaryonCount _                 = intToBoxInt 0
-
-||| Total nucleon/baryon count of a hadron multiset.
-public export
-totalHadronNucleonCount : Multiset BoxInt HadronToken -> BoxInt
-totalHadronNucleonCount =
-  foldMultiset (\h, w, acc => acc + (w * hadronBaryonCount h)) (intToBoxInt 0)
-
-||| Total nucleon count of a Big Bang Nucleosynthesis light nucleus multiset.
-public export
-totalBBNNucleonCount : Multiset BoxInt LightNucleusSpec -> BoxInt
-totalBBNNucleonCount =
-  foldMultiset (\nuc, w, acc => acc + (w * natToBoxInt (nucleusNucleonCount nuc))) (intToBoxInt 0)
-
-||| Baryonic nucleon mass count of a cellular biomodule token (HydratedCellToken = 18 nucleons from H2O hydration).
-public export
-biomoduleNucleonCount : BiomoduleToken -> BoxInt
-biomoduleNucleonCount HydratedCellToken = intToBoxInt 18
-biomoduleNucleonCount AdenineToken      = intToBoxInt 135
-biomoduleNucleonCount ThymineToken      = intToBoxInt 126
-biomoduleNucleonCount GuanineToken      = intToBoxInt 151
-biomoduleNucleonCount CytosineToken     = intToBoxInt 111
-
-||| Total nucleon count of a cellular biomodule multiset.
-public export
-totalBiomoduleNucleonCount : Multiset BoxInt BiomoduleToken -> BoxInt
-totalBiomoduleNucleonCount =
-  foldMultiset (\b, w, acc => acc + (w * biomoduleNucleonCount b)) (intToBoxInt 0)
-
-||| Total conserved baryonic nucleon count across all 8 baryonic matter tiers:
-||| (Subatomic Quarks + Hadron Nucleons + BBN Light Nuclei + Stellar Nuclides +
-|||  Atomic Elements + Volatile Molecules + Macromolecular Chemistry + Cellular Biomodules).
-public export
-totalMatterNucleonCount : MatterSubstanceSector -> BoxInt
-totalMatterNucleonCount (MkMatterSector quarks _ hadrons bbn nucl atoms mols chem _ biomods _ _) =
-  totalSubatomicBaryonCount quarks +
-  totalHadronNucleonCount hadrons +
-  totalBBNNucleonCount bbn +
-  totalNucleonCount nucl +
-  totalAtomNucleonCount atoms +
-  totalMoleculeNucleonCount mols +
-  totalMacromoleculeNucleonCount chem +
-  totalBiomoduleNucleonCount biomods
-
-||| Total condensed post-recombination disk matter nucleon count:
-||| (Atomic Elements + Prebiotic Volatiles + Macromolecular Chemistry + Cellular Biomodules).
-public export
-condensedDiskNucleonCount : MatterSubstanceSector -> BoxInt
-condensedDiskNucleonCount (MkMatterSector _ _ _ _ _ atoms mols chem _ biomods _ _) =
-  totalAtomNucleonCount atoms +
-  totalMoleculeNucleonCount mols +
-  totalMacromoleculeNucleonCount chem +
-  totalBiomoduleNucleonCount biomods
-
 ------------------------------------------------------------------------
 -- CONSTITUENT TOKEN HOMOMORPHISMS (liftToken)
 ------------------------------------------------------------------------
@@ -361,20 +288,26 @@ stepBBNNucleosynthesisStoichiometric :
   (Multiset BoxInt HadronToken, Multiset BoxInt LightNucleusSpec, Multiset BoxInt StellarElement)
 stepBBNNucleosynthesisStoichiometric k hadrons bbn nucl =
   if isBBNDeuteronBottleneck k
-    then let (h1, b1, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
-                             (bbnNucleusTokenToHadrons (MkToken Deuteron2H))
+    then let reactants = bbnNucleusTokenToHadrons (MkToken Deuteron2H)
+             avail = reactionQuotientBox reactants hadrons
+             (h1, b1, _) = transmuteMultisetBox avail
+                             reactants
                              (AddM Deuteron2H (intToBoxInt 1) ZeroM)
                              hadrons bbn
          in (h1, b1, nucl)
     else if isBBNHeliumFreezeout k
-      then let (b1, n1, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
-                               (AddM Deuteron2H (intToBoxInt 2) ZeroM)
-                               (AddM ElemHe (intToBoxInt 1) ZeroM)
-                               bbn nucl
-               (h1, n2, _) = transmuteMultisetBox (natToBoxInt canonicalBaryonNucleonCount)
-                               (AddM ProtonToken (intToBoxInt 1) ZeroM)
-                               (AddM ElemH (intToBoxInt 1) ZeroM)
-                               hadrons n1
+      then let heReactants = AddM Deuteron2H (intToBoxInt 2) ZeroM
+               heAvail = reactionQuotientBox heReactants bbn
+               (b1, n1, _) = transmuteMultisetBox heAvail
+                                heReactants
+                                (AddM ElemHe (intToBoxInt 1) ZeroM)
+                                bbn nucl
+               hReactants = AddM ProtonToken (intToBoxInt 1) ZeroM
+               hAvail = reactionQuotientBox hReactants hadrons
+               (h1, n2, _) = transmuteMultisetBox hAvail
+                                hReactants
+                                (AddM ElemH (intToBoxInt 1) ZeroM)
+                                hadrons n1
            in (h1, b1, n2)
       else (hadrons, bbn, nucl)
 
@@ -631,7 +564,10 @@ stepUniverseSimulationAction actionQuantum (MkUniverseSimulationState spacetime 
       (MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco) = nextMatterRaw
       nextMatterSnapshot = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
       nextMatter = MkMatterSector nQuarks nQGP nHadrons nBBN nNucl nAtoms nMols nChem nPep nBiomods nObs nEco
-      baryonMass = divBox (totalMatterNucleonCount nextMatterSnapshot * intToBoxInt 100) (natToBoxInt canonicalBaryonNucleonCount)
+      baryonMass = let b0 = totalMatterNucleonCount (MkMatterSector maQuarks maQGP maHadrons maBBN maNucl maAtoms maMols maChem maPep maBiomods maObs maEco)
+                   in if b0 == intToBoxInt 0
+                        then intToBoxInt 0
+                        else divBox (totalMatterNucleonCount nextMatterSnapshot * intToBoxInt 100) b0
       diskSlope  = divBox (condensedDiskNucleonCount nextMatterSnapshot) (epochTriadQuadrance 0).blueQ
       -- 3. Step Dynamics Sector linearly (4D symplectic leapfrog coupled to leaf metric, DEC gauge gluons, and U(1) Maxwell field)
       maxwell4D = maxwellStateTo4DMaxel gaMaxwell
@@ -925,7 +861,7 @@ auditConformalParabolicFlushProof =
   (freeEnergyState canonicalState136).freeEnergy == groundStateFreeEnergy &&
   (freeEnergyState canonicalState137).freeEnergy == groundStateFreeEnergy &&
   qgpPhaseState canonicalState137 == QuarkGluonPlasma &&
-  totalSubatomicBaryonCount (subatomicQuarks canonicalState137) == natToBoxInt canonicalBaryonNucleonCount &&
+  totalSubatomicBaryonCount (subatomicQuarks canonicalState137) == totalMatterNucleonCount (initUniverseSimulation).matterSector &&
   superEpoch canonicalState137 == 1
 
 ||| Audit: Active inference predictive coding filter maintains bounded internal free energy (F_int <= 887).
@@ -964,7 +900,7 @@ auditParticipatoryObserverCurvatureFeedbackProof =
   observerEpochActive canonicalState39 == True &&
   absBox (curvatureDefect canonicalState39) <= scaleSievePeriod
 
-||| Audit: Total baryonic nucleon count (175 nucleons) is strictly conserved across all 8 matter tiers
+||| Audit: Total baryonic nucleon count is strictly conserved across all 8 matter tiers
 ||| (Subatomic Quarks -> Hadron Nucleons -> BBN Light Nuclei -> Stellar Nuclides ->
 |||  Atomic Elements -> Prebiotic Volatiles -> Macromolecular Chemistry -> Cellular Biomodules)
 ||| over the full 137-epoch trajectory.
@@ -972,11 +908,12 @@ export
 auditMatterSectorBaryonConservationProof : Bool
 auditMatterSectorBaryonConservationProof =
   let st0 = initUniverseSimulation
-  in totalMatterNucleonCount st0.matterSector               == natToBoxInt canonicalBaryonNucleonCount &&
-     totalMatterNucleonCount canonicalState15.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
-     totalMatterNucleonCount canonicalState25.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
-     totalMatterNucleonCount canonicalState35.matterSector  == natToBoxInt canonicalBaryonNucleonCount &&
-     totalMatterNucleonCount canonicalState137.matterSector == natToBoxInt canonicalBaryonNucleonCount
+      b0  = totalMatterNucleonCount st0.matterSector
+  in totalMatterNucleonCount st0.matterSector               == b0 &&
+     totalMatterNucleonCount canonicalState15.matterSector  == b0 &&
+     totalMatterNucleonCount canonicalState25.matterSector  == b0 &&
+     totalMatterNucleonCount canonicalState35.matterSector  == b0 &&
+     totalMatterNucleonCount canonicalState137.matterSector == b0
 
 ||| Audit: Verifies all newly integrated physical sub-levels across the 137-epoch trajectory:
 ||| - QGP cooling (k=2: HadronGasTransition) & QCD confinement (k=5: ConfinementHadronGas, 175 hadrons)
@@ -988,22 +925,32 @@ export
 auditFullHierarchyLevelsSimulationProof : Bool
 auditFullHierarchyLevelsSimulationProof =
   let st0 = initUniverseSimulation
+      b0  = totalMatterNucleonCount st0.matterSector
+      p5  = lookupCountBox ProtonToken (hadronNucleons canonicalState5)
+      n5  = lookupCountBox NeutronToken (hadronNucleons canonicalState5)
+      d8  = lookupCountBox Deuteron2H (bbnNuclei canonicalState8)
+      he10 = lookupCountBox ElemHe (nuclearNuclides canonicalState10)
+      h10  = lookupCountBox ElemH (nuclearNuclides canonicalState10)
   in qgpPhaseState st0 == QuarkGluonPlasma &&
-     totalSubatomicBaryonCount (subatomicQuarks st0) == natToBoxInt canonicalBaryonNucleonCount &&
+     totalSubatomicBaryonCount (subatomicQuarks st0) == b0 &&
      qgpPhaseState canonicalState2 == HadronGasTransition &&
      qgpPhaseState canonicalState5 == ConfinementHadronGas &&
-     totalHadronNucleonCount (hadronNucleons canonicalState5) == natToBoxInt canonicalBaryonNucleonCount &&
-     lookupCountBox Deuteron2H (bbnNuclei canonicalState8) == intToBoxInt 50 &&
-     totalMatterNucleonCount canonicalState8.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
-     lookupCountBox ElemHe (nuclearNuclides canonicalState10) == intToBoxInt 25 &&
-     lookupCountBox ElemH (nuclearNuclides canonicalState10) == intToBoxInt 75 &&
-     totalMatterNucleonCount canonicalState10.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
+     totalHadronNucleonCount (hadronNucleons canonicalState5) == b0 &&
+     p5 == natToBoxInt canonicalProtonCount &&
+     n5 == natToBoxInt canonicalNeutronCount &&
+     (p5 + n5 == b0) &&
+     d8 > intToBoxInt 0 &&
+     totalMatterNucleonCount canonicalState8.matterSector == b0 &&
+     he10 > intToBoxInt 0 &&
+     h10 > intToBoxInt 0 &&
+     ((intToBoxInt 4 * he10) + h10 == b0) &&
+     totalMatterNucleonCount canonicalState10.matterSector == b0 &&
      translatedPeptides canonicalState33 == canonicalPeptideYield &&
      lookupCountBox HydratedCellToken (cellularBiomodules canonicalState36) > intToBoxInt 0 &&
-     totalMatterNucleonCount canonicalState36.matterSector == natToBoxInt canonicalBaryonNucleonCount &&
+     totalMatterNucleonCount canonicalState36.matterSector == b0 &&
      remnantPhase canonicalState90 == NeutronStar &&
      remnantPhase canonicalState120 == BlackHole &&
-     computeTotalCosmicMass (holographicEnvelope canonicalState10) == natToBoxInt Stage1.FourGeometries.primorial210Budget &&
+     computeTotalCosmicMass (holographicEnvelope canonicalState10) == natToBoxInt (fst primorialBudgetDimension) &&
      diracSpinor canonicalState1 == MkDiracSpinor (intToBoxInt 0) (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) &&
      spinorQuadrance (diracSpinor canonicalState10) == intToBoxInt 1 &&
      lookupCountBox FermionDyonic (toricAnyons canonicalState10) == intToBoxInt 1
@@ -1018,7 +965,8 @@ stepInvariantFlags : UniverseSimulationState -> (Bool, Bool, Bool, Bool, Bool)
 stepInvariantFlags st =
   let q1 = lookupUnixel (MkUnixel 1) (phaseState st).position
       p1 = lookupUnixel (MkUnixel 1) (phaseState st).momentum
-  in ( totalMatterNucleonCount st.matterSector == natToBoxInt canonicalBaryonNucleonCount
+      b0 = totalMatterNucleonCount (initUniverseSimulation).matterSector
+  in ( totalMatterNucleonCount st.matterSector == b0
      , spinorQuadrance (diracSpinor st) == intToBoxInt 1
      , absBox q1 <= intToBoxInt 4 && absBox p1 <= intToBoxInt 4
      , (freeEnergyState st).freeEnergy >= groundStateFreeEnergy

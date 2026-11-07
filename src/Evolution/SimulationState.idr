@@ -211,6 +211,79 @@ Eq MatterSubstanceSector where
     q1 == q2 && ph1 == ph2 && h1 == h2 && b1 == b2 && n1 == n2 && a1 == a2 &&
     v1 == v2 && c1 == c2 && p1 == p2 && bm1 == bm2 && o1 == o2 && e1 == e2
 
+||| Baryon number of a subatomic quark multiset (3 quarks = 1 baryon).
+public export
+totalSubatomicBaryonCount : Multiset BoxInt SubatomicParticle -> BoxInt
+totalSubatomicBaryonCount m =
+  let totalQuarks = foldMultiset (\p, w, acc =>
+                      case p of
+                        QuarkToken _ => acc + w
+                        _            => acc) (intToBoxInt 0) m
+  in divBox totalQuarks (intToBoxInt 3)
+
+||| Baryon number of a hadron token (1 for baryons/nucleons, 0 for mesons).
+public export
+hadronBaryonCount : HadronToken -> BoxInt
+hadronBaryonCount ProtonToken       = intToBoxInt 1
+hadronBaryonCount NeutronToken      = intToBoxInt 1
+hadronBaryonCount LambdaBaryonToken = intToBoxInt 1
+hadronBaryonCount SigmaBaryonToken  = intToBoxInt 1
+hadronBaryonCount XiBaryonToken     = intToBoxInt 1
+hadronBaryonCount OmegaBaryonToken  = intToBoxInt 1
+hadronBaryonCount _                 = intToBoxInt 0
+
+||| Total nucleon/baryon count of a hadron multiset.
+public export
+totalHadronNucleonCount : Multiset BoxInt HadronToken -> BoxInt
+totalHadronNucleonCount =
+  foldMultiset (\h, w, acc => acc + (w * hadronBaryonCount h)) (intToBoxInt 0)
+
+||| Total nucleon count of a Big Bang Nucleosynthesis light nucleus multiset.
+public export
+totalBBNNucleonCount : Multiset BoxInt LightNucleusSpec -> BoxInt
+totalBBNNucleonCount =
+  foldMultiset (\nuc, w, acc => acc + (w * natToBoxInt (nucleusNucleonCount nuc))) (intToBoxInt 0)
+
+||| Baryonic nucleon mass count of a cellular biomodule token (HydratedCellToken = 18 nucleons from H2O hydration).
+public export
+biomoduleNucleonCount : BiomoduleToken -> BoxInt
+biomoduleNucleonCount HydratedCellToken = intToBoxInt 18
+biomoduleNucleonCount AdenineToken      = intToBoxInt 135
+biomoduleNucleonCount ThymineToken      = intToBoxInt 126
+biomoduleNucleonCount GuanineToken      = intToBoxInt 151
+biomoduleNucleonCount CytosineToken     = intToBoxInt 111
+
+||| Total nucleon count of a cellular biomodule multiset.
+public export
+totalBiomoduleNucleonCount : Multiset BoxInt BiomoduleToken -> BoxInt
+totalBiomoduleNucleonCount =
+  foldMultiset (\b, w, acc => acc + (w * biomoduleNucleonCount b)) (intToBoxInt 0)
+
+||| Total conserved baryonic nucleon count across all 8 baryonic matter tiers:
+||| (Subatomic Quarks + Hadron Nucleons + BBN Light Nuclei + Stellar Nuclides +
+|||  Atomic Elements + Volatile Molecules + Macromolecular Chemistry + Cellular Biomodules).
+public export
+totalMatterNucleonCount : MatterSubstanceSector -> BoxInt
+totalMatterNucleonCount (MkMatterSector quarks _ hadrons bbn nucl atoms mols chem _ biomods _ _) =
+  totalSubatomicBaryonCount quarks +
+  totalHadronNucleonCount hadrons +
+  totalBBNNucleonCount bbn +
+  totalNucleonCount nucl +
+  totalAtomNucleonCount atoms +
+  totalMoleculeNucleonCount mols +
+  totalMacromoleculeNucleonCount chem +
+  totalBiomoduleNucleonCount biomods
+
+||| Total condensed post-recombination disk matter nucleon count:
+||| (Atomic Elements + Prebiotic Volatiles + Macromolecular Chemistry + Cellular Biomodules).
+public export
+condensedDiskNucleonCount : MatterSubstanceSector -> BoxInt
+condensedDiskNucleonCount (MkMatterSector _ _ _ _ _ atoms mols chem _ biomods _ _) =
+  totalAtomNucleonCount atoms +
+  totalMoleculeNucleonCount mols +
+  totalMacromoleculeNucleonCount chem +
+  totalBiomoduleNucleonCount biomods
+
 ||| Sector 4: Hamiltonian phase space dynamics and dark matter halo distribution.
 public export
 record SymplecticDynamicsSector where
@@ -306,54 +379,114 @@ public export %inline coherenceStatus : (st : UniverseSimulationState) -> Cohere
 public export %inline freeEnergyState : UniverseSimulationState -> DiscreteHelmholtzState 27 128 55 2; freeEnergyState st = st.thermodynamicSector.subFreeEnergyState
 public export %inline dissipatedEntropy : UniverseSimulationState -> BoxInt; dissipatedEntropy st = st.thermodynamicSector.subDissipatedEntropy
 
-||| Canonical proton count in the primordial baryonic nucleon budget:
+||| Synthesizes initial subatomic quark plasma from the active Chromogeometric Triad:
+||| Up-quarks: (Q_Green / 2) * Q_Blue = (24 / 2) * 25 = 300.
+||| Down-quarks: (manifestSpatialDim^2) * Q_Blue = 9 * 25 = 225.
+||| Total valence quarks: (12 + 9) * 25 = 525 quarks = 175 baryons.
 public export
-canonicalProtonCount : Nat
-canonicalProtonCount = 125
+synthesizeQuarksFromTriad : TriadQuadrance -> Multiset BoxInt SubatomicParticle
+synthesizeQuarksFromTriad triad =
+  let uFactor = divBox triad.greenQ (intToBoxInt 2)
+      dFactor = intToBoxInt (cast (powerNat manifestSpatialDim 2))
+      uCount  = mulBox uFactor triad.blueQ
+      dCount  = mulBox dFactor triad.blueQ
+  in AddM (QuarkToken UpQuark) uCount
+       (AddM (QuarkToken DownQuark) dCount ZeroM)
 
-||| Canonical neutron count in the primordial baryonic nucleon budget:
+||| Canonical primordial deconfined Quark-Gluon Plasma carrier,
+||| synthesized directly from the primordial (25, 7, 24) chromogeometric triad:
 public export
-canonicalNeutronCount : Nat
-canonicalNeutronCount = 50
+canonicalSubatomicQuarkState : Multiset BoxInt SubatomicParticle
+canonicalSubatomicQuarkState = synthesizeQuarksFromTriad (epochTriadQuadrance 0)
 
-||| Conserved baryonic nucleon budget (125 Protons + 50 Neutrons = 175 nucleons):
-public export
-canonicalBaryonNucleonCount : Nat
-canonicalBaryonNucleonCount = canonicalProtonCount + canonicalNeutronCount
-
-||| Conserved up-quark count (2 per proton + 1 per neutron = 2 * 125 + 50 = 300):
+||| Conserved up-quark count read directly from the primordial subatomic carrier:
 public export
 canonicalUpQuarkCount : Nat
-canonicalUpQuarkCount = (2 * canonicalProtonCount) + canonicalNeutronCount
+canonicalUpQuarkCount = boxToNat (lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState)
 
-||| Conserved down-quark count (1 per proton + 2 per neutron = 125 + 2 * 50 = 225):
+||| Conserved down-quark count read directly from the primordial subatomic carrier:
 public export
 canonicalDownQuarkCount : Nat
-canonicalDownQuarkCount = canonicalProtonCount + (2 * canonicalNeutronCount)
+canonicalDownQuarkCount = boxToNat (lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState)
 
-||| Conserved total valence quark count (300 + 225 = 525 = 3 * 175):
+||| Conserved total valence quark count read directly from the primordial subatomic carrier:
 public export
 canonicalTotalValenceQuarks : Nat
 canonicalTotalValenceQuarks = canonicalUpQuarkCount + canonicalDownQuarkCount
 
-||| Canonical deconfined Subatomic Quark-Gluon Plasma carrier (300 UpQuark + 225 DownQuark = 525 quarks = 175 baryons):
-||| Conserves exact baryon count for 125 Protons (2u+d) + 50 Neutrons (u+2d) = 175 nucleons.
+||| Conserved baryonic nucleon budget read directly from the primordial subatomic carrier:
 public export
-canonicalSubatomicQuarkState : Multiset BoxInt SubatomicParticle
-canonicalSubatomicQuarkState =
-  AddM (QuarkToken UpQuark) (natToBoxInt canonicalUpQuarkCount)
-    (AddM (QuarkToken DownQuark) (natToBoxInt canonicalDownQuarkCount) ZeroM)
+canonicalBaryonNucleonCount : Nat
+canonicalBaryonNucleonCount = boxToNat (totalSubatomicBaryonCount canonicalSubatomicQuarkState)
 
-||| Synthesizes initial subatomic quark plasma from condensed elliptic VM token count (27 tokens -> 300 u + 225 d = 175 baryons).
+||| Primordial proton count emerging from stoichiometric QCD confinement of the quark carrier:
+public export
+canonicalProtonCount : Nat
+canonicalProtonCount =
+  let u = lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState
+      d = lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState
+  in boxToNat (divBox ((intToBoxInt 2 * u) - d) (intToBoxInt 3))
+
+||| Primordial neutron count emerging from stoichiometric QCD confinement of the quark carrier:
+public export
+canonicalNeutronCount : Nat
+canonicalNeutronCount =
+  let u = lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState
+      d = lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState
+  in boxToNat (divBox ((intToBoxInt 2 * d) - u) (intToBoxInt 3))
+
+||| Reads active up-quark count directly from the matter sector:
+public export
+upQuarksInMatter : MatterSubstanceSector -> BoxInt
+upQuarksInMatter mat = lookupCountBox (QuarkToken UpQuark) mat.matSubatomicQuarks
+
+||| Reads active down-quark count directly from the matter sector:
+public export
+downQuarksInMatter : MatterSubstanceSector -> BoxInt
+downQuarksInMatter mat = lookupCountBox (QuarkToken DownQuark) mat.matSubatomicQuarks
+
+||| Reads active proton count directly from the matter sector:
+public export
+protonsInMatter : MatterSubstanceSector -> BoxInt
+protonsInMatter mat = lookupCountBox ProtonToken mat.matHadronNucleons
+
+||| Reads active neutron count directly from the matter sector:
+public export
+neutronsInMatter : MatterSubstanceSector -> BoxInt
+neutronsInMatter mat = lookupCountBox NeutronToken mat.matHadronNucleons
+
+||| Reads active deuteron count directly from the matter sector:
+public export
+deuteronsInMatter : MatterSubstanceSector -> BoxInt
+deuteronsInMatter mat = lookupCountBox Deuteron2H mat.matBBNNuclei
+
+||| Reads active helium count directly from the matter sector:
+public export
+heliumInMatter : MatterSubstanceSector -> BoxInt
+heliumInMatter mat = lookupCountBox ElemHe mat.matNuclearNuclides
+
+||| Reads active hydrogen count directly from the matter sector:
+public export
+hydrogenInMatter : MatterSubstanceSector -> BoxInt
+hydrogenInMatter mat = lookupCountBox ElemH mat.matNuclearNuclides
+
+||| Reads total conserved baryon nucleon count directly from the matter sector:
+public export
+baryonsInMatter : MatterSubstanceSector -> BoxInt
+baryonsInMatter = totalMatterNucleonCount
+
+||| Synthesizes initial subatomic quark plasma from condensed elliptic VM token count:
 public export
 synthesizeQuarksFromEllipticCount : Nat -> Multiset BoxInt SubatomicParticle
 synthesizeQuarksFromEllipticCount ellCount =
-  if ellCount >= 27
-    then canonicalSubatomicQuarkState
-    else let scale  = intToBoxInt (cast ellCount)
-             uCount = divBox (scale * natToBoxInt canonicalUpQuarkCount) (intToBoxInt 27)
-             dCount = divBox (scale * natToBoxInt canonicalDownQuarkCount) (intToBoxInt 27)
-         in AddM (QuarkToken UpQuark) uCount (AddM (QuarkToken DownQuark) dCount ZeroM)
+  let vmDim = fst ellipticDimension
+  in if ellCount >= vmDim
+       then canonicalSubatomicQuarkState
+       else let scale  = intToBoxInt (cast ellCount)
+                dimBox = intToBoxInt (cast vmDim)
+                uCount = divBox (scale * natToBoxInt canonicalUpQuarkCount) dimBox
+                dCount = divBox (scale * natToBoxInt canonicalDownQuarkCount) dimBox
+            in AddM (QuarkToken UpQuark) uCount (AddM (QuarkToken DownQuark) dCount ZeroM)
 
 ||| Canonical initial Dirac bispinor state (norm = 1^2 + 0 + 0 - 0 = 1).
 public export
