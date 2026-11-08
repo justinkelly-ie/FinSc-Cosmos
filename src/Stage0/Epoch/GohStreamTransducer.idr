@@ -67,8 +67,8 @@ goh13SmoothnessTransducer = MkTransducer (\_, step => Yield (auditGoh13Smoothnes
 
 ||| Static proof witness verifying Prime 13 fuel limit bound (13 steps maximum).
 public export
-0 verifyPrime13FuelLimit : (f : Fuel) -> f = limit 13 -> True = True
-verifyPrime13FuelLimit _ _ = Refl
+0 verifyPrime13FuelLimit : (f : Fuel) -> (0 prf : f = limit 13) -> f = limit 13
+verifyPrime13FuelLimit _ prf = prf
 
 --------------------------------------------------------------------------------
 -- 2. GOH RATIONAL ENERGY TRANSDUCTION RATIO ENGINE
