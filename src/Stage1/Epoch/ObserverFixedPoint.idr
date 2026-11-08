@@ -49,7 +49,9 @@ public export
 epoch38State : EpochState
 epoch38State = advanceEpochState getEpoch37State
 
-||| Constructs the Observer Fixed Point for k=37 (Observer Hypothesis).
+||| Constructs the Observer Fixed Point for k=37 (Primorial 210 Ground State Saturation).
+||| At scale step index k=37 (1-based step n=38), dark matter laws count saturates to T_10 = 55,
+||| achieving the Primorial 210 budget (27 VM + 128 DE + 55 DM = 210) and F = -1320 (Rule 03 §2).
 public export
 observerFixedPoint37 : ObserverFixedPoint 37
 observerFixedPoint37 =
@@ -60,7 +62,9 @@ observerFixedPoint37 =
       coh  = evalScaleStepCoherence 37
   in MkObserverFixedPoint 37 dm ns goh coh
 
-||| Constructs the Observer Fixed Point for k=38 (Eddington Gate-Pure Point, n=39=3x13).
+||| Constructs the Observer Fixed Point for k=38 (Gate-Pure Observer Epoch, n=39=3x13).
+||| At scale step index k=38 (1-based step n=39 = 3 * 13), the 13-smooth GatePure point
+||| houses the lawful emergence of living matter, enzymatic catalysis, and active inference (Rule 03 §5).
 public export
 observerFixedPoint38 : ObserverFixedPoint 38
 observerFixedPoint38 =
