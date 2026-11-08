@@ -329,7 +329,7 @@ condenseGenesisToUniverse st =
         spacetime = MkSpacetimeSector g10 g4 (spacetimeModuliDegreesOfFreedom phaseSpaceBasisDim) (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
         gluons = synthesizeGellMannFromEllipticCount (boxToNat ellipticCount)
         gauge = MkGaugeSector gluons vacuumMaxwellState canonicalDiracSpinorState canonicalToricAnyonState
-        quarks = synthesizeQuarksFromTriad st.activeTriad
+        quarks = canonicalSubatomicQuarkState
         chem = canonicalChemistryState
         matter = MkMatterSector
                    quarks
