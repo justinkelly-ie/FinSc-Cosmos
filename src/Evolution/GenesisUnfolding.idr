@@ -515,6 +515,7 @@ stepCosmosUnifiedObservableWithToken (MkLToken tok) (PostGeometric sim) =
   in MkLStatePair nextSt obs
 
 ||| Runs N unified cosmological steps under strict QTT linearity, accumulating CosmologicalQuantum observables.
+%spec steps
 public export
 runCosmosUnifiedWithObservablesLinear :
   (steps : Nat) ->

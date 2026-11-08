@@ -659,6 +659,7 @@ stepUniverseSimulation st =
   stepUniverseSimulationWithToken (MkLToken unitActionToken) st
 
 ||| Advances the simulation by n action steps recursively.
+%spec n
 public export
 runSimulationSteps : (n : Nat) -> (1 st : UniverseSimulationState) -> UniverseSimulationState
 runSimulationSteps Z st = st
@@ -720,6 +721,7 @@ streamUniverseSimulation st0 =
 
 ||| Streams universe simulation evolution across N action steps with strict QTT linearity,
 ||| accumulating the observable trajectory into an unrestricted list without leaking or duplicating the linear state.
+%spec steps
 public export
 runSimulationWithObservables : (steps : Nat) -> (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState (List SimulationObservableRecord)
 runSimulationWithObservables Z st = MkLStatePair st (the (List SimulationObservableRecord) [])
@@ -733,18 +735,21 @@ runSimulationWithObservables (S k) st =
 ------------------------------------------------------------------------
 
 ||| Evaluates M^steps for a 2x2 companion spread matrix in O(log steps) multiplications using fast repeated squaring.
+%spec fuel, steps
 public export
 fastForwardSpreadCompanion : (fuel : Nat) -> (steps : Nat) -> SquareMaxel 2 -> SquareMaxel 2
 fastForwardSpreadCompanion fuel steps m =
   fastSquareMaxelPower fuel steps m
 
 ||| Evaluates M^steps for a 2x2 companion spread matrix using model-derived Goh fuel.
+%spec steps
 public export
 fastForwardSpreadCompanionGoh : (steps : Nat) -> SquareMaxel 2 -> SquareMaxel 2
 fastForwardSpreadCompanionGoh steps m =
   fastSquareMaxelPowerGoh steps m
 
 ||| Fast-forwards the thermodynamic substrate sector across multi-step intervals via O(log N) companion matrix exponentiation.
+%spec fuel, steps
 public export
 fastForwardSubstrateSector : (fuel : Nat) -> (steps : Nat) -> (1 thermo : ThermodynamicSubstrateSector) -> ThermodynamicSubstrateSector
 fastForwardSubstrateSector fuel steps (MkSubstrateSector ep super ticks cap spread scale hubble gov mode isObs status fe diss) =
@@ -754,6 +759,7 @@ fastForwardSubstrateSector fuel steps (MkSubstrateSector ep super ticks cap spre
 
 ||| Streams or evaluates universe simulation evolution across N action steps with strict QTT linearity,
 ||| accumulating the observable trajectory into an unrestricted list without leaking or duplicating the linear state.
+%spec steps
 public export
 fastForwardSimulationObservables : (steps : Nat) -> (1 st : UniverseSimulationState) -> LinearStatePair UniverseSimulationState (List SimulationObservableRecord)
 fastForwardSimulationObservables steps st =
@@ -1087,6 +1093,7 @@ auditStepInvariants st =
 
 ||| Steps the simulation `steps` ticks, auditing the invariants at the current state and after EVERY tick.
 ||| Returns the first tick index (0-based, from the starting state) at which an invariant fails, if any.
+%spec steps
 public export
 firstInvariantViolation : (steps : Nat) -> (tick : Nat) -> UniverseSimulationState -> Maybe Nat
 firstInvariantViolation Z tick st = if auditStepInvariants st then Nothing else Just tick
@@ -1096,6 +1103,7 @@ firstInvariantViolation (S n) tick st =
     else Just tick
 
 ||| True iff all invariants hold at every tick of the trajectory.
+%spec steps
 public export
 auditTrajectoryStepByStep : (steps : Nat) -> UniverseSimulationState -> Bool
 auditTrajectoryStepByStep steps st = isNothing (firstInvariantViolation steps 0 st)
