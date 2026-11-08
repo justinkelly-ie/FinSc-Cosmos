@@ -84,18 +84,63 @@ public export
     u1 == u2 && s1 == s2 && f1 == f2
 
 
-||| Certified ground-state thermodynamic values at temperature T = 2 (Rule 03 §2):
+||| Discrete thermodynamic weight vector for internal energy U:
+||| - VM (Elliptic): phaseSpaceBasisDim = 10 (10D phase space)
+||| - DE (Hyperbolic): 1 (Identity single quantum)
+||| - DM (Parabolic): 0 (Null momentum dissipation drain, p_null = (0, 0))
+%inline public export
+helmholtzInternalEnergy : (vm : BoxInt) -> (de : BoxInt) -> BoxInt
+helmholtzInternalEnergy vm de =
+  (intToBoxInt (cast phaseSpaceBasisDim) * vm) + de
+
+||| Discrete thermodynamic weight vector for entropy S at temperature T = 2 (Landauer bit capacity):
+||| - VM (Elliptic): 2 (binary radix bit multiplicity)
+||| - DE (Hyperbolic): (fst primordialGeneratorNat + 1) = 5 (hypotenuse prime 5)
+||| - DM (Parabolic): manifestSpatialDim = 3 (spatial torus dimension)
+%inline public export
+helmholtzEntropy : (vm : BoxInt) -> (de : BoxInt) -> (dm : BoxInt) -> BoxInt
+helmholtzEntropy vm de dm =
+  let wVM = intToBoxInt 2
+      wDE = intToBoxInt (cast (fst primordialGeneratorNat + 1))
+      wDM = intToBoxInt (cast manifestSpatialDim)
+  in (wVM * vm) + (wDE * de) + (wDM * dm)
+
+||| Discrete Helmholtz Free Energy: F = U - T * S at binary bit temperature T = 2:
+%inline public export
+helmholtzFreeEnergy : (u : BoxInt) -> (s : BoxInt) -> BoxInt
+helmholtzFreeEnergy u s = u - (intToBoxInt 2 * s)
+
+||| Certified ground-state thermodynamic values at temperature T = 2 (Rule 03 §2),
+||| derived algebraically from Primorial 210 sector capacities (27, 128, 55):
 public export
 groundStateInternalEnergy : BoxInt
-groundStateInternalEnergy = intToBoxInt 398
+groundStateInternalEnergy =
+  helmholtzInternalEnergy (intToBoxInt (cast (geometryCapacity EllipticGeom)))
+                          (intToBoxInt (cast (geometryCapacity HyperbolicGeom)))
 
 public export
 groundStateEntropy : BoxInt
-groundStateEntropy = intToBoxInt 859
+groundStateEntropy =
+  helmholtzEntropy (intToBoxInt (cast (geometryCapacity EllipticGeom)))
+                   (intToBoxInt (cast (geometryCapacity HyperbolicGeom)))
+                   (intToBoxInt (cast (geometryCapacity ParabolicGeom)))
 
 public export
 groundStateFreeEnergy : BoxInt
-groundStateFreeEnergy = intToBoxInt (-1320)
+groundStateFreeEnergy =
+  helmholtzFreeEnergy groundStateInternalEnergy groundStateEntropy
+
+||| Compile-time verification that ground-state thermodynamic values definitionally evaluate to 398, 859, -1320:
+public export
+0 prfGroundStateThermodynamics :
+  let u = Evolution.SimulationState.groundStateInternalEnergy
+      s = Evolution.SimulationState.groundStateEntropy
+      f = Evolution.SimulationState.groundStateFreeEnergy
+  in ( u = MkBoxInt 398
+     , s = MkBoxInt 859
+     , f = MkBoxInt (-1320)
+     )
+prfGroundStateThermodynamics = (Refl, Refl, Refl)
 
 public export
 canonicalHelmholtzGroundState : DiscreteHelmholtzState 27 128 55 2

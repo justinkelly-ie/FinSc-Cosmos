@@ -265,9 +265,9 @@ energyFromTokens tokens =
                          SubstrateGeom  => (vAcc, hAcc, pAcc))
                        (intToBoxInt 0, intToBoxInt 0, intToBoxInt 0)
                        tokens
-      u = (intToBoxInt 10 * vm) + (intToBoxInt 1 * de)
-      s = (intToBoxInt 2 * vm) + (intToBoxInt 5 * de) + (intToBoxInt 3 * dm)
-      f = u - (intToBoxInt 2 * s)
+      u = helmholtzInternalEnergy vm de
+      s = helmholtzEntropy vm de dm
+      f = helmholtzFreeEnergy u s
   in (u, s, f)
 
 ||| Canonical sequence of fundamental geometry tokens up to count N (consolidated into <= 3 RLE nodes):
