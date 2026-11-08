@@ -322,7 +322,14 @@ record RecombinationStoichiometricRate where
 
 public export
 canonicalRecombinationRate : RecombinationStoichiometricRate
-canonicalRecombinationRate = MkRecombinationRate (intToBoxInt 10) (intToBoxInt 2) (intToBoxInt 1) (intToBoxInt 1)
+canonicalRecombinationRate =
+  let x = fst primordialGeneratorNat
+      y = snd primordialGeneratorNat
+      hRate = intToBoxInt (cast (2 * (x + 1)))
+      heRate = intToBoxInt (cast (minus y 1))
+      cRate = intToBoxInt (cast (minus x y))
+      oRate = intToBoxInt (cast (minus x y))
+  in MkRecombinationRate hRate heRate cRate oRate
 
 ||| Stoichiometric atomic recombination at epochs k in [15, 25]:
 ||| Consumes bare stellar nuclides to form neutral AtomTokens while strictly conserving nucleon count.

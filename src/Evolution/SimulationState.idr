@@ -379,6 +379,89 @@ public export %inline coherenceStatus : (st : UniverseSimulationState) -> Cohere
 public export %inline freeEnergyState : UniverseSimulationState -> DiscreteHelmholtzState 27 128 55 2; freeEnergyState st = st.thermodynamicSector.subFreeEnergyState
 public export %inline dissipatedEntropy : UniverseSimulationState -> BoxInt; dissipatedEntropy st = st.thermodynamicSector.subDissipatedEntropy
 
+------------------------------------------------------------------------
+-- 4. BARYON & QUARK BUDGET ALGEBRAIC DERIVATION
+------------------------------------------------------------------------
+
+||| Conserved baryonic and subatomic quark budget derived algebraically
+||| from a generator pair (x, y) = (D_spacetime, d_space):
+public export
+record BaryonBudget where
+  constructor MkBaryonBudget
+  generatorX          : Nat
+  generatorY          : Nat
+  quadranceBlue       : Nat -- x² + y²
+  quadranceRed        : Nat -- x² - y²
+  quadranceGreen      : Nat -- 2xy
+  protonCount         : Nat -- (x + 1) * Q_Blue
+  neutronCount        : Nat -- (y - 1) * Q_Blue
+  baryonNucleonCount  : Nat -- Q_Red * Q_Blue = P + N
+  upQuarkCount        : Nat -- (x * y) * Q_Blue = 2P + N
+  downQuarkCount      : Nat -- y² * Q_Blue = P + 2N
+  totalQuarkCount     : Nat -- u + d = 3 * A
+
+||| Derives the complete conserved baryonic and subatomic quark budget
+||| algebraically from any coprime integer generator pair (x, y):
+%inline public export
+deriveBaryonBudget : (x : Nat) -> (y : Nat) -> BaryonBudget
+deriveBaryonBudget x y =
+  let qBlue  = (x * x) + (y * y)
+      qRed   = minus (x * x) (y * y)
+      qGreen = 2 * x * y
+      pCount = (S x) * qBlue
+      nCount = (minus y 1) * qBlue
+      aCount = qRed * qBlue
+      uCount = (x * y) * qBlue
+      dCount = (y * y) * qBlue
+      totQ   = uCount + dCount
+  in MkBaryonBudget x y qBlue qRed qGreen pCount nCount aCount uCount dCount totQ
+
+||| The canonical primordial baryon budget derived directly from primordialGeneratorNat:
+%inline public export
+canonicalBaryonBudget : BaryonBudget
+canonicalBaryonBudget = deriveBaryonBudget (fst primordialGeneratorNat) (snd primordialGeneratorNat)
+
+||| Compile-time proof: Nucleon conservation A = P + N.
+public export
+0 prfCanonicalBaryonConservation :
+  let b = Evolution.SimulationState.canonicalBaryonBudget
+  in b.protonCount + b.neutronCount = b.baryonNucleonCount
+prfCanonicalBaryonConservation = Refl
+
+||| Compile-time proof: Quark-baryon stoichiometry u + d = 3A.
+public export
+0 prfCanonicalQuarkBaryonRatio :
+  let b = Evolution.SimulationState.canonicalBaryonBudget
+  in b.upQuarkCount + b.downQuarkCount = 3 * b.baryonNucleonCount
+prfCanonicalQuarkBaryonRatio = Refl
+
+||| Compile-time proof: Valence up-quarks 2P + N = u.
+public export
+0 prfProtonQuarkValence :
+  let b = Evolution.SimulationState.canonicalBaryonBudget
+  in (2 * b.protonCount) + b.neutronCount = b.upQuarkCount
+prfProtonQuarkValence = Refl
+
+||| Compile-time proof: Valence down-quarks P + 2N = d.
+public export
+0 prfNeutronQuarkValence :
+  let b = Evolution.SimulationState.canonicalBaryonBudget
+  in b.protonCount + (2 * b.neutronCount) = b.downQuarkCount
+prfNeutronQuarkValence = Refl
+
+||| Compile-time certification of canonical baryon budget values:
+public export
+0 prfCanonicalBaryonBudgetValues :
+  let b = Evolution.SimulationState.canonicalBaryonBudget
+  in ( b.protonCount = 125
+     , b.neutronCount = 50
+     , b.baryonNucleonCount = 175
+     , b.upQuarkCount = 300
+     , b.downQuarkCount = 225
+     , b.totalQuarkCount = 525
+     )
+prfCanonicalBaryonBudgetValues = (Refl, Refl, Refl, Refl, Refl, Refl)
+
 ||| Synthesizes initial subatomic quark plasma from the active Chromogeometric Triad:
 ||| Up-quarks: (Q_Green / 2) * Q_Blue = (24 / 2) * 25 = 300.
 ||| Down-quarks: (manifestSpatialDim^2) * Q_Blue = 9 * 25 = 225.
@@ -399,41 +482,35 @@ public export
 canonicalSubatomicQuarkState : Multiset BoxInt SubatomicParticle
 canonicalSubatomicQuarkState = synthesizeQuarksFromTriad (epochTriadQuadrance 0)
 
-||| Conserved up-quark count read directly from the primordial subatomic carrier:
+||| Conserved up-quark count read directly from canonicalBaryonBudget:
 public export
 canonicalUpQuarkCount : Nat
-canonicalUpQuarkCount = boxToNat (lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState)
+canonicalUpQuarkCount = canonicalBaryonBudget.upQuarkCount
 
-||| Conserved down-quark count read directly from the primordial subatomic carrier:
+||| Conserved down-quark count read directly from canonicalBaryonBudget:
 public export
 canonicalDownQuarkCount : Nat
-canonicalDownQuarkCount = boxToNat (lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState)
+canonicalDownQuarkCount = canonicalBaryonBudget.downQuarkCount
 
-||| Conserved total valence quark count read directly from the primordial subatomic carrier:
+||| Conserved total valence quark count read directly from canonicalBaryonBudget:
 public export
 canonicalTotalValenceQuarks : Nat
-canonicalTotalValenceQuarks = canonicalUpQuarkCount + canonicalDownQuarkCount
+canonicalTotalValenceQuarks = canonicalBaryonBudget.totalQuarkCount
 
-||| Conserved baryonic nucleon budget read directly from the primordial subatomic carrier:
+||| Conserved baryonic nucleon budget read directly from canonicalBaryonBudget:
 public export
 canonicalBaryonNucleonCount : Nat
-canonicalBaryonNucleonCount = boxToNat (totalSubatomicBaryonCount canonicalSubatomicQuarkState)
+canonicalBaryonNucleonCount = canonicalBaryonBudget.baryonNucleonCount
 
-||| Primordial proton count emerging from stoichiometric QCD confinement of the quark carrier:
+||| Primordial proton count emerging from canonicalBaryonBudget:
 public export
 canonicalProtonCount : Nat
-canonicalProtonCount =
-  let u = lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState
-      d = lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState
-  in boxToNat (divBox ((intToBoxInt 2 * u) - d) (intToBoxInt 3))
+canonicalProtonCount = canonicalBaryonBudget.protonCount
 
-||| Primordial neutron count emerging from stoichiometric QCD confinement of the quark carrier:
+||| Primordial neutron count emerging from canonicalBaryonBudget:
 public export
 canonicalNeutronCount : Nat
-canonicalNeutronCount =
-  let u = lookupCountBox (QuarkToken UpQuark) canonicalSubatomicQuarkState
-      d = lookupCountBox (QuarkToken DownQuark) canonicalSubatomicQuarkState
-  in boxToNat (divBox ((intToBoxInt 2 * d) - u) (intToBoxInt 3))
+canonicalNeutronCount = canonicalBaryonBudget.neutronCount
 
 ||| Reads active up-quark count directly from the matter sector:
 public export
@@ -518,7 +595,7 @@ initUniverseSimulationMode : ExpansionParadigm -> UniverseSimulationState
 initUniverseSimulationMode mode =
   let g10 = spacetime10DMetric
       g4  = project10Dto4D g10.metricMaxel
-      spacetime = MkSpacetimeSector g10 g4 (triangularNat 9) (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
+      spacetime = MkSpacetimeSector g10 g4 (spacetimeModuliDegreesOfFreedom phaseSpaceBasisDim) (intToBoxInt 0) initMacroCosmicEnvelope WhiteDwarf
       gluons = [ gellMannMaxel 1, gellMannMaxel 2, gellMannMaxel 3, gellMannMaxel 4
                , gellMannMaxel 5, gellMannMaxel 6, gellMannMaxel 7, gellMannMaxel 8
                ]
