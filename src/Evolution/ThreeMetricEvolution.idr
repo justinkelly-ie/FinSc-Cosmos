@@ -1,7 +1,7 @@
 module Evolution.ThreeMetricEvolution
 
 import Language.Reflection
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage0.BoxInt
 import Stage0.Multiset
 import Evolution.Init
