@@ -1,7 +1,7 @@
 package FinSc-Cosmos
 version = 0.3.1
 authors = "Justin Kelly"
-brief   = "Layer 5 Cosmological Engine, QTT State Machine, REPL & Verification."
+brief   = "Layer 16 Cosmological Master Apex, Primorial 210 Ground State Condensation (F = -1320) & cosmos-sim"
 
 depends = FinSc-Geometry, FinSc-Nuclear-Matter, FinSc-Thermodynamics, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Phase-Unfolding, FinSc-Action-Dynamics, FinSc-Cosmic-Horizon, FinSc-Chemistry, FinSc-Biology, FinSc-Gauge-Fields, FinSc-Electromagnetism, FinSc-Radix-Binary, FinSc-Radix-Ternary, FinSc-Dihedron, FinSc-Quantum-Coherence, base, linear
 sourcedir = "src"
